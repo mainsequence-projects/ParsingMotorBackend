@@ -1,3 +1,5 @@
+from pathlib import Path
+import json
 """HTTP contract for Jose: status codes and error bodies (no AWS: failures happen before)."""
 import base64
 import io
@@ -44,16 +46,23 @@ def test_bad_uploads_are_4xx_not_500(name, data, code):
     assert isinstance(r.json()["detail"], str)
 
 
+_FIXTURE = json.loads((Path(__file__).parent / "fixtures" / "extract_response_01.json").read_text())
+
+
+def _fake_result(**extra):
+    return {**_FIXTURE, **extra}
+
+
 def test_owner_only_encrypted_pdf_is_accepted(monkeypatch):
     seen = {}
-    monkeypatch.setattr(pipeline, "run_package", lambda pages, **k: seen.setdefault("n", len(pages)) and {"ok": 1})
+    monkeypatch.setattr(pipeline, "run_package", lambda pages, **k: seen.setdefault("n", len(pages)) and _fake_result())
     data = _pdf(encryption=fitz.PDF_ENCRYPT_AES_256, owner_pw="o", user_pw="")
     r = C.post("/extract", files={"files": ("owner.pdf", data)})
     assert r.status_code == 200 and seen["n"] == 1
 
 
 def test_image_without_extension_is_sniffed(monkeypatch):
-    monkeypatch.setattr(pipeline, "run_package", lambda pages, **k: {"pages": len(pages)})
+    monkeypatch.setattr(pipeline, "run_package", lambda pages, **k: _fake_result(pages=len(pages)))
     b = io.BytesIO()
     Image.new("RGB", (50, 50), "white").save(b, "PNG")
     r = C.post("/extract", files={"files": ("blob", b.getvalue())})
@@ -100,7 +109,7 @@ def test_long_extraction_does_not_block_health(monkeypatch):
     def slow(pages, **k):
         started.set()
         time.sleep(1.5)
-        return {"ok": True}
+        return _fake_result()
     monkeypatch.setattr(pipeline, "run_package", slow)
     b = io.BytesIO()
     Image.new("RGB", (40, 40), "white").save(b, "PNG")
