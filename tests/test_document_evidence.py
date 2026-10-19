@@ -6,7 +6,7 @@ from pathlib import Path
 import pymupdf
 import pytest
 
-from extractor import document_service
+from extractor import aws, document_service
 from extractor import evidence_contracts as E
 from tests.test_document_endpoints import client as client
 from tests.test_document_endpoints import discovery_body, typed_body
@@ -85,18 +85,31 @@ def test_extraction_v2_returns_citations_without_inventing_ocr_scores_or_boxes(
     assert result.field_evidence[0].pointer == "/bank_name"
 
 
+def textract(monkeypatch, value, conf=0.5):
+    seen = []
+
+    def fake(png, queries):
+        seen.append(dict(queries))
+        return ({a: {"value": value, "confidence": conf, "bbox": None} for a in queries},
+                {"cache_hit": False, "called": True})
+
+    monkeypatch.setattr(aws, "textract_queries", fake)
+    return seen
+
+
 def test_independent_readers_preserve_disagreement_without_resolving_it(
     client, upload, monkeypatch
 ):
     body = {**typed_body(upload), "contract_version": 2, "reader_mode": "independent_readers"}
-    calls = replies(monkeypatch, [reading("Primary Bank"), reading("Secondary Bank")])
+    replies(monkeypatch, [reading("Primary Bank")])
+    seen = textract(monkeypatch, "Secondary Bank")
     response = client.post("/extract_typed_json", json=body)
     assert response.status_code == 200, response.text
     result = response.json()
     assert result["field_evidence"][0]["agreement"] == "disagree"
-    assert result["attributes"]["bank_name"] == "Primary Bank"
+    assert result["attributes"]["bank_name"] == "Primary Bank"   # text: OCR never overrides
     assert len(result["field_evidence"][0]["candidates"]) == 2
-    assert "Primary Bank" not in calls[1][0]  # Second reader never sees first reader output.
+    assert "Primary Bank" not in str(seen)  # The OCR reader never sees the vision output.
     assert "policy" not in result and "checks" not in result
 
 
@@ -168,15 +181,16 @@ def test_page_selection_keeps_original_physical_numbers_and_reordering(client, u
     )
 
 
-def test_independent_structures_are_not_silently_aligned(client, upload, monkeypatch):
-    second = reading()
-    second["attributes"]["account_holders"] = ["Different person"]
-    second["citations"].append(
-        {"pointer": "/account_holders/0", "pages": [1], "raw_text": "Different person"}
-    )
-    replies(monkeypatch, [reading(), second])
+def test_array_items_are_never_aligned_by_index(client, upload, monkeypatch):
+    first = reading()
+    first["attributes"]["account_holders"] = ["Eva Horáková"]
+    first["citations"].append({"pointer": "/account_holders/0", "pages": [1], "raw_text": "Eva Horáková"})
+    replies(monkeypatch, [first])
+    textract(monkeypatch, "Bank name")
     response = client.post(
         "/extract_typed_json",
         json={**typed_body(upload), "contract_version": 2, "reader_mode": "independent_readers"},
     )
-    assert response.status_code == 502
+    assert response.status_code == 200, response.text
+    holder = next(f for f in response.json()["field_evidence"] if f["pointer"] == "/account_holders/0")
+    assert holder["agreement"] == "single_reader" and len(holder["candidates"]) == 1

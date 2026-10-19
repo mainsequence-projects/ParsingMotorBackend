@@ -16,7 +16,7 @@ from pathlib import Path
 
 TEXTRACT_QUERIES_PER_PAGE = 0.015
 BEDROCK_PRICES = {  # USD per 1M tokens (input, output)
-    "claude-haiku-4-5": (0.80, 4.00),
+    "claude-haiku-4-5": (1.00, 5.00),
     "claude-sonnet-4-5": (3.00, 15.00),
     "claude-sonnet-4-2025": (3.00, 15.00),
     "nova-lite": (0.06, 0.24),
