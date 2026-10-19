@@ -1,4 +1,4 @@
-# KB Document Control Extractor — API v0.3.0
+# KB Document Control Extractor — API v0.4.0
 
 > ES: Contrato HTTP para Jose (frontend + Main Sequence). La fuente de verdad formal es
 > [`docs/openapi.json`](openapi.json) (generado con `python scripts/export_openapi.py`; un
@@ -65,6 +65,7 @@ off by default; never on Lambda (duplicated headers break browsers).
 | GET | `/runs/{run_id}` | key | Estado actual (motor + decisiones humanas) | Current state |
 | POST | `/runs/{run_id}/decisions` | key | Añade decisión humana y recalcula | Append human decision, re-evaluate |
 | GET | `/runs/{run_id}/verify` | key | Verifica la cadena de hashes | Verify hash chain |
+| GET | `/runs/{run_id}/protocol?format=html\|pdf` | key | Protocolo de control citado (HTML/PDF) | Cited control protocol |
 | GET | `/learning?min_support=3` | key | Overrides humanos por regla (sugerencias, nunca auto) | Human overrides per rule |
 | GET | `/rules` | key | rules.yaml activo + versión | Active rules.yaml + version |
 | GET | `/` | — | Página demo HTML | HTML demo |
@@ -103,14 +104,23 @@ Salida (resumen; ver openapi para todo):
 | `missing_documents`, `missing_pages`, `unexpected_documents` | faltantes / páginas faltantes / sobrantes | completeness |
 | `combined_confidence`, `fields_auto_validated_pct` | métricas | metrics |
 | `recommended_next_step` | ver §3 | see §3 |
-| `draft_client_message` | borrador de email al cliente (inglés) o `null` | client email draft or null |
+| `draft_client_message` | borrador de email al cliente (inglés, compatibilidad) o `null` | client email draft (EN) or null |
+| `draft_client_messages` | `{"cs": "...", "en": "..."}` el mismo borrador en checo (el que se envía) e inglés, o `null` | same draft in Czech + English |
 | `models`, `rules_version`, `engine_version`, `git_commit`, `inputs[]` (sha256) | trazabilidad | provenance |
 | `cost` | coste del run y caché | run cost |
 
 `field.status`: `passed` · `warning` · `manual_review` · `missing`.
 `check.status`: `passed` · `warning` · `discrepancy` · `manual_review`.
 `field.outcome` (ejemplos): `agree_high_conf`, `agree_exact`, `agree_low_conf`,
-`disagree`, `ocr_unparseable`, `llm_only`, `textract_only`, `both_missing`.
+`agree_ocr_no_diacritics` (Textract no lee checo y pierde ř/č/š/í…; si la única diferencia
+son esas letras cuenta como acuerdo y se guarda la grafía del LLM), `disagree`,
+`ocr_unparseable`, `llm_only`, `textract_only`, `both_missing`.
+
+**Tipos de documento (`doc_type`)** v0.4: `contract`, `id_card` (občanský průkaz),
+`bank_statement` (výpis z účtu), `payslip` (výplatní lístek), `proof_of_address`,
+`employer_confirmation` (potvrzení o zaměstnání a výši příjmu), `tax_or_debt_certificate`
+(potvrzení o bezdlužnosti, Finanční úřad), `other`. El contrato define cuáles (5–7) son
+obligatorios; ver `GET /rules` y `extractor/schemas.yaml` para los campos.
 
 ### 2.3 `POST /runs/{run_id}/decisions` → `DecisionResponse`
 ```json
@@ -143,20 +153,32 @@ checks tocados por un humano llevan `engine` (lo que dijo el motor) y `human`.
 Learning agrega decisiones por `rule_id` y sugiere ajustes (`auto_applied` siempre `false`).
 Rules devuelve el YAML activo y su versión (sha256[:16]).
 
+### 2.7 `GET /runs/{run_id}/protocol?format=html|pdf` → HTML o PDF
+Protocolo de control citado para firmar/archivar, reconstruido solo desde el audit log
+(CLI: `python -m extractor protocol <run_id> -o protocolo.pdf`). Contiene: cabecera (caso,
+run_id, hora, versión motor/git, reglas, modelos, región, sha256 de entradas, estado de la
+cadena de hashes), resumen (conteos y siguiente paso), tabla de todos los checks (rule_id,
+descripción, estado, evidencia: doc, campo, página, valor Textract + confianza, valor
+Bedrock, valor final), campos citados por documento, faltantes y borrador al cliente
+(checo + inglés), historial de decisiones humanas y pie *"AI output supports the decision;
+not an automatic final approval"*. `format` distinto de html/pdf → 422; run desconocido → 404.
+
 ---
 
 ## 3. `recommended_next_step`
-Orden de prioridad (rules.yaml → `next_step`), primero que aplica:
+Orden de prioridad (rules.yaml → `next_step`), gana la primera condición que se cumple:
 
-| Valor | Cuándo (ES) | When (EN) |
-|---|---|---|
-| `request_missing_documents` | falta un documento requerido o páginas | required doc/pages missing |
-| `manual_review_discrepancy` | algún check en `discrepancy` (p. ej. ingresos ≠, RČ inválido, nombre ≠) | a cross-check discrepancy |
-| `manual_review_extraction` | muchos campos en revisión manual o algún campo requerido sin valor | extraction not trustworthy |
-| `spot_check_warnings` | solo avisos / un campo dudoso | warnings only |
-| `approve_ready` | todo `passed` | all passed |
+| # | Valor | Cuándo (ES) | When (EN) |
+|---|---|---|---|
+| 1 | `manual_review_discrepancy` | algún check en `discrepancy` (ingresos ≠, RČ inválido, nombre ≠, deuda fiscal, certificado de otra persona…) | a cross-check discrepancy |
+| 2 | `request_missing_documents` | falta un documento requerido o páginas | required doc/pages missing |
+| 3 | `manual_review_extraction` | ≥ 3 campos en revisión manual | ≥ 3 fields in manual review |
+| 4 | `manual_review_extraction` | algún campo sin valor (`missing`) | any field missing |
+| 5 | `spot_check_warnings` | cualquier aviso o revisión manual restante | any warning / manual review |
+| 6 | `approve_ready` | todo `passed` | all passed |
 
-`draft_client_message` se rellena cuando hay algo que pedir al cliente.
+Una discrepancia gana a "pedir documentos": primero lo decide una persona y no se pide nada al
+cliente antes. `draft_client_message` se rellena cuando hay algo que pedir al cliente.
 
 ---
 
@@ -211,13 +233,17 @@ curl -s --aws-sigv4 "aws:amz:eu-central-1:lambda" --user "$AWS_ACCESS_KEY_ID:$AW
 ---
 
 ## 6. Límites conocidos / Known limits
-- ES: audit en Lambda en `/tmp` (efímero y por contenedor): un `run_id` puede dar 404 en otra
-  invocación. Para producción: S3/DynamoDB. EN: Lambda audit is ephemeral/per container.
+- ES: audit en Lambda en `/tmp` (efímero y por contenedor): un `run_id` (y su protocolo) puede
+  dar 404 en otra invocación. Hacerlo durable exige un recurso nuevo (bucket S3 o tabla
+  DynamoDB): pendiente de aprobación de Carlos. EN: Lambda audit is ephemeral/per container;
+  durable storage needs a new resource (S3/DynamoDB), pending approval.
 - Guardia de presupuesto en Lambda es por contenedor (no global).
 - Solo las primeras 6 páginas de un documento van a Bedrock (`MAX_BEDROCK_PAGES`).
 - Dos documentos del mismo tipo sin clave distintiva se fusionan; los checks cruzados usan el
   primero de cada tipo.
-- `draft_client_message` solo en inglés.
+- Textract no tiene modelo checo: pierde letras acentuadas y no entiende prosa checa (cartas).
+  Se compensa en reglas deterministas (acuerdo sin diacríticos, meses OCR, regla OCR para
+  nedoplatek), pero fechas en cartas en prosa quedan a menudo en revisión manual.
 - Perfiles `eu.*` de Bedrock (cross-region inference) pueden procesar en otra región UE.
 - La cadena de hashes no está anclada fuera (quien controla el disco puede reescribirla entera).
 - Sin verificación IBAN mod-97.

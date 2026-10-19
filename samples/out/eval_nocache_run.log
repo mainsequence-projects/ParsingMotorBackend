@@ -1,0 +1,47 @@
+01_happy_all7_A            pages 8/8  group ok  fields 48/48  checks 32/32  flags 0/0  false 0  next spot_check_warnings (exp approve_ready)  $0.2155
+02_happy_all7_B            pages 8/8  group ok  fields 47/48  checks 31/32  flags 0/0  false 1  next spot_check_warnings (exp approve_ready)  $0.2158
+03_missing_tax_certificate pages 7/7  group ok  fields 40/42  checks 26/28  flags 1/1  false 1  next request_missing_documents (ok)  $0.1874
+04_missing_statement_page  pages 6/6  group ok  fields 43/44  checks 30/31  flags 1/1  false 1  next request_missing_documents (ok)  $0.1698
+05_income_mismatch_employer pages 8/8  group ok  fields 48/48  checks 32/32  flags 2/2  false 0  next manual_review_discrepancy (ok)  $0.2127
+06_employer_mismatch_stale_cert pages 8/8  group ok  fields 46/48  checks 31/32  flags 2/2  false 1  next manual_review_discrepancy (ok)  $0.2143
+07_invalid_rc_name_typo    pages 7/7  group ok  fields 42/42  checks 24/27  flags 3/3  false 0  next manual_review_discrepancy (ok)  $0.1876
+08_scanned_noisy_5types    pages 6/6  group ok  fields 38/38  checks 27/27  flags 0/0  false 0  next spot_check_warnings (exp approve_ready)  $0.1646
+09_shuffled_6types         pages 7/7  group ok  fields 42/44  checks 29/31  flags 0/0  false 2  next manual_review_extraction (exp approve_ready)  $0.1922
+10_photo_id_tax_arrears    pages 8/8  group ok  fields 47/48  checks 31/32  flags 1/1  false 1  next manual_review_discrepancy (ok)  $0.2167
+11_extra_doc_cert_other_person pages 8/8  group ok  fields 44/44  checks 31/31  flags 3/3  false 0  next manual_review_discrepancy (ok)  $0.19
+12_happy_5types_B          pages 5/5  group ok  fields 33/33  checks 23/23  flags 0/0  false 0  next spot_check_warnings (exp approve_ready)  $0.1377
+{
+  "packages": 12,
+  "page_classification_accuracy": 1.0,
+  "grouping_ok": "12/12",
+  "field_accuracy": 0.983,
+  "fields": "518/527",
+  "expected_flags_hit": "13/13",
+  "check_accuracy": 0.969,
+  "checks": "347/358",
+  "false_alarms": 7,
+  "packages_without_false_alarm": "6/12",
+  "next_step_accuracy": "7/12",
+  "next_step_safe": "12/12",
+  "missing_docs_ok": "12/12",
+  "missing_pages_ok": "12/12",
+  "unexpected_ok": "12/12",
+  "eval_usd": 2.3043,
+  "ledger": {
+    "budget_usd": 16.0,
+    "total_usd": 5.7447,
+    "remaining_usd": 10.2553,
+    "textract_pages": 189,
+    "bedrock_calls": 404,
+    "bedrock_input_tokens": 892148,
+    "bedrock_output_tokens": 81554,
+    "cache_hits_textract": 156,
+    "cache_hits_bedrock": 251,
+    "aborted": false,
+    "ledger": "/workspace/hack/ParsingMotorBackend/.cost/task2_2026-10-19.json"
+  }
+}
+
+real	3m21.497s
+user	0m43.981s
+sys	0m0.932s
