@@ -1,41 +1,81 @@
-"""Classify each page into a document type with Bedrock (temperature 0)."""
+"""Per-page classification with Bedrock (Haiku, temperature 0).
+
+Besides the doc type, each page reports layout cues used by the splitter:
+printed page markers ("Page 2 of 3", "Strana 1 z 2"), a doc_key that links pages of the same
+document (IBAN, contract no., document no.) and the rotation needed to make it upright.
+"""
+from __future__ import annotations
+
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from .aws import converse_json
-from .config import DOC_TYPES, MAX_WORKERS, BEDROCK_CLASSIFY_MODEL, BEDROCK_CLASSIFY_FALLBACKS
-from .ingest import Page
+from .config import BEDROCK_CLASSIFY_FALLBACKS, BEDROCK_CLASSIFY_MODEL, DOC_TYPES, MAX_WORKERS
+from .ingest import Page, rotate_png, sha256
 
 SYSTEM = (
     "You are a bank back-office document classifier. "
     "Return ONLY valid JSON. Never invent content that is not on the page."
 )
 
+PROMPT = (
+    "Classify this single page of a Czech bank loan / KYC package.\n"
+    f"Allowed doc_type values: {DOC_TYPES}.\n"
+    "Return JSON with keys:\n"
+    '  "doc_type": one of the allowed values,\n'
+    '  "confidence": 0.0-1.0,\n'
+    '  "reason": one short English sentence,\n'
+    '  "page_number": integer ONLY if a page marker like "Page 2 of 3" / "Strana 2 z 3" / "2/3" '
+    "is printed on the page, else null,\n"
+    '  "page_count": the total from that same marker, else null,\n'
+    '  "doc_key": an identifier printed on the page that would also appear on other pages of the '
+    "same document (account IBAN, contract number, ID document number, policy number), copied "
+    "exactly, else null,\n"
+    '  "rotation": degrees clockwise (0, 90, 180 or 270) the image must be rotated to be upright.\n'
+    "Hints: contracts mention 'smlouva'/'contract' and loan amounts; id cards show photo fields / "
+    "'obcansky prukaz' / document number; bank statements show IBAN and balances; payslips show "
+    "employer / net pay; utility bills are proof_of_address; anything else (insurance, letters) is other."
+)
+
+
+def _int_or_none(v):
+    try:
+        v = int(v)
+        return v if v > 0 else None
+    except (TypeError, ValueError):
+        return None
+
 
 def _classify_one(page: Page) -> dict:
-    prompt = (
-        "Classify this single page of a Czech bank loan / KYC package.\n"
-        f"Allowed doc_type values: {DOC_TYPES}.\n"
-        "Return JSON: {\"doc_type\": \"...\", \"confidence\": 0.0-1.0, "
-        "\"reason\": \"one short sentence in English\"}.\n"
-        "Hints: contracts mention 'smlouva'/'contract' and loan amounts; "
-        "id cards show photo fields / 'obcansky prukaz' / document number; "
-        "bank statements show IBAN and balances; payslips show employer / net pay; "
-        "utility bills are proof_of_address."
-    )
-    data, model = converse_json(prompt, images=[page.png], system=SYSTEM, max_tokens=200,
-                               model_id=BEDROCK_CLASSIFY_MODEL,
-                               fallbacks=BEDROCK_CLASSIFY_FALLBACKS)
+    data, model, meta = converse_json(PROMPT, images=[page.png], system=SYSTEM, max_tokens=300,
+                                      model_id=BEDROCK_CLASSIFY_MODEL,
+                                      fallbacks=BEDROCK_CLASSIFY_FALLBACKS, return_meta=True)
     doc_type = data.get("doc_type", "other")
     if doc_type not in DOC_TYPES:
         doc_type = "other"
+    rot = _int_or_none(data.get("rotation")) or 0
+    rot = rot if rot in (90, 180, 270) else 0
+    png = page.png
+    if rot:
+        png = rotate_png(page.png, rot)
+    pn, pc = _int_or_none(data.get("page_number")), _int_or_none(data.get("page_count"))
+    if pn and pc and pn > pc:
+        pn = pc = None
     return {
         "source_file": page.source_file,
         "page": page.page,
         "doc_type": doc_type,
         "confidence": float(data.get("confidence") or 0.0),
         "reason": data.get("reason") or "",
+        "page_number": pn,
+        "page_count": pc,
+        "doc_key": (str(data["doc_key"]).strip() or None) if data.get("doc_key") else None,
+        "rotation": rot,
         "model": model,
-        "png": page.png,
+        "cache_hit": meta.get("cache_hit"),
+        "source_sha256": page.source_sha256,
+        "page_sha256": page.original_sha256,
+        "sha256": sha256(png),
+        "png": png,
     }
 
 
@@ -46,18 +86,3 @@ def classify_pages(pages: list[Page]) -> list[dict]:
         for fut in as_completed(futs):
             results[futs[fut]] = fut.result()
     return results
-
-
-def group_documents(classified: list[dict]) -> list[dict]:
-    """Split a multi-page package into contiguous same-type document groups (bonus)."""
-    if not classified:
-        return []
-    docs, cur = [], None
-    for c in classified:
-        if cur is None or c["doc_type"] != cur["doc_type"] or c["source_file"] != cur["source_file"]:
-            cur = {"doc_type": c["doc_type"], "source_file": c["source_file"],
-                   "pages": [], "confidence": c["confidence"], "reason": c["reason"]}
-            docs.append(cur)
-        cur["pages"].append({"page": c["page"], "png": c["png"], "confidence": c["confidence"]})
-        cur["confidence"] = min(cur["confidence"], c["confidence"])
-    return docs
