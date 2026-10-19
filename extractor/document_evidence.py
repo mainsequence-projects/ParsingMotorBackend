@@ -2,6 +2,7 @@
 
 import copy
 import json
+import re
 import time
 
 from pydantic import Field, JsonValue
@@ -14,6 +15,24 @@ from .config import BEDROCK_CLASSIFY_FALLBACKS, BEDROCK_CLASSIFY_MODEL
 from .evidence_base import StrictModel
 from .ingest import InputError
 from .schema_contract import validator
+
+
+# The schemas come last in the prompt, so models answer with the bare document unless the
+# wrapper is restated after them (seen on real Bedrock: every V2 extraction failed).
+REPLY_SHAPE = (
+    "\nREPLY FORMAT (mandatory): ONE JSON object and nothing else, exactly "
+    '{"attributes": <object conforming to OUTPUT_SCHEMA, including document_type>, '
+    '"citations": [{"pointer": "/field", "pages": [1], "raw_text": "text as printed"}]}. '
+    "Never put the attributes at the top level and never return two separate JSON values."
+)
+# Back Office descriptions are short English sentences; documents arrive in Czech or other
+# languages (real Bedrock returned null for 'POTVRZENÍ O ZAMĚSTNÁNÍ').
+CLASSIFY_LANGUAGE = (
+    "Pages may be in any language (often Czech): decide by meaning, not by English words. "
+    "Each document_type identifier is itself the name of the document. Use null only when "
+    "no catalog entry plausibly fits; when unsure between entries pick the closest and "
+    "lower the confidence. "
+)
 
 
 class ObservedClassification(D.Classification):
@@ -59,7 +78,8 @@ def classify(request):
         "Return document_type (null if unknown), confidence [0,1], reason, printed_page_number "
         "and printed_page_count (null unless printed), group_hint (a visible document identifier "
         "or null), boundary (starts_document, continues_document, or unknown). Grouping is only "
-        "an observation. Do not guess missing pagination. Catalog: " + json.dumps(catalog)
+        "an observation. Do not guess missing pagination. " + CLASSIFY_LANGUAGE
+        + "Catalog: " + json.dumps(catalog)
     )
     result, costs = [], []
     for page in pages:
@@ -128,6 +148,7 @@ def extract(request):
         + json.dumps(request.canonical_schema)
         + "\nOUTPUT_SCHEMA: "
         + json.dumps(request.output_schema)
+        + REPLY_SHAPE
     )
     started = time.monotonic()
     data, model, meta = service.converse_json(
@@ -152,8 +173,17 @@ def extract(request):
         ):
             raise ValueError("invalid or duplicate field citation")
         citations[citation.pointer] = citation
-    if any(v is not None and p not in citations for p, v in values.items()):
-        raise ValueError("reader omitted evidence for an extracted value")
+    # An uncited scalar is treated as unread (null) and marks the evidence incomplete, so Back
+    # Office routes the document to review instead of losing every other field of it (real
+    # Bedrock does this). Array items stay fail-closed: nulling one would shift the array.
+    uncited = [p for p, v in values.items() if v is not None and p not in citations]
+    if any(re.search(r"/\d+(/|$)", p) for p in uncited):
+        raise ValueError("reader omitted evidence for an extracted array item")
+    attributes = copy.deepcopy(reading.attributes)
+    for p in uncited:
+        values[p] = None
+        ocr_reader.set_pointer(attributes, p, None)
+    evidence_complete = not uncited
     costs, cache_hits = [usage(model, meta, started)], [bool(meta.get("cache_hit", False))]
     # Second reader = Textract (a different modality: OCR with its own confidence and box),
     # so the two readers do not share the same failure mode. It never sees the vision values.
@@ -164,7 +194,6 @@ def extract(request):
         ocr = ocr_reader.read(pages, request.output_schema, values, citations)
         costs.append(E.ProviderUsage(model=ocr_reader.MODEL,
                                      duration_ms=int((time.monotonic() - started) * 1000)))
-    attributes = copy.deepcopy(reading.attributes)
     fields = []
     for pointer, value in values.items():
         leaf = ocr_reader.leaf_schema(request.output_schema, pointer)
@@ -240,6 +269,6 @@ def extract(request):
         cache_hit=all(cache_hits),
         normalization_version=ocr_reader.NORMALIZATION_VERSION,
         field_evidence=fields,
-        evidence_complete=True,
+        evidence_complete=evidence_complete,
         usage=costs,
     ).model_dump()

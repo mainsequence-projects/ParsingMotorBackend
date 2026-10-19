@@ -114,7 +114,7 @@ def test_independent_readers_preserve_disagreement_without_resolving_it(
 
 
 @pytest.mark.parametrize(
-    "bad", ["missing_citation", "bad_page", "extra_decision", "wrong_pointer", "duplicate"]
+    "bad", ["bad_page", "extra_decision", "wrong_pointer", "duplicate"]
 )
 def test_bad_provider_evidence_fails_closed(client, upload, monkeypatch, bad):
     data = reading()
@@ -194,3 +194,25 @@ def test_array_items_are_never_aligned_by_index(client, upload, monkeypatch):
     assert response.status_code == 200, response.text
     holder = next(f for f in response.json()["field_evidence"] if f["pointer"] == "/account_holders/0")
     assert holder["agreement"] == "single_reader" and len(holder["candidates"]) == 1
+
+def test_prompts_restate_the_reply_shape_last_and_classify_by_meaning(client, upload, monkeypatch):
+    calls = replies(monkeypatch, [reading()])
+    client.post("/extract_typed_json", json={**typed_body(upload), "contract_version": 2})
+    prompt = calls[0][0]
+    schema_at = prompt.index("\nOUTPUT_SCHEMA:")
+    assert prompt.index("REPLY FORMAT") > schema_at and prompt.rindex('"attributes"') > schema_at
+    calls = replies(monkeypatch, [{"document_type": "bank_statement", "confidence": 0.9, "reason": "x"}])
+    client.post("/classify_json", json={**discovery_body(upload), "contract_version": 2})
+    assert "any language" in calls[0][0] and "Catalog:" in calls[0][0]
+
+
+def test_uncited_value_is_dropped_and_marks_evidence_incomplete(client, upload, monkeypatch):
+    data = reading()
+    data["citations"] = []
+    replies(monkeypatch, [data])
+    response = client.post("/extract_typed_json", json={**typed_body(upload), "contract_version": 2})
+    assert response.status_code == 200, response.text
+    result = E.ExtractionResponseV2.model_validate(response.json())
+    assert result.evidence_complete is False
+    assert result.attributes["bank_name"] is None          # unsupported reading = unread
+    assert result.field_evidence[0].agreement == "missing"
