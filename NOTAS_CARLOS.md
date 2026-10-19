@@ -581,6 +581,30 @@ Ledger `.cost/review_2026-10-19.json` (tope 1,5 USD): **0,1869 USD** antes del r
 
 ---
 
+## 16. Redeploy v0.3.0 (19-oct-2026, 15:06 hora de Praga)
+
+`bash deploy/deploy.sh` con el árbol limpio (commit `7397cce`), **mismos recursos** (Lambda
+`fintechers-kb-extractor`, rol, Function URL AWS_IAM, OAC `E29PRMB6AFKA4D`, distribución
+`E13GPX9M1FZKBI`). Nada nuevo creado. El env se conservó (DEMO_INVOKE_ROLE_ARN, FUNCTION_URL,
+EXTRACTOR_API_KEY, BEDROCK_*, EXTRACTOR_BUDGET_USD) + `EXTRACTOR_GIT_COMMIT`; el token **no**
+cambió. `EXTRACTOR_CORS_ORIGINS` NO está puesto en Lambda (a propósito).
+
+| Verificación | Resultado |
+|---|---|
+| `GET /health` por CloudFront | 200, `version 0.3.0`, `git_commit 7397cceaecaa`, `rules_version 4932db49748e6d14` |
+| `GET /` (HTML demo) | 200, "KB Document Control — Demo" |
+| `/session` y `/rules` sin token / token malo | 401 / 401 |
+| `/session` y `/rules` con token | 200 / 200 |
+| Function URL sin firma | 403 (AWS_IAM) |
+| Preflight CORS en la Function URL | 200, un solo `Access-Control-Allow-Origin: *` |
+| `signed_extract.py samples/01_clean/package.pdf` (5 páginas, sin caché) | **13 s**, `approve_ready`, 0 campos sin pasar, 0,1319 USD |
+| `GET /runs/{id}/verify` del run anterior por CloudFront | `ok: true`, 9 eventos |
+
+Coste de la revisión completa: 0,1869 (local) + 0,1319 (verificación Lambda) ≈ **0,32 USD**
+(tope 1,5). Acumulado del proyecto ≈ 3,04 + 0,32 ≈ **3,36 USD** (cuenta máx. 800).
+
+---
+
 ## Archivos clave
 
 - Motor: `extractor/` (reglas: `rules.yaml`, `rules_engine.py`; audit: `audit.py`;
