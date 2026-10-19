@@ -55,27 +55,49 @@ def norm_birth_number(v):
     return d or None
 
 
+_CURRENCY = re.compile(r"(?i)\b(czk|kc|eur|usd)\b|kč|€|\$")
+_NUM = re.compile(r"-?\d[\d .,']*\d|-?\d")
+
+
 def norm_amount(v):
-    """'250 000,00 CZK' -> 250000.0 ; '52,000.50' -> 52000.5"""
-    if v is None:
+    """Strict, deterministic amount parser. Returns None when the text is ambiguous.
+
+    '250 000,00 CZK' -> 250000.0 ; '52,000.50' -> 52000.5 ; '52 000,- Kč' -> 52000.0
+    None for OCR garbage such as '1O000' / '15200E.00' (letter inside the number) or for
+    two separate numbers ('2024: 52000'): guessing would silently change the magnitude.
+    """
+    if v is None or isinstance(v, bool):
         return None
     if isinstance(v, (int, float)):
         return round(float(v), 2)
-    s = re.sub(r"[^\d,.\-]", "", str(v).replace("\u00a0", " "))
-    if not re.search(r"\d", s):
+    s = str(v)
+    for ch in ("\u00a0", "\u202f", "\u2009"):
+        s = s.replace(ch, " ")
+    s = s.replace("\u2212", "-").replace("\u2013", "-")
+    s = _CURRENCY.sub(" ", s)
+    s = re.sub(r"[,.]\s*-(?!\d)", "", s)          # '52 000,-' (whole crowns)
+    if re.search(r"\d[A-Za-z]|[A-Za-z]\d", s):    # OCR letter/digit confusion
         return None
-    if "," in s and "." in s:
-        if s.rfind(",") > s.rfind("."):
-            s = s.replace(".", "").replace(",", ".")
+    nums = _NUM.findall(s)
+    if len(nums) != 1:
+        return None
+    n = nums[0].strip().replace("'", "")
+    if " " in n:                                    # spaces only as thousands groups
+        if not re.fullmatch(r"-?\d{1,3}( \d{3})+([.,]\d{1,2})?", n):
+            return None
+        n = n.replace(" ", "")
+    if "," in n and "." in n:
+        if n.rfind(",") > n.rfind("."):
+            n = n.replace(".", "").replace(",", ".")
         else:
-            s = s.replace(",", "")
-    elif "," in s:
-        head, _, tail = s.rpartition(",")
-        s = head.replace(",", "") + ("." + tail if len(tail) <= 2 else tail)
-    elif s.count(".") > 1 or re.search(r"\.\d{3}$", s):
-        s = s.replace(".", "")
+            n = n.replace(",", "")
+    elif "," in n:
+        head, _, tail = n.rpartition(",")
+        n = head.replace(",", "") + ("." + tail if len(tail) <= 2 else tail)
+    elif n.count(".") > 1 or re.search(r"\.\d{3}$", n):
+        n = n.replace(".", "")
     try:
-        return round(float(s), 2)
+        return round(float(n), 2)
     except ValueError:
         return None
 

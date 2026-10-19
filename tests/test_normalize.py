@@ -1,0 +1,30 @@
+"""Deterministic normalisers: Czech formats and OCR garbage (no AWS)."""
+import pytest
+
+from extractor.normalize import norm_amount
+
+
+@pytest.mark.parametrize("raw,exp", [
+    ("52 000,00 Kč", 52000.0), ("52.000,00", 52000.0), ("CZK 52000", 52000.0),
+    ("52\u00a0000,00 CZK", 52000.0), ("52 000,- Kč", 52000.0), ("52000,-", 52000.0),
+    ("52,000.50", 52000.5), ("250000.00 CZK", 250000.0), ("12 345 678", 12345678.0),
+    ("52 000 Kč / měsíc", 52000.0), ("−1 245,00 CZK", -1245.0), ("-1 245,00", -1245.0),
+    (52000, 52000.0), (52000.004, 52000.0), ("1,5", 1.5),
+])
+def test_amount_formats(raw, exp):
+    assert norm_amount(raw) == exp
+
+
+@pytest.mark.parametrize("raw", ["1O000", "15200E.00", "2024: 52000", "52 00 0", "abc", "", None, True])
+def test_amount_garbage_is_none_not_a_guess(raw):
+    assert norm_amount(raw) is None
+
+
+def test_unparseable_ocr_amount_is_manual_review_not_llm_only(raw03):
+    from extractor.evaluate import evaluate_package
+    from extractor.rules_engine import load_rules
+    res = evaluate_package(raw03, load_rules(), run_date="2026-10-19")
+    f = next(d for d in res["documents"] if d["doc_type"] == "contract")["fields"]["declared_monthly_income"]
+    assert f["textract"] == "15200E.00"
+    assert f["outcome"] == "ocr_unparseable" and f["status"] == "manual_review"
+    assert f["normalized"] == 52000.0

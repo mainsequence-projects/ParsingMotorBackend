@@ -39,6 +39,11 @@ def reconcile_fields(doc_type: str, textract: dict, bedrock: dict, rules: Rules)
         elif agree:
             outcome = "agree_high_conf" if conf >= p["pass_conf"] else "agree_low_conf"
             chosen_raw, chosen_norm = (t_raw, t_norm) if t_raw not in (None, "") else (b_raw, b_norm)
+        elif t_norm is None and t_raw not in (None, "") and b_norm is not None:
+            # OCR printed something the strict normaliser cannot parse ('15200E.00'):
+            # that is a disagreement, not an LLM-only field.
+            outcome = "ocr_unparseable" if "ocr_unparseable" in rules.rule(RULE_ID)["severity"] else "disagree"
+            chosen_raw, chosen_norm = b_raw, b_norm
         elif t_norm is None:
             outcome, chosen_raw, chosen_norm = "llm_only", b_raw, b_norm
         elif b_norm is None:

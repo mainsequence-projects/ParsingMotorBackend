@@ -25,6 +25,7 @@ rules:
       ocr_only_high_conf: warning
       ocr_only_low_conf: manual_review
       disagree: manual_review
+      ocr_unparseable: manual_review   # OCR leyó algo no parseable (p. ej. '15200E.00'): no es "solo LLM"
       both_missing: missing
 
   - id: RC_VALID
