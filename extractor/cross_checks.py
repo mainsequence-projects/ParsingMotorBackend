@@ -182,6 +182,10 @@ def completeness(docs: list[dict], rules: Rules) -> tuple[list[str], list[str], 
                 break
     if not required:
         required = list(rules.params("COMPLETENESS")["default_required"])
+    # The contract defines the package: without it there is nothing to check against.
+    for t in reversed(rules.params("COMPLETENESS").get("always_required") or []):
+        if t not in required:
+            required.insert(0, t)
     present = {d["doc_type"] for d in docs}
     return required, [c for c in required if c not in present], source
 
@@ -234,6 +238,7 @@ def recommended_next_step(rules: Rules, checks, field_statuses, missing, gaps) -
 
 
 NICE = {
+    "contract": "the signed loan contract (it defines which documents we need)",
     "id_card": "a copy of your national ID card",
     "bank_statement": "a recent bank statement (last 3 months)",
     "payslip": "your latest payslip",

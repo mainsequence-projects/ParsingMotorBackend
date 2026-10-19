@@ -169,9 +169,10 @@ rules:
     scope: package
     check: required_documents_present
     description:
-      es: "Están todos los documentos que exige el contrato (o la lista por defecto si el contrato no la trae)."
-      en: "All documents required by the contract are present (or the default list if the contract has none)."
+      es: "Están el contrato y todos los documentos que exige (o la lista por defecto si el contrato no la trae)."
+      en: "The contract and every document it requires are present (or the default list if the contract has none)."
     params:
+      always_required: [contract]   # sin contrato no hay lista de requisitos: siempre se pide
       default_required: [id_card, bank_statement, payslip, proof_of_address]
     severity:
       complete: passed
