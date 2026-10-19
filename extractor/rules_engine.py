@@ -39,6 +39,10 @@ REQUIRED_OUTCOMES = {
 OPTIONAL_OUTCOMES = {
     "CONTRACT_SINGLE": {"single", "multiple"},
     "MODEL_PRIMARY": {"primary", "fallback"},
+    "XDOC_EMPLOYER": {"consistent", "inconsistent"},
+    "DOC_RECENT": {"recent", "stale", "undated"},
+    "TAX_CLEAR": {"clear", "has_arrears", "unclear"},
+    "XDOC_HOLDER_RC": {"consistent", "near_miss", "inconsistent"},
 }
 REQUIRED_PARAMS = {
     "FIELD_RECONCILE": {"pass_conf", "amount_ocr_wins_min_conf", "ocr_preferred_min_conf",

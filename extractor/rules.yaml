@@ -3,7 +3,7 @@
 # Allowed severities for checks: passed | discrepancy | warning | manual_review
 # (FIELD_RECONCILE may also map to "missing" because it is a field status).
 schema_version: 1
-label: "kb-rules-2026-10-19"
+label: "kb-rules-2026-10-19-v04"
 
 rules:
   - id: FIELD_RECONCILE
@@ -131,6 +131,7 @@ rules:
       en: "Holder name (statement / proof of address) matches the contract first+last name."
     params:
       near_miss_ratio: 0.85
+      holder_fields: [account_holder, full_name, employee_name]   # campos "nombre completo" por tipo
     severity:
       consistent: passed
       near_miss: warning
@@ -159,6 +160,8 @@ rules:
         - {check: income_contract_vs_payslip, a: contract.declared_monthly_income, b: payslip.net_income}
         - {check: income_contract_vs_statement, a: contract.declared_monthly_income, b: bank_statement.salary_credit}
         - {check: income_payslip_vs_statement, a: payslip.net_income, b: bank_statement.salary_credit}
+        - {check: income_contract_vs_employer, a: contract.declared_monthly_income, b: employer_confirmation.monthly_net_income}
+        - {check: income_payslip_vs_employer, a: payslip.net_income, b: employer_confirmation.monthly_net_income}
     severity:
       within_tolerance: passed
       out_of_tolerance: discrepancy
@@ -192,6 +195,10 @@ rules:
           bank_statement: ["bank statement", "account statement", "vypis z uctu", "vypis z bankovniho uctu"]
           payslip: ["payslip", "pay slip", "salary slip", "vyplatni listek", "vyplatni paska"]
           proof_of_address: ["proof of address", "utility bill", "doklad o bydlisti", "potvrzeni o bydlisti"]
+          employer_confirmation: ["employer confirmation", "confirmation of employment", "employment confirmation",
+                                   "potvrzeni o zamestnani", "potvrzeni o zamestnani a prijmu", "potvrzeni o vysi prijmu"]
+          tax_or_debt_certificate: ["tax clearance", "no debt certificate", "certificate of no tax arrears",
+                                    "potvrzeni o bezdluznosti", "potvrzeni o nedoplatcich", "bezdluznost"]
     severity:
       complete: passed
       incomplete: manual_review
@@ -244,6 +251,64 @@ rules:
     severity:
       none: passed
       present: warning
+
+  - id: XDOC_EMPLOYER
+    scope: package
+    check: employer_consistent
+    description:
+      es: "El empleador de la nómina coincide con el de la confirmación de empleo (texto sin diacríticos)."
+      en: "Employer name on the payslip matches the employer confirmation (diacritics-insensitive)."
+    params:
+      similarity: 0.85
+    severity:
+      consistent: passed
+      inconsistent: discrepancy
+
+  - id: DOC_RECENT
+    scope: package
+    description:
+      es: "Confirmación de empleo y certificado de sin deudas emitidos hace como máximo N días (por defecto 30)."
+      en: "Employer confirmation and no-debt certificate issued within the last N days (default 30)."
+    params:
+      max_age_days: 30
+      fields:
+        - {check: employer_confirmation_recent, doc_type: employer_confirmation, field: issue_date}
+        - {check: tax_certificate_recent, doc_type: tax_or_debt_certificate, field: issue_date}
+    severity:
+      recent: passed
+      stale: discrepancy
+      undated: manual_review
+
+  - id: TAX_CLEAR
+    scope: document
+    check: no_tax_arrears
+    description:
+      es: "El certificado del Finanční úřad declara que no hay deudas fiscales."
+      en: "The tax office certificate states there are no tax arrears."
+    params:
+      # sin diacríticos y en minúsculas; se mira primero "clear" y luego "arrears"
+      clear_phrases: ["no arrears", "no tax arrears", "does not have any tax arrears", "without debt",
+                      "nema zadne", "zadne danove nedoplatky", "zadne nedoplatky", "bez nedoplatku",
+                      "nevykazuje nedoplatky", "bez dluhu"]
+      arrears_phrases: ["arrears", "nedoplatek", "nedoplatky", "dluh", "debt"]
+    severity:
+      clear: passed
+      has_arrears: discrepancy
+      unclear: manual_review
+
+  - id: XDOC_HOLDER_RC
+    scope: package
+    check: certificate_holder_matches_id
+    description:
+      es: "El titular del certificado de sin deudas (nombre y RČ) coincide con el DNI / contrato."
+      en: "No-debt certificate holder (name and birth number) matches the ID / contract."
+    params:
+      near_miss_ratio: 0.85
+    severity:
+      consistent: passed
+      near_miss: warning
+      inconsistent: discrepancy
+
 
 next_step:
   description:

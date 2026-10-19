@@ -138,7 +138,8 @@ class Evaluation(_Open):
     recommended_next_step: str = Field(..., examples=[
         "approve_ready", "spot_check_warnings", "manual_review_extraction",
         "request_missing_documents", "manual_review_discrepancy"])
-    draft_client_message: Optional[str] = Field(None, description="email draft to the client; null if nothing to ask")
+    draft_client_message: Optional[str] = Field(None, description="English email draft (compat); null if nothing to ask")
+    draft_client_messages: Optional[Dict[str, str]] = Field(None, description='{"cs": "...", "en": "..."}' )
 
 
 class InputRef(_Open):

@@ -13,6 +13,8 @@ SYSTEM = (
     "Never invent values. Never convert or recalculate amounts — copy the printed figure."
 )
 MAX_BEDROCK_PAGES = 6  # cost guard
+# codes the contract can require (every known type except the contract itself and 'other')
+_DOC_CODES = tuple(t for t in SCHEMAS if t not in ("contract", "other"))
 
 
 def _field_defs(doc_type: str) -> dict:
@@ -52,7 +54,7 @@ def _bedrock_for_doc(doc: dict):
     hint = {}
     for name, meta in fields.items():
         if meta.get("type") == "doc_list":
-            v = ["id_card", "bank_statement", "payslip", "proof_of_address"]
+            v = list(_DOC_CODES)
         elif meta.get("type") == "amount":
             v = 0.0
         else:
@@ -70,8 +72,8 @@ def _bedrock_for_doc(doc: dict):
         "next to that label, never the loan amount.\n"
         "- birth_number (rodne cislo) digits with optional slash, exactly as printed.\n"
         "- Copy names exactly as printed, including typos. Do not correct spelling.\n"
-        "- For required_documents, map free text to the codes: id_card, bank_statement, payslip, "
-        "proof_of_address. Only include those listed as required.\n"
+        f"- For required_documents, map free text to the codes: {', '.join(_DOC_CODES)}. "
+        "Only include those listed as required.\n"
         "- Do not invent. Missing => null (or [] for lists)."
     )
     data, model, meta = converse_json(prompt, images=[p["png"] for p in pages], system=SYSTEM,

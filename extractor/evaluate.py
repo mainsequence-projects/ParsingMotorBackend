@@ -8,7 +8,7 @@ import copy
 
 from .config import SCHEMAS
 from .cross_checks import (
-    completeness, completeness_checks, document_checks, draft_client_message, model_checks, package_checks,
+    completeness, completeness_checks, document_checks, draft_client_message, draft_client_messages, model_checks, package_checks,
     page_gaps, recommended_next_step,
 )
 from .normalize import normalize
@@ -117,4 +117,5 @@ def evaluate_package(raw_docs: list[dict], rules: Rules, *, field_overrides=(), 
         "fields_auto_validated_pct": round(100 * auto / n, 1),
         "recommended_next_step": recommended_next_step(rules, checks, statuses, missing, gaps),
         "draft_client_message": draft_client_message(missing, gaps, checks, client),
+        "draft_client_messages": draft_client_messages(missing, gaps, checks, client),
     }

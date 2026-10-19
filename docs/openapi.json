@@ -1681,7 +1681,22 @@
               }
             ],
             "title": "Draft Client Message",
-            "description": "email draft to the client; null if nothing to ask"
+            "description": "English email draft (compat); null if nothing to ask"
+          },
+          "draft_client_messages": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Draft Client Messages",
+            "description": "{\"cs\": \"...\", \"en\": \"...\"}"
           },
           "run_id": {
             "type": "string",
@@ -2359,7 +2374,22 @@
               }
             ],
             "title": "Draft Client Message",
-            "description": "email draft to the client; null if nothing to ask"
+            "description": "English email draft (compat); null if nothing to ask"
+          },
+          "draft_client_messages": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Draft Client Messages",
+            "description": "{\"cs\": \"...\", \"en\": \"...\"}"
           },
           "run_id": {
             "type": "string",

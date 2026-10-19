@@ -33,7 +33,11 @@ PROMPT = (
     '  "rotation": degrees clockwise (0, 90, 180 or 270) the image must be rotated to be upright.\n'
     "Hints: contracts mention 'smlouva'/'contract' and loan amounts; id cards show photo fields / "
     "'obcansky prukaz' / document number; bank statements show IBAN and balances; payslips show "
-    "employer / net pay; utility bills are proof_of_address; anything else (insurance, letters) is other."
+    "employer / net pay for one month; 'potvrzeni o zamestnani' / employer confirmation of employment "
+    "and income (position, start date, average income, signed by HR) is employer_confirmation; "
+    "'potvrzeni o bezdluznosti' / tax office (Financni urad) certificate about tax arrears is "
+    "tax_or_debt_certificate; utility bills are proof_of_address; anything else (insurance, "
+    "valuations, letters) is other."
 )
 
 

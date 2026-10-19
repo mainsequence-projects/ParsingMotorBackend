@@ -40,6 +40,9 @@ def document_checks(doc: dict, rules: Rules, run_date: str | None = None) -> lis
                 detail=f"field={bd['normalized']} encoded={info['birth_date']}",
                 page=bd.get("page"), doc_type=dt,
                 evidence=[_ev(doc, "birth_date"), _ev(doc, "birth_number")]))
+    st = fields.get("arrears_status") or {}
+    if dt == "tax_or_debt_certificate" and "TAX_CLEAR" in rules.rules:
+        checks.append(_tax_clear(doc, st, rules))
     loan, decl = fields.get("loan_amount") or {}, fields.get("declared_monthly_income") or {}
     if loan.get("normalized") is not None and decl.get("normalized") is not None:
         eq = loan["normalized"] == decl["normalized"]
@@ -50,7 +53,115 @@ def document_checks(doc: dict, rules: Rules, run_date: str | None = None) -> lis
     return checks
 
 
+def _plain(s) -> str:
+    import re
+    from .normalize import strip_diacritics
+    return re.sub(r"\s+", " ", strip_diacritics(str(s or "")).lower()).strip()
+
+
+def _tax_clear(doc, f, rules):
+    p = rules.params("TAX_CLEAR")
+    # read both engines: a "clear" verdict needs the printed text to say so
+    texts = [_plain(x) for x in (f.get("value"), f.get("textract"), f.get("bedrock")) if x]
+    if not texts:
+        outcome = "unclear"
+    elif any(any(c in t for c in p.get("clear_phrases", [])) for t in texts) and not any(
+            any(a in t for a in p.get("arrears_phrases", [])) and
+            not any(c in t for c in p.get("clear_phrases", [])) for t in texts):
+        outcome = "clear"
+    elif any(any(a in t for a in p.get("arrears_phrases", [])) for t in texts):
+        outcome = "has_arrears"
+    else:
+        outcome = "unclear"
+    return rules.check("TAX_CLEAR", outcome, detail=f"status={f.get('value')!r}", page=f.get("page"),
+                       doc_type=doc["doc_type"], evidence=[_ev(doc, "arrears_status")])
+
+
 # ---------------- package ----------------
+_LEGAL_FORMS = (" s.r.o.", " s. r. o.", " sro", " a.s.", " a. s.", " as", " spol.", " k.s.", " v.o.s.")
+
+
+def _company(v) -> str:
+    import re
+    t = " " + _plain(v)
+    for lf in _LEGAL_FORMS:
+        t = t.replace(lf, " ")
+    return re.sub(r"[^a-z0-9]+", "", t)
+
+
+def _employer_consistency(docs, rules):
+    items = [(d, d["fields"]["employer"]) for d in docs
+             if (d["fields"].get("employer") or {}).get("value")]
+    if len(items) < 2:
+        return None
+    vals = [_company(f["value"]) for _, f in items]
+    thr = rules.params("XDOC_EMPLOYER").get("similarity", 0.85)
+    worst = min(similarity(vals[0], v) for v in vals[1:])
+    return rules.check("XDOC_EMPLOYER", "consistent" if worst >= thr else "inconsistent",
+                       detail=f"values={[f['value'] for _, f in items]} min_similarity={worst:.2f}",
+                       page=items[0][1].get("page"), evidence=[_ev(d, "employer") for d, _ in items])
+
+
+def _recency(docs, rules, run_date):
+    from datetime import date as _d
+    p = rules.params("DOC_RECENT")
+    _, cdate = _first(docs, "contract", "contract_date")
+    ref = (cdate or {}).get("normalized") or run_date or _d.today().isoformat()
+    out = []
+    for spec in p.get("fields") or []:
+        max_age = int(spec.get("max_age_days", p.get("max_age_days", 30)))
+        for d in docs:
+            if d["doc_type"] != spec["doc_type"]:
+                continue
+            f = d["fields"].get(spec["field"]) or {}
+            if not f.get("normalized"):
+                outcome, detail = "undated", "issue date not read"
+            else:
+                age = (_d.fromisoformat(ref[:10]) - _d.fromisoformat(str(f["normalized"])[:10])).days
+                # issued after the contract date is fine (documents often follow the signature)
+                outcome = "recent" if age <= max_age else "stale"
+                detail = f"issued={f['normalized']} ref={ref} age_days={age} max={max_age}"
+            out.append(rules.check("DOC_RECENT", outcome, check=spec["check"], doc_type=d["doc_type"],
+                                   detail=detail, page=f.get("page"), evidence=[_ev(d, spec["field"])]))
+    return out
+
+
+def _holder_matches_id(docs, rules):
+    out = []
+    idd, ifn = _first(docs, "id_card", "first_name")
+    _, iln = _first(docs, "id_card", "last_name")
+    _, irc = _first(docs, "id_card", "birth_number")
+    if not idd:                                   # no ID: fall back to the contract
+        idd, ifn = _first(docs, "contract", "first_name")
+        _, iln = _first(docs, "contract", "last_name")
+        _, irc = _first(docs, "contract", "birth_number")
+    if not idd or not ifn or not iln:
+        return out
+    ref = (ifn["normalized"] or "") + (iln["normalized"] or "")
+    near = rules.params("XDOC_HOLDER_RC").get("near_miss_ratio", 0.85)
+    for d in docs:
+        if d["doc_type"] != "tax_or_debt_certificate":
+            continue
+        hn = d["fields"].get("holder_name") or {}
+        rc = d["fields"].get("birth_number") or {}
+        if not hn.get("normalized"):
+            continue
+        name_ok = hn["normalized"] == ref
+        rc_ok = (not rc.get("normalized") or not irc or str(rc["normalized"]) == str(irc["normalized"]))
+        if name_ok and rc_ok:
+            outcome = "consistent"
+        elif rc_ok and similarity(hn["normalized"], ref) >= near:
+            outcome = "near_miss"
+        else:
+            outcome = "inconsistent"
+        out.append(rules.check(
+            "XDOC_HOLDER_RC", outcome, doc_type=d["doc_type"],
+            detail=f"holder={hn['normalized']} rc={rc.get('normalized')} vs {idd['doc_type']} {ref} rc={(irc or {}).get('normalized')}",
+            page=hn.get("page"),
+            evidence=[_ev(d, "holder_name"), _ev(d, "birth_number"), _ev(idd, "first_name"),
+                      _ev(idd, "last_name"), _ev(idd, "birth_number")]))
+    return out
+
 def _name_consistency(rules, rule_id, docs, field):
     items = [(d, d["fields"][field]) for d in docs
              if (d["fields"].get(field) or {}).get("normalized")]
@@ -103,8 +214,9 @@ def package_checks(docs: list[dict], rules: Rules, run_date: str | None = None) 
     if cd and cfn and cln:
         ref = (cfn["normalized"] or "") + (cln["normalized"] or "")
         near = rules.params("XDOC_FULL_NAME")["near_miss_ratio"]
+        holder_fields = rules.params("XDOC_FULL_NAME").get("holder_fields") or ["account_holder", "full_name"]
         for d in docs:
-            for fld in ("account_holder", "full_name"):
+            for fld in holder_fields:
                 f = d["fields"].get(fld) or {}
                 if not f.get("normalized"):
                     continue
@@ -145,6 +257,15 @@ def package_checks(docs: list[dict], rules: Rules, run_date: str | None = None) 
                 check=pair["check"],
                 detail=f"{a['normalized']} vs {b['normalized']} (diff={diff:.2%}, tol={ip['tolerance']:.0%})",
                 page=a.get("page"), evidence=[_ev(da, fa), _ev(db, fb)]))
+
+    if "XDOC_EMPLOYER" in rules.rules:
+        c = _employer_consistency(docs, rules)
+        if c:
+            checks.append(c)
+    if "DOC_RECENT" in rules.rules:
+        checks.extend(_recency(docs, rules, run_date))
+    if "XDOC_HOLDER_RC" in rules.rules:
+        checks.extend(_holder_matches_id(docs, rules))
 
     # loan amount present
     for d in docs:
@@ -260,44 +381,117 @@ def recommended_next_step(rules: Rules, checks, field_statuses, missing, gaps) -
 
 
 NICE = {
-    "contract": "the signed loan contract (it defines which documents we need)",
-    "id_card": "a copy of your national ID card",
-    "bank_statement": "a recent bank statement (last 3 months)",
-    "payslip": "your latest payslip",
-    "proof_of_address": "a proof of address (utility bill, max 3 months old)",
+    "en": {
+        "contract": "the signed loan contract (it defines which documents we need)",
+        "id_card": "a copy of your national ID card (občanský průkaz)",
+        "bank_statement": "a recent bank statement for the last 3 months (výpis z účtu)",
+        "payslip": "your latest payslip (výplatní lístek)",
+        "proof_of_address": "a proof of address (utility bill, max 3 months old)",
+        "employer_confirmation": "an employer confirmation of employment and income (potvrzení o zaměstnání a příjmu), max 30 days old",
+        "tax_or_debt_certificate": "a certificate of no tax arrears from the tax office (potvrzení o bezdlužnosti), max 30 days old",
+    },
+    "cs": {
+        "contract": "podepsanou úvěrovou smlouvu (určuje, které dokumenty potřebujeme)",
+        "id_card": "kopii občanského průkazu",
+        "bank_statement": "aktuální výpis z účtu za poslední 3 měsíce",
+        "payslip": "nejnovější výplatní lístek",
+        "proof_of_address": "doklad o bydlišti (faktura za energie, max. 3 měsíce starý)",
+        "employer_confirmation": "potvrzení o zaměstnání a výši příjmu (max. 30 dnů staré)",
+        "tax_or_debt_certificate": "potvrzení o bezdlužnosti od Finančního úřadu (max. 30 dnů staré)",
+    },
+}
+
+_DOC_LABEL = {
+    "en": {"bank_statement": "bank statement", "payslip": "payslip", "id_card": "ID card",
+           "proof_of_address": "proof of address", "employer_confirmation": "employer confirmation",
+           "tax_or_debt_certificate": "tax clearance certificate", "contract": "contract"},
+    "cs": {"bank_statement": "výpis z účtu", "payslip": "výplatní lístek", "id_card": "občanský průkaz",
+           "proof_of_address": "doklad o bydlišti", "employer_confirmation": "potvrzení o zaměstnání",
+           "tax_or_debt_certificate": "potvrzení o bezdlužnosti", "contract": "smlouva"},
 }
 
 
+def _problem_lines(lang, said_rules, problems):
+    """One bullet per rule_id, bilingual templates. said_rules is mutated."""
+    out = []
+    for c in problems:
+        rid = c["rule_id"]
+        if rid in said_rules:
+            continue
+        said_rules.add(rid)
+        if rid == "XDOC_INCOME":
+            out.append({"en": "The income figures on your documents do not match. Please confirm your "
+                              "monthly net income or send an updated payslip / employer confirmation.",
+                        "cs": "Údaje o příjmu na Vašich dokumentech se neshodují. Prosíme o potvrzení "
+                              "měsíčního čistého příjmu nebo zaslání aktualizovaného výplatního lístku / "
+                              "potvrzení o zaměstnání."}[lang])
+        elif rid == "XDOC_EMPLOYER":
+            out.append({"en": "The employer name on your payslip does not match the employer confirmation. "
+                              "Please send matching documents.",
+                        "cs": "Název zaměstnavatele na výplatním lístku se neshoduje s potvrzením o "
+                              "zaměstnání. Prosíme o zaslání odpovídajících dokladů."}[lang])
+        elif rid in ("XDOC_LAST_NAME", "XDOC_FIRST_NAME", "XDOC_FULL_NAME", "XDOC_HOLDER_RC"):
+            out.append({"en": "Your name (or birth number) does not match across documents. Please confirm "
+                              "the correct spelling and re-send a clear copy of your ID.",
+                        "cs": "Vaše jméno (nebo rodné číslo) se na dokumentech neshoduje. Prosíme o "
+                              "potvrzení správného zápisu a zaslání čitelné kopie občanského průkazu."}[lang])
+        elif rid in ("RC_VALID", "XDOC_BIRTH_NUMBER", "RC_BIRTHDATE_MATCH"):
+            out.append({"en": "The birth number (rodné číslo) on your documents appears invalid or "
+                              "inconsistent. Please re-send a clear copy of your ID.",
+                        "cs": "Rodné číslo na Vašich dokumentech se jeví neplatné nebo nekonzistentní. "
+                              "Prosíme o zaslání čitelné kopie občanského průkazu."}[lang])
+        elif rid == "ID_NOT_EXPIRED":
+            out.append({"en": "Your ID card appears to be expired. Please send a valid ID.",
+                        "cs": "Váš občanský průkaz je zřejmě propadlý. Prosíme o zaslání platného dokladu."}[lang])
+        elif rid == "DOC_RECENT":
+            out.append({"en": "One of the required certificates is older than 30 days. Please send a "
+                              "freshly issued employer confirmation and/or tax clearance certificate.",
+                        "cs": "Jeden z požadovaných dokladů je starší než 30 dnů. Prosíme o aktuální "
+                              "potvrzení o zaměstnání a/nebo potvrzení o bezdlužnosti."}[lang])
+        elif rid == "TAX_CLEAR":
+            out.append({"en": "The tax office certificate indicates outstanding arrears. Please resolve "
+                              "them and send an updated certificate of no tax arrears.",
+                        "cs": "Potvrzení Finančního úřadu uvádí nedoplatky. Prosíme o jejich vyřešení a "
+                              "zaslání aktualizovaného potvrzení o bezdlužnosti."}[lang])
+    return out
+
+
+def _draft(lang, missing, gaps, problems, client_name) -> str:
+    greet = {"en": f"Dear {client_name or 'Customer'},",
+             "cs": f"Vážená/ý {client_name or 'kliente/klientko'},"}[lang]
+    intro = {"en": "We are reviewing your loan application and need your help to complete the file:",
+             "cs": "Posuzujeme Vaši žádost o úvěr a potřebujeme Vaši součinnost k doplnění spisu:"}[lang]
+    lines = [greet, "", intro]
+    for m in missing:
+        ask = {"en": f"- Please send {NICE['en'].get(m, m)}.",
+               "cs": f"- Prosíme o zaslání: {NICE['cs'].get(m, m)}."}[lang]
+        lines.append(ask)
+    for g in gaps:
+        label = _DOC_LABEL[lang].get(g["doc_type"], g["doc_type"].replace("_", " "))
+        pages = ", ".join(str(n) for n in g["missing_page_numbers"])
+        lines.append({"en": f"- Your {label} is incomplete: page(s) {pages} of {g['page_count']} "
+                            "are missing. Please send the complete document.",
+                      "cs": f"- Váš dokument ({label}) je neúplný: chybí strana/strany {pages} "
+                            f"z {g['page_count']}. Prosíme o zaslání kompletního dokladu."}[lang])
+    lines.extend(_problem_lines(lang, set(), problems))
+    sign = {"en": ["", "Kind regards,", "Komerční banka – Credit Operations"],
+            "cs": ["", "S pozdravem,", "Komerční banka – Úvěrové operace"]}[lang]
+    return "\n".join(lines + sign)
+
+
 def draft_client_message(missing, gaps, checks, client_name) -> str | None:
+    """Back-compat: English body (same string as before for existing tests / demos)."""
+    msgs = draft_client_messages(missing, gaps, checks, client_name)
+    return None if msgs is None else msgs["en"]
+
+
+def draft_client_messages(missing, gaps, checks, client_name) -> dict | None:
+    """Bilingual drafts for Jose's UI. None when there is nothing to ask the client."""
     problems = [c for c in checks if c["status"] == "discrepancy"]
     if not missing and not gaps and not problems:
         return None
-    lines = [f"Dear {client_name or 'Customer'},", "",
-             "We are reviewing your loan application and need your help to complete the file:"]
-    for m in missing:
-        lines.append(f"- Please send {NICE.get(m, m)}.")
-    for g in gaps:
-        pages = ", ".join(str(n) for n in g["missing_page_numbers"])
-        lines.append(f"- Your {g['doc_type'].replace('_', ' ')} is incomplete: page(s) {pages} of "
-                     f"{g['page_count']} are missing. Please send the complete document.")
-    said = set()
-    for c in problems:
-        rid = c["rule_id"]
-        if rid in said:
-            continue
-        said.add(rid)
-        if rid == "XDOC_INCOME":
-            lines.append("- The income figures on your documents do not match. Please confirm your "
-                         "monthly net income or send an updated payslip.")
-        elif rid in ("XDOC_LAST_NAME", "XDOC_FIRST_NAME", "XDOC_FULL_NAME"):
-            lines.append("- Your name does not match across documents. Please confirm the correct spelling.")
-        elif rid in ("RC_VALID", "XDOC_BIRTH_NUMBER", "RC_BIRTHDATE_MATCH"):
-            lines.append("- The birth number (rodné číslo) on your documents appears invalid or "
-                         "inconsistent. Please re-send a clear copy of your ID.")
-        elif rid == "ID_NOT_EXPIRED":
-            lines.append("- Your ID card appears to be expired. Please send a valid ID.")
-    lines += ["", "Kind regards,", "Komerční banka – Credit Operations"]
-    return "\n".join(lines)
+    return {"en": _draft("en", missing, gaps, problems, client_name),
+            "cs": _draft("cs", missing, gaps, problems, client_name)}
 
 
 def model_checks(docs: list[dict], raw_docs: list[dict], rules: Rules) -> list[dict]:

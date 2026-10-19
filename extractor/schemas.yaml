@@ -19,7 +19,8 @@ doc_types:
         textract: lines   # 2º lector determinista: líneas OCR + sinónimos de rules.yaml (COMPLETENESS)
         description: >-
           List of documents the client must submit according to the contract, mapped to
-          codes: id_card, bank_statement, payslip, proof_of_address
+          codes: id_card, bank_statement, payslip, proof_of_address, employer_confirmation,
+          tax_or_debt_certificate
   id_card:
     description: Czech national identity card (obcansky prukaz)
     fields:
@@ -55,6 +56,31 @@ doc_types:
       address: {type: address, query: "What is the customer's address (supply address)?"}
       issuer: {type: text, query: "Who issued the document (company name)?"}
       issue_date: {type: date, query: "What is the issue date?"}
+  employer_confirmation:
+    description: >-
+      Employer confirmation of employment and income (potvrzeni o zamestnani a vysi prijmu),
+      signed by the employer's HR/payroll; states position, start date and average net income
+    fields:
+      employee_name: {type: name, query: "What is the employee's full name?"}
+      birth_number: {type: birth_number, query: "What is the employee's birth number (rodne cislo)?"}
+      employer: {type: text, query: "What is the employer's company name?"}
+      employer_ico: {type: id, query: "What is the employer's company ID (ICO)?"}
+      position: {type: text, query: "What is the employee's job position?"}
+      employment_start: {type: date, query: "Since what date is the employee employed (employment start date)?"}
+      contract_type: {type: text, query: "Is the employment for an indefinite or fixed period?"}
+      monthly_net_income: {type: amount, query: "What is the average monthly net income?"}
+      issue_date: {type: date, query: "What is the date this confirmation was issued?"}
+  tax_or_debt_certificate:
+    description: >-
+      Certificate of no tax arrears from the Czech tax office (potvrzeni o bezdluznosti,
+      Financni urad); states the holder, issue date and whether arrears exist
+    fields:
+      holder_name: {type: name, query: "What is the full name of the taxpayer the certificate is issued for?"}
+      birth_number: {type: birth_number, query: "What is the taxpayer's birth number (rodne cislo)?"}
+      tax_office: {type: text, query: "Which tax office issued the certificate?"}
+      certificate_number: {type: id, query: "What is the certificate reference number (cislo jednaci)?"}
+      issue_date: {type: date, query: "What is the date of issue of the certificate?"}
+      arrears_status: {type: text, query: "Does the certificate state that the taxpayer has any tax arrears?"}
   other:
     description: Anything else
     fields: {}
