@@ -299,8 +299,14 @@ def main(argv=None):
     ap.add_argument("--samples", default=str(ROOT / "samples"))
     ap.add_argument("--only", nargs="*", help="package id prefixes, e.g. 05 13")
     ap.add_argument("--reader-mode", default="independent_readers", choices=["single", "independent_readers"])
+    ap.add_argument("--catalog", help="JSON {document_type: description} overriding the Back Office "
+                                      "descriptions sent to the classifier (to test better ones)")
     ap.add_argument("-o", "--out")
     a = ap.parse_args(argv)
+    if a.catalog:
+        override = json.loads(Path(a.catalog).read_text(encoding="utf-8"))
+        for c in CATALOG:
+            c["description"] = override.get(c["document_type"], c["description"])
     if a.real and not a.budget:
         ap.error("--real needs --budget")
     import os
@@ -329,7 +335,8 @@ def main(argv=None):
         r = results[-1]
         print(f"{r['package_id']:<34} pages {r['pages_ok']}/{r['pages']}  grouping {'ok' if r['grouping_ok'] else 'NO'}"
               f"  fields {sum(x['ok'] for x in r['fields'])}/{len(r['fields'])}", file=sys.stderr)
-    out = {"mode": "mock" if a.mock else "real", "reader_mode": a.reader_mode, "summary": summarize(results),
+    out = {"mode": "mock" if a.mock else "real", "reader_mode": a.reader_mode, "catalog": a.catalog or "back_office",
+           "summary": summarize(results),
            "packages": results}
     if oracle:
         out["estimated_real_cost"] = estimate_usd(oracle.calls)
