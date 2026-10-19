@@ -1,8 +1,8 @@
 {
   "packages": 4,
-  "packages_fully_correct": 2,
+  "packages_fully_correct": 4,
   "field_accuracy": 1.0,
-  "check_accuracy": 0.938,
+  "check_accuracy": 1.0,
   "reports": [
     {
       "package": "01_clean",
@@ -14,8 +14,8 @@
         },
         "next_step": {
           "expected": "approve_ready",
-          "got": "manual_review_discrepancy",
-          "pass": false
+          "got": "spot_check_warnings",
+          "pass": true
         },
         "classified:contract": {
           "pass": true
@@ -59,7 +59,7 @@
           "pass": true
         }
       },
-      "ok": false,
+      "ok": true,
       "auto_validated_pct": 97.0,
       "combined_confidence": 0.97,
       "usage": {
@@ -82,8 +82,8 @@
         },
         "next_step": {
           "expected": "request_missing_documents",
-          "got": "manual_review_discrepancy",
-          "pass": false
+          "got": "request_missing_documents",
+          "pass": true
         },
         "classified:contract": {
           "pass": true
@@ -99,12 +99,12 @@
         }
       },
       "fields": {},
-      "ok": false,
+      "ok": true,
       "auto_validated_pct": 96.3,
       "combined_confidence": 0.963,
       "usage": {
         "input_tokens": 14439,
-        "output_tokens": 775,
+        "output_tokens": 781,
         "calls": 8
       }
     },
@@ -149,7 +149,7 @@
       "combined_confidence": 0.97,
       "usage": {
         "input_tokens": 18030,
-        "output_tokens": 978,
+        "output_tokens": 972,
         "calls": 10
       }
     },
@@ -197,7 +197,7 @@
       "combined_confidence": 0.939,
       "usage": {
         "input_tokens": 18030,
-        "output_tokens": 978,
+        "output_tokens": 943,
         "calls": 10
       }
     }

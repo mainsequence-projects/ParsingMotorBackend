@@ -1,0 +1,64 @@
+{
+  "budget_usd": 5.0,
+  "historical_estimate_usd": 2.3523,
+  "verification_run_usd": 0.0964,
+  "estimated_total_build_usd": 2.4487,
+  "remaining_under_cap_usd": 2.5513,
+  "per_package": {
+    "01_clean": {
+      "pages": 5,
+      "usd_estimate": 0.1205
+    },
+    "02_missing_payslip": {
+      "pages": 4,
+      "usd_measured": 0.0964
+    },
+    "03_amount_mismatch": {
+      "pages": 5,
+      "usd_estimate": 0.1205
+    },
+    "04_name_typo_invalid_rc": {
+      "pages": 5,
+      "usd_estimate": 0.1205
+    }
+  },
+  "pricing": {
+    "textract_queries_per_page_usd": 0.015,
+    "bedrock_per_MTok_usd": {
+      "claude-haiku-4-5": [
+        0.8,
+        4.0
+      ],
+      "claude-sonnet-4-5": [
+        3.0,
+        15.0
+      ],
+      "claude-sonnet-4-2025": [
+        3.0,
+        15.0
+      ],
+      "nova-lite": [
+        0.06,
+        0.24
+      ],
+      "nova-micro": [
+        0.035,
+        0.14
+      ],
+      "default": [
+        3.0,
+        15.0
+      ]
+    },
+    "note": "List-price estimates for eu-central-1 / eu.* CRIS profiles"
+  },
+  "constraints": {
+    "no_provisioned_resources": true,
+    "pay_per_call_only": [
+      "textract.analyze_document",
+      "bedrock.converse"
+    ],
+    "build_cap_usd": 5.0,
+    "account_hard_max_usd": 800
+  }
+}

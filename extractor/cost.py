@@ -40,6 +40,21 @@ _state = {
     "aborted": False,
 }
 
+def _load_historical():
+    """Count prior estimated spend toward the abort cap (session meter still tracks new calls)."""
+    try:
+        if LEDGER_PATH.exists():
+            data = json.loads(LEDGER_PATH.read_text())
+            hist = float(data.get("historical_estimate_usd") or 0.0)
+            if hist > 0 and not any(e.get("type") == "historical_seed" for e in _state["entries"]):
+                _state["total_usd"] += hist
+                _state["historical_estimate_usd"] = hist
+                _state["entries"].append({"type": "historical_seed", "usd": hist})
+    except Exception:
+        pass
+
+_load_historical()
+
 
 def _price_for(model_id: str) -> tuple[float, float]:
     mid = (model_id or "").lower()

@@ -3,7 +3,7 @@
   "engine_version": "0.1.0",
   "region": "eu-central-1",
   "bedrock_model": "eu.anthropic.claude-sonnet-4-5-20250929-v1:0",
-  "generated_at": "2026-10-19T10:54:52.222984+00:00",
+  "generated_at": "2026-10-19T10:56:08.875110+00:00",
   "documents": [
     {
       "doc_type": "contract",
@@ -11,21 +11,21 @@
       "page_start": 1,
       "page_end": 1,
       "classification_confidence": 0.99,
-      "classification_reason": "Document is titled 'ÚVĚROVÁ SMLOUVA / LOAN CONTRACT' and contains contract number, loan amount, and contract terms.",
+      "classification_reason": "Document is titled 'ÚVĚROVÁ SMLOUVA / LOAN CONTRACT' and contains loan amount, contract number, and contract date.",
       "fields": {
         "contract_number": {
           "value": "KB-2026-00421",
           "normalized": "KB202600421",
           "textract": "KB-2026-00421",
           "bedrock": "KB-2026-00421",
-          "confidence": 0.92,
+          "confidence": 0.94,
           "page": 1,
           "status": "passed",
           "bbox": {
-            "Width": 0.15887437760829926,
-            "Height": 0.010839687660336494,
-            "Left": 0.4048231840133667,
-            "Top": 0.13120333850383759
+            "Width": 0.15806794166564941,
+            "Height": 0.010839723981916904,
+            "Left": 0.4048232436180115,
+            "Top": 0.1312030702829361
           }
         },
         "first_name": {
@@ -37,10 +37,10 @@
           "page": 1,
           "status": "passed",
           "bbox": {
-            "Width": 0.04677524045109749,
-            "Height": 0.013120886869728565,
-            "Left": 0.40240418910980225,
-            "Top": 0.15801577270030975
+            "Width": 0.04677525535225868,
+            "Height": 0.013120898976922035,
+            "Left": 0.402404248714447,
+            "Top": 0.15801551938056946
           }
         },
         "last_name": {
@@ -48,14 +48,14 @@
           "normalized": "novakova",
           "textract": "Nováková",
           "bedrock": "Nováková",
-          "confidence": 0.95,
+          "confidence": 0.94,
           "page": 1,
           "status": "passed",
           "bbox": {
-            "Width": 0.10000200569629669,
-            "Height": 0.011409727856516838,
-            "Left": 0.4056304395198822,
-            "Top": 0.18482725322246552
+            "Width": 0.10000203549861908,
+            "Height": 0.011409755796194077,
+            "Left": 0.405630499124527,
+            "Top": 0.18482698500156403
           }
         },
         "birth_date": {
@@ -67,10 +67,10 @@
           "page": 1,
           "status": "passed",
           "bbox": {
-            "Width": 0.11532481014728546,
-            "Height": 0.01083928719162941,
-            "Left": 0.40563082695007324,
-            "Top": 0.21220938861370087
+            "Width": 0.11532483994960785,
+            "Height": 0.010839319787919521,
+            "Left": 0.405630886554718,
+            "Top": 0.21220912039279938
           }
         },
         "birth_number": {
@@ -82,10 +82,10 @@
           "page": 1,
           "status": "passed",
           "bbox": {
-            "Width": 0.13467995822429657,
-            "Height": 0.012550697661936283,
-            "Left": 0.40482473373413086,
-            "Top": 0.2384505569934845
+            "Width": 0.13468000292778015,
+            "Height": 0.012550737708806992,
+            "Left": 0.404824823141098,
+            "Top": 0.23845027387142181
           }
         },
         "address": {
@@ -93,14 +93,14 @@
           "normalized": "vinohradska 12 120 00 praha 2",
           "textract": "Vinohradská 12, 120 00 Praha 2",
           "bedrock": "Vinohradská 12, 120 00 Praha 2",
-          "confidence": 0.91,
+          "confidence": 0.9,
           "page": 1,
           "status": "passed",
           "bbox": {
-            "Width": 0.3322646915912628,
-            "Height": 0.01312185823917389,
-            "Left": 0.4040186405181885,
-            "Top": 0.2652614712715149
+            "Width": 0.3322647511959076,
+            "Height": 0.013121959753334522,
+            "Left": 0.40401872992515564,
+            "Top": 0.26526114344596863
           }
         },
         "loan_amount": {
@@ -108,30 +108,25 @@
           "normalized": 250000.0,
           "textract": "250000.00 CZK",
           "bedrock": 250000.0,
-          "confidence": 0.9,
+          "confidence": 0.84,
           "page": 1,
-          "status": "passed",
+          "status": "warning",
           "bbox": {
-            "Width": 0.15806728601455688,
-            "Height": 0.010839278809726238,
-            "Left": 0.40482550859451294,
-            "Top": 0.2926442623138428
+            "Width": 0.15726087987422943,
+            "Height": 0.011409785598516464,
+            "Left": 0.4048255980014801,
+            "Top": 0.292073518037796
           }
         },
         "declared_monthly_income": {
-          "value": "250000.00",
-          "normalized": 250000.0,
-          "textract": "250000.00",
+          "value": 52000.0,
+          "normalized": 52000.0,
+          "textract": "15200E.00",
           "bedrock": 52000.0,
-          "confidence": 0.84,
+          "confidence": 0.5,
           "page": 1,
           "status": "manual_review",
-          "bbox": {
-            "Width": 0.10988830029964447,
-            "Height": 0.010940255597233772,
-            "Left": 0.40487802028656006,
-            "Top": 0.2926770746707916
-          }
+          "bbox": null
         },
         "contract_date": {
           "value": "01.10.2026",
@@ -142,10 +137,10 @@
           "page": 1,
           "status": "passed",
           "bbox": {
-            "Width": 0.11613090336322784,
-            "Height": 0.01140948198735714,
-            "Left": 0.404826283454895,
-            "Top": 0.34626758098602295
+            "Width": 0.11613093316555023,
+            "Height": 0.010839062742888927,
+            "Left": 0.40482640266418457,
+            "Top": 0.34683775901794434
           }
         },
         "required_documents": {
@@ -324,7 +319,7 @@
       "page_start": 3,
       "page_end": 3,
       "classification_confidence": 1.0,
-      "classification_reason": "Document clearly shows IBAN, account holder, statement period, salary credit, closing balance, and recent transactions typical of a bank statement.",
+      "classification_reason": "Document clearly shows IBAN, account balance, statement period, and transaction history typical of a bank statement.",
       "fields": {
         "account_holder": {
           "value": "Jana Nováková",
@@ -663,13 +658,13 @@
     {
       "check": "income_contract_vs_payslip",
       "status": "discrepancy",
-      "detail": "250000.0 vs 38000.0 (diff=84.80%)",
+      "detail": "52000.0 vs 38000.0 (diff=26.92%)",
       "page": 1
     },
     {
       "check": "income_contract_vs_statement",
       "status": "discrepancy",
-      "detail": "250000.0 vs 38000.0 (diff=84.80%)",
+      "detail": "52000.0 vs 38000.0 (diff=26.92%)",
       "page": 1
     },
     {
@@ -691,7 +686,7 @@
   "draft_client_message": "Dear Jana Nováková,\n\nWe are reviewing your loan application and need your help to complete the file:\n- The income figures on your documents do not match. Please confirm your monthly net income or send an updated payslip.\n\nKind regards,\nKomerční banka – Credit Operations",
   "usage": {
     "input_tokens": 18030,
-    "output_tokens": 978,
+    "output_tokens": 972,
     "calls": 10
   },
   "pages_classified": [
@@ -700,7 +695,7 @@
       "page": 1,
       "doc_type": "contract",
       "confidence": 0.99,
-      "reason": "Document is titled 'ÚVĚROVÁ SMLOUVA / LOAN CONTRACT' and contains contract number, loan amount, and contract terms."
+      "reason": "Document is titled 'ÚVĚROVÁ SMLOUVA / LOAN CONTRACT' and contains loan amount, contract number, and contract date."
     },
     {
       "source_file": "package.pdf",
@@ -714,7 +709,7 @@
       "page": 3,
       "doc_type": "bank_statement",
       "confidence": 1.0,
-      "reason": "Document clearly shows IBAN, account holder, statement period, salary credit, closing balance, and recent transactions typical of a bank statement."
+      "reason": "Document clearly shows IBAN, account balance, statement period, and transaction history typical of a bank statement."
     },
     {
       "source_file": "package.pdf",
