@@ -3,7 +3,7 @@ import io
 from dataclasses import dataclass
 from pathlib import Path
 
-import fitz  # pymupdf
+import pymupdf as fitz
 from PIL import Image
 
 from .config import RENDER_DPI

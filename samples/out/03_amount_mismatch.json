@@ -3,14 +3,14 @@
   "engine_version": "0.1.0",
   "region": "eu-central-1",
   "bedrock_model": "eu.anthropic.claude-sonnet-4-5-20250929-v1:0",
-  "generated_at": "2026-10-19T10:53:48.205625+00:00",
+  "generated_at": "2026-10-19T10:54:52.222984+00:00",
   "documents": [
     {
       "doc_type": "contract",
       "source_file": "package.pdf",
       "page_start": 1,
       "page_end": 1,
-      "classification_confidence": 1.0,
+      "classification_confidence": 0.99,
       "classification_reason": "Document is titled 'ÚVĚROVÁ SMLOUVA / LOAN CONTRACT' and contains contract number, loan amount, and contract terms.",
       "fields": {
         "contract_number": {
@@ -18,14 +18,14 @@
           "normalized": "KB202600421",
           "textract": "KB-2026-00421",
           "bedrock": "KB-2026-00421",
-          "confidence": 0.94,
+          "confidence": 0.92,
           "page": 1,
           "status": "passed",
           "bbox": {
-            "Width": 0.1580677181482315,
-            "Height": 0.010839688591659069,
-            "Left": 0.4048239588737488,
-            "Top": 0.1312030702829361
+            "Width": 0.15887437760829926,
+            "Height": 0.010839687660336494,
+            "Left": 0.4048231840133667,
+            "Top": 0.13120333850383759
           }
         },
         "first_name": {
@@ -37,10 +37,10 @@
           "page": 1,
           "status": "passed",
           "bbox": {
-            "Width": 0.04677518084645271,
-            "Height": 0.013120879419147968,
-            "Left": 0.40240493416786194,
-            "Top": 0.15801547467708588
+            "Width": 0.04677524045109749,
+            "Height": 0.013120886869728565,
+            "Left": 0.40240418910980225,
+            "Top": 0.15801577270030975
           }
         },
         "last_name": {
@@ -52,10 +52,10 @@
           "page": 1,
           "status": "passed",
           "bbox": {
-            "Width": 0.10080837458372116,
-            "Height": 0.01198019739240408,
-            "Left": 0.4056311547756195,
-            "Top": 0.184256449341774
+            "Width": 0.10000200569629669,
+            "Height": 0.011409727856516838,
+            "Left": 0.4056304395198822,
+            "Top": 0.18482725322246552
           }
         },
         "birth_date": {
@@ -67,10 +67,10 @@
           "page": 1,
           "status": "passed",
           "bbox": {
-            "Width": 0.11532469838857651,
-            "Height": 0.011409756727516651,
-            "Left": 0.40563151240348816,
-            "Top": 0.21163856983184814
+            "Width": 0.11532481014728546,
+            "Height": 0.01083928719162941,
+            "Left": 0.40563082695007324,
+            "Top": 0.21220938861370087
           }
         },
         "birth_number": {
@@ -82,10 +82,10 @@
           "page": 1,
           "status": "passed",
           "bbox": {
-            "Width": 0.13467982411384583,
-            "Height": 0.012550709769129753,
-            "Left": 0.4048254191875458,
-            "Top": 0.23845016956329346
+            "Width": 0.13467995822429657,
+            "Height": 0.012550697661936283,
+            "Left": 0.40482473373413086,
+            "Top": 0.2384505569934845
           }
         },
         "address": {
@@ -93,44 +93,44 @@
           "normalized": "vinohradska 12 120 00 praha 2",
           "textract": "Vinohradská 12, 120 00 Praha 2",
           "bedrock": "Vinohradská 12, 120 00 Praha 2",
+          "confidence": 0.91,
+          "page": 1,
+          "status": "passed",
+          "bbox": {
+            "Width": 0.3322646915912628,
+            "Height": 0.01312185823917389,
+            "Left": 0.4040186405181885,
+            "Top": 0.2652614712715149
+          }
+        },
+        "loan_amount": {
+          "value": "250000.00 CZK",
+          "normalized": 250000.0,
+          "textract": "250000.00 CZK",
+          "bedrock": 250000.0,
           "confidence": 0.9,
           "page": 1,
           "status": "passed",
           "bbox": {
-            "Width": 0.33226433396339417,
-            "Height": 0.013121908530592918,
-            "Left": 0.4040193259716034,
-            "Top": 0.2652610242366791
-          }
-        },
-        "loan_amount": {
-          "value": "250 000 CZK",
-          "normalized": 250000.0,
-          "textract": "250 000 CZK",
-          "bedrock": 250000.0,
-          "confidence": 0.89,
-          "page": 1,
-          "status": "warning",
-          "bbox": {
-            "Width": 0.13064731657505035,
-            "Height": 0.01083920057862997,
-            "Left": 0.40482616424560547,
-            "Top": 0.2926439344882965
+            "Width": 0.15806728601455688,
+            "Height": 0.010839278809726238,
+            "Left": 0.40482550859451294,
+            "Top": 0.2926442623138428
           }
         },
         "declared_monthly_income": {
-          "value": 32000.0,
-          "normalized": 32000.0,
-          "textract": "5250",
-          "bedrock": 32000.0,
-          "confidence": 0.2,
+          "value": "250000.00",
+          "normalized": 250000.0,
+          "textract": "250000.00",
+          "bedrock": 52000.0,
+          "confidence": 0.84,
           "page": 1,
           "status": "manual_review",
           "bbox": {
-            "Width": 0.037702351808547974,
-            "Height": 0.011197098530828953,
-            "Left": 0.4053027033805847,
-            "Top": 0.2926939129829407
+            "Width": 0.10988830029964447,
+            "Height": 0.010940255597233772,
+            "Left": 0.40487802028656006,
+            "Top": 0.2926770746707916
           }
         },
         "contract_date": {
@@ -142,10 +142,10 @@
           "page": 1,
           "status": "passed",
           "bbox": {
-            "Width": 0.11613080650568008,
-            "Height": 0.011409502476453781,
-            "Left": 0.40482690930366516,
-            "Top": 0.34626713395118713
+            "Width": 0.11613090336322784,
+            "Height": 0.01140948198735714,
+            "Left": 0.404826283454895,
+            "Top": 0.34626758098602295
           }
         },
         "required_documents": {
@@ -324,7 +324,7 @@
       "page_start": 3,
       "page_end": 3,
       "classification_confidence": 1.0,
-      "classification_reason": "Document clearly shows IBAN, account balance, statement period, and transaction history typical of a bank statement.",
+      "classification_reason": "Document clearly shows IBAN, account holder, statement period, salary credit, closing balance, and recent transactions typical of a bank statement.",
       "fields": {
         "account_holder": {
           "value": "Jana Nováková",
@@ -335,10 +335,10 @@
           "page": 3,
           "status": "passed",
           "bbox": {
-            "Width": 0.15484194457530975,
-            "Height": 0.013692490756511688,
-            "Left": 0.4024100601673126,
-            "Top": 0.13063307106494904
+            "Width": 0.15484188497066498,
+            "Height": 0.013692285865545273,
+            "Left": 0.4024094343185425,
+            "Top": 0.13063375651836395
           }
         },
         "iban": {
@@ -350,10 +350,10 @@
           "page": 3,
           "status": "warning",
           "bbox": {
-            "Width": 0.3411363959312439,
-            "Height": 0.01084176916629076,
-            "Left": 0.4048296809196472,
-            "Top": 0.15801548957824707
+            "Width": 0.3411363363265991,
+            "Height": 0.010841360315680504,
+            "Left": 0.4048290550708771,
+            "Top": 0.1580161303281784
           }
         },
         "period_from": {
@@ -365,10 +365,10 @@
           "page": 3,
           "status": "passed",
           "bbox": {
-            "Width": 0.11613128334283829,
-            "Height": 0.010839862748980522,
-            "Left": 0.4048299193382263,
-            "Top": 0.18539784848690033
+            "Width": 0.11613123118877411,
+            "Height": 0.010839715600013733,
+            "Left": 0.4048292934894562,
+            "Top": 0.18539844453334808
           }
         },
         "period_to": {
@@ -380,40 +380,40 @@
           "page": 3,
           "status": "passed",
           "bbox": {
-            "Width": 0.11613120138645172,
-            "Height": 0.010839876718819141,
-            "Left": 0.40483012795448303,
-            "Top": 0.21220971643924713
+            "Width": 0.11613116413354874,
+            "Height": 0.010839734226465225,
+            "Left": 0.4048295319080353,
+            "Top": 0.2122102677822113
           }
         },
         "salary_credit": {
-          "value": "38 000.00 CZK",
+          "value": "38000.00 CZK",
           "normalized": 38000.0,
-          "textract": "38 000.00 CZK",
+          "textract": "38000.00 CZK",
           "bedrock": 38000.0,
-          "confidence": 0.88,
+          "confidence": 0.87,
           "page": 3,
           "status": "warning",
           "bbox": {
-            "Width": 0.15080919861793518,
-            "Height": 0.011410677805542946,
-            "Left": 0.40483033657073975,
-            "Top": 0.23845107853412628
+            "Width": 0.14435741305351257,
+            "Height": 0.010839984752237797,
+            "Left": 0.4048297703266144,
+            "Top": 0.23902204632759094
           }
         },
         "closing_balance": {
-          "value": "87 450.55 CZK",
+          "value": "87450.55 CZK",
           "normalized": 87450.55,
-          "textract": "87 450.55 CZK",
+          "textract": "87450.55 CZK",
           "bedrock": 87450.55,
-          "confidence": 0.94,
+          "confidence": 0.93,
           "page": 3,
           "status": "passed",
           "bbox": {
-            "Width": 0.15080910921096802,
-            "Height": 0.011410700157284737,
-            "Left": 0.40483054518699646,
-            "Top": 0.2652628719806671
+            "Width": 0.1443573236465454,
+            "Height": 0.010840010829269886,
+            "Left": 0.4048299789428711,
+            "Top": 0.2658337950706482
           }
         }
       },
@@ -425,7 +425,7 @@
       "page_start": 4,
       "page_end": 4,
       "classification_confidence": 0.99,
-      "classification_reason": "Document is clearly labeled 'PAYSLIP / VÝPLATNÍ LÍSTEK' and contains employer name (ACME s.r.o.), employee details, pay period (September 2026), net pay (38,000 CZK), and gross pay (51,300 CZK).",
+      "classification_reason": "Document is clearly labeled 'PAYSLIP / VÝPLATNÍ LÍSTEK' and contains employer name (ACME s.r.o.), employee details, pay period (September 2026), net pay (38000.00 CZK), and gross pay (51300.00 CZK).",
       "fields": {
         "first_name": {
           "value": "Jana",
@@ -436,10 +436,10 @@
           "page": 4,
           "status": "passed",
           "bbox": {
-            "Width": 0.045968592166900635,
-            "Height": 0.013120757415890694,
-            "Left": 0.40240681171417236,
-            "Top": 0.14831814169883728
+            "Width": 0.046775054186582565,
+            "Height": 0.013120762072503567,
+            "Left": 0.4024070203304291,
+            "Top": 0.14831826090812683
           }
         },
         "last_name": {
@@ -452,9 +452,9 @@
           "status": "passed",
           "bbox": {
             "Width": 0.10161459445953369,
-            "Height": 0.011979988776147366,
-            "Left": 0.40482649207115173,
-            "Top": 0.1739886999130249
+            "Height": 0.011979986913502216,
+            "Left": 0.40482670068740845,
+            "Top": 0.17398883402347565
           }
         },
         "birth_number": {
@@ -467,9 +467,9 @@
           "status": "passed",
           "bbox": {
             "Width": 0.13467958569526672,
-            "Height": 0.011409580707550049,
-            "Left": 0.404826819896698,
-            "Top": 0.20194117724895477
+            "Height": 0.01140957698225975,
+            "Left": 0.4048270285129547,
+            "Top": 0.2019413262605667
           }
         },
         "employer": {
@@ -477,29 +477,29 @@
           "normalized": "acme s r o",
           "textract": "ACME s.r.o.",
           "bedrock": "ACME s.r.o.",
-          "confidence": 0.67,
+          "confidence": 0.7,
           "page": 4,
           "status": "warning",
           "bbox": {
             "Width": 0.11855021864175797,
-            "Height": 0.010839030146598816,
-            "Left": 0.40402066707611084,
-            "Top": 0.22875285148620605
+            "Height": 0.010839026421308517,
+            "Left": 0.40402084589004517,
+            "Top": 0.2287530153989792
           }
         },
         "net_income": {
-          "value": "38 000.00 CZK",
+          "value": "38000.00 CZK",
           "normalized": 38000.0,
-          "textract": "38 000.00 CZK",
+          "textract": "38000.00 CZK",
           "bedrock": 38000.0,
-          "confidence": 0.93,
+          "confidence": 0.94,
           "page": 4,
           "status": "passed",
           "bbox": {
-            "Width": 0.150808647274971,
-            "Height": 0.011409462429583073,
-            "Left": 0.4048277735710144,
-            "Top": 0.2823759615421295
+            "Width": 0.14435692131519318,
+            "Height": 0.010838985443115234,
+            "Left": 0.40482795238494873,
+            "Top": 0.2829466164112091
           }
         },
         "period": {
@@ -507,14 +507,14 @@
           "normalized": "september 2026",
           "textract": "September 2026",
           "bedrock": "September 2026",
-          "confidence": 0.96,
+          "confidence": 0.94,
           "page": 4,
           "status": "passed",
           "bbox": {
-            "Width": 0.1709703654050827,
-            "Height": 0.01369139738380909,
-            "Left": 0.4048274755477905,
-            "Top": 0.2555643320083618
+            "Width": 0.17177681624889374,
+            "Height": 0.013691393658518791,
+            "Left": 0.40482762455940247,
+            "Top": 0.25556451082229614
           }
         }
       },
@@ -663,13 +663,13 @@
     {
       "check": "income_contract_vs_payslip",
       "status": "discrepancy",
-      "detail": "32000.0 vs 38000.0 (diff=15.79%)",
+      "detail": "250000.0 vs 38000.0 (diff=84.80%)",
       "page": 1
     },
     {
       "check": "income_contract_vs_statement",
       "status": "discrepancy",
-      "detail": "32000.0 vs 38000.0 (diff=15.79%)",
+      "detail": "250000.0 vs 38000.0 (diff=84.80%)",
       "page": 1
     },
     {
@@ -691,7 +691,7 @@
   "draft_client_message": "Dear Jana Nováková,\n\nWe are reviewing your loan application and need your help to complete the file:\n- The income figures on your documents do not match. Please confirm your monthly net income or send an updated payslip.\n\nKind regards,\nKomerční banka – Credit Operations",
   "usage": {
     "input_tokens": 18030,
-    "output_tokens": 970,
+    "output_tokens": 978,
     "calls": 10
   },
   "pages_classified": [
@@ -699,7 +699,7 @@
       "source_file": "package.pdf",
       "page": 1,
       "doc_type": "contract",
-      "confidence": 1.0,
+      "confidence": 0.99,
       "reason": "Document is titled 'ÚVĚROVÁ SMLOUVA / LOAN CONTRACT' and contains contract number, loan amount, and contract terms."
     },
     {
@@ -714,14 +714,14 @@
       "page": 3,
       "doc_type": "bank_statement",
       "confidence": 1.0,
-      "reason": "Document clearly shows IBAN, account balance, statement period, and transaction history typical of a bank statement."
+      "reason": "Document clearly shows IBAN, account holder, statement period, salary credit, closing balance, and recent transactions typical of a bank statement."
     },
     {
       "source_file": "package.pdf",
       "page": 4,
       "doc_type": "payslip",
       "confidence": 0.99,
-      "reason": "Document is clearly labeled 'PAYSLIP / VÝPLATNÍ LÍSTEK' and contains employer name (ACME s.r.o.), employee details, pay period (September 2026), net pay (38,000 CZK), and gross pay (51,300 CZK)."
+      "reason": "Document is clearly labeled 'PAYSLIP / VÝPLATNÍ LÍSTEK' and contains employer name (ACME s.r.o.), employee details, pay period (September 2026), net pay (38000.00 CZK), and gross pay (51300.00 CZK)."
     },
     {
       "source_file": "package.pdf",

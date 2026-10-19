@@ -45,15 +45,16 @@ def reconcile_fields(doc_type: str, textract: dict, bedrock: dict) -> dict:
             status = "manual_review" if conf < TEXTRACT_PASS_CONF else "warning"
             chosen_raw, chosen_norm = t_raw, t_norm
         else:
-            # Disagreement: LLM must NOT silently win. Prefer OCR for OCR-native types
-            # when confidence is decent AND (for amounts) the OCR figure is not an
-            # obvious truncation vs Bedrock (e.g. "5250" vs 52000).
+            # Disagreement: LLM never silently wins without a flag (status=manual_review).
+            # Choice of the working value:
+            # - amounts: Textract often grabs a nearby figure (loan vs income). Trust OCR
+            #   only at high confidence (>=0.9); otherwise prefer Bedrock (reads labels).
+            # - other OCR-native types: prefer Textract from conf>=0.4.
             status = "manual_review"
-            prefer_ocr = ftype in OCR_PREFERRED and conf >= 0.4 and t_norm is not None
-            if prefer_ocr and ftype == "amount" and b_norm is not None:
-                hi, lo = max(abs(t_norm), abs(b_norm)), min(abs(t_norm), abs(b_norm)) or 1.0
-                if hi / lo >= 5:  # likely OCR dropped a digit/space
-                    prefer_ocr = conf >= 0.85
+            if ftype == "amount":
+                prefer_ocr = conf >= TEXTRACT_PASS_CONF and t_norm is not None
+            else:
+                prefer_ocr = ftype in OCR_PREFERRED and conf >= 0.4 and t_norm is not None
             if prefer_ocr:
                 chosen_raw, chosen_norm = t_raw, t_norm
             else:
@@ -115,4 +116,14 @@ def run_field_rules(fields: dict) -> list[dict]:
                     "detail": "ok",
                     "page": bd.get("page") or bn.get("page"),
                 })
+    loan = fields.get("loan_amount") or {}
+    declared = fields.get("declared_monthly_income") or {}
+    if (loan.get("normalized") is not None and declared.get("normalized") is not None
+            and loan["normalized"] == declared["normalized"]):
+        checks.append({
+            "check": "declared_income_not_loan_amount",
+            "status": "discrepancy",
+            "detail": f"both={loan['normalized']} — likely mis-extraction",
+            "page": declared.get("page") or loan.get("page"),
+        })
     return checks

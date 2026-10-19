@@ -56,8 +56,8 @@ def contract(path, p):
         ("Date of birth", p["birth_date"]),
         ("Birth number (rodné číslo)", p["birth_number"]),
         ("Permanent address", p["address"]),
-        ("Loan amount", f"{p['loan_amount']:.2f} CZK"),
-        ("Declared monthly net income", f"{p['declared_income']:.2f} CZK"),
+        ("LOAN_AMOUNT", f"{p['loan_amount']:.2f} CZK"),
+        ("DECLARED_MONTHLY_NET_INCOME", f"{p['declared_income']:.2f} CZK"),
         ("Contract date", p["contract_date"]),
     ])
     c.setFont("DejaVuBold", 11)

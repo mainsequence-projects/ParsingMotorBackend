@@ -64,7 +64,7 @@
       "combined_confidence": 0.97,
       "usage": {
         "input_tokens": 18030,
-        "output_tokens": 952,
+        "output_tokens": 978,
         "calls": 10
       }
     },
@@ -149,7 +149,7 @@
       "combined_confidence": 0.97,
       "usage": {
         "input_tokens": 18030,
-        "output_tokens": 970,
+        "output_tokens": 978,
         "calls": 10
       }
     },
@@ -197,7 +197,7 @@
       "combined_confidence": 0.939,
       "usage": {
         "input_tokens": 18030,
-        "output_tokens": 953,
+        "output_tokens": 978,
         "calls": 10
       }
     }
