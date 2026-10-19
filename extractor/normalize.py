@@ -95,7 +95,7 @@ def norm_birth_number(v):
     return d or None
 
 
-_CURRENCY = re.compile(r"(?i)\b(czk|kc|eur|usd)\b|kč|€|\$")
+_CURRENCY = re.compile(r"(?i)\b(czk|kc|eur|usd)\b|kč|€|\$|(?<=\d )K\s*$")   # "K": OCR dropped the č of Kč
 _NUM = re.compile(r"-?\d[\d .,']*\d|-?\d")
 
 
@@ -116,6 +116,10 @@ def norm_amount(v):
     s = s.replace("\u2212", "-").replace("\u2013", "-")
     s = _CURRENCY.sub(" ", s)
     s = re.sub(r"[,.]\s*-(?!\d)", "", s)          # '52 000,-' (whole crowns)
+    s = re.sub(r"(\d)([.,])\s+(\d{2})(?!\d)", r"\1\2\3", s)  # OCR '47 200, 00'
+    # OCR lost the decimal comma: '480 000 00' / '27731 29' -> a final 2-digit group can only be
+    # haléře (thousands groups always have 3 digits). Still has to agree with the LLM to pass.
+    s = re.sub(r"^(\s*-?(?:\d{1,3}(?: \d{3})+|\d{4,})) (\d{2})\s*$", r"\1,\2", s)
     if re.search(r"\d[A-Za-z]|[A-Za-z]\d", s):    # OCR letter/digit confusion
         return None
     nums = _NUM.findall(s)
@@ -187,12 +191,12 @@ def ocr_dropped_diacritics(ocr, llm) -> bool:
     """
     if not isinstance(ocr, str) or not isinstance(llm, str) or not ocr.strip() or not llm.strip():
         return False
-    o = re.sub(r"\s+", " ", ocr.strip().lower())
+    # OCR keeps some accents (á, é) and drops others (ř, č, š) and sometimes the space before
+    # a dropped capital ('Lucie Černá' -> 'Lucieerná'): compare without spaces and accents.
+    o = re.sub(r"[\s.,;:'\"()-]+", "", strip_diacritics(ocr.strip().lower()))
     pat = []
-    for ch in re.sub(r"\s+", " ", llm.strip().lower()):
-        if ch == " ":
-            pat.append(r"\s*")
-        elif ord(ch) < 128:
+    for ch in re.sub(r"[\s.,;:'\"()-]+", "", llm.strip().lower()):
+        if ord(ch) < 128:
             pat.append(re.escape(ch))
         else:
             base = strip_diacritics(ch)
@@ -202,10 +206,23 @@ def ocr_dropped_diacritics(ocr, llm) -> bool:
     return re.fullmatch("".join(pat), o) is not None
 
 
+def norm_employment_term(v):
+    """Employment contract term -> 'indefinite' | 'fixed' (Czech or English wording)."""
+    t = strip_diacritics(str(v or "")).lower()
+    if not t.strip():
+        return None
+    if re.search(r"neurcit|indefinite|permanent|unlimited", t):
+        return "indefinite"
+    if re.search(r"urcit|fixed|temporary|limited", t):
+        return "fixed"
+    return None
+
+
 NORMALIZERS = {
     "name": norm_name, "text": norm_text, "address": norm_text, "date": norm_date,
     "birth_number": norm_birth_number, "amount": norm_amount, "iban": norm_iban,
     "id": norm_id, "doc_list": norm_doc_list, "yesno": norm_yesno,
+    "employment_term": norm_employment_term,
 }
 
 

@@ -67,7 +67,7 @@ doc_types:
       employer_ico: {type: id, query: "What is the employer's company ID (ICO)?"}
       position: {type: text, query: "What is the employee's job position?"}
       employment_start: {type: date, query: "Since what date is the employee employed (employment start date)?"}
-      contract_type: {type: text, query: "Is the employment for an indefinite or fixed period?"}
+      contract_type: {type: employment_term, query: "Is the employment for an indefinite or fixed period?"}
       monthly_net_income: {type: amount, query: "What is the average monthly net income?"}
       issue_date: {type: date, query: "What is the date this confirmation was issued?"}
   tax_or_debt_certificate:
@@ -80,7 +80,7 @@ doc_types:
       tax_office: {type: text, query: "Which tax office issued the certificate?"}
       certificate_number: {type: id, query: "What is the certificate reference number (cislo jednaci)?"}
       issue_date: {type: date, query: "What is the date of issue of the certificate?"}
-      has_tax_arrears: {type: yesno, query: "Does the certificate state that the taxpayer has any tax arrears?"}
+      has_tax_arrears: {type: yesno, query: "Ignoring the title, does the text state that the taxpayer has tax arrears (nedoplatek) with an amount?"}
   other:
     description: Anything else
     fields: {}

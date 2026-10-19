@@ -113,3 +113,35 @@ def test_bilingual_draft_covers_missing_and_discrepancy():
     assert "potvrzení o bezdlužnosti" in msgs["cs"] and "strana" in msgs["cs"].lower()
     assert "employer" in msgs["en"].lower() and "page(s) 2 of 2" in msgs["en"]
     assert msgs["cs"] != msgs["en"]
+
+
+def test_ocr_amounts_with_lost_or_spaced_decimal_comma():
+    from extractor.normalize import norm_amount
+    assert norm_amount("480 000 00 K") == 480000.0       # 'Kč' -> 'K', comma lost
+    assert norm_amount("27731 29 Kc") == 27731.29
+    assert norm_amount("47 200, 00 Kc") == 47200.0
+    assert norm_amount("1O 000") is None                   # letter inside: still refused
+
+
+def test_employment_term_in_czech_or_english_is_the_same_value():
+    from extractor.normalize import norm_employment_term as t
+    assert t("Indefinite") == t("na dobu neurčitou") == "indefinite"
+    assert t("na dobu určitou do 31. 12. 2027") == "fixed"
+    assert t("") is None
+
+
+def test_company_legal_form_variants():
+    from extractor.cross_checks import _company
+    assert _company("Vltava Software s.r.o") == _company("Vltava Software, s. r. o.") == "vltavasoftware"
+    assert _company("Moravská strojírna a.s.") == "moravskastrojirna"
+
+
+def test_recency_never_decided_on_a_date_the_engines_disagree_on():
+    f = _f("01.02.2016", None, status="manual_review")
+    f["normalized"] = "2016-02-01"
+    doc = _doc("employer_confirmation", {"issue_date": f})
+    c = [x for x in document_checks(doc, R, run_date="2026-10-02") if x["rule_id"] == "DOC_RECENT"]
+    if not c:   # DOC_RECENT is a package check in some versions
+        from extractor.cross_checks import _recency
+        c = _recency([doc], R, "2026-10-02")
+    assert c[0]["status"] == "manual_review" and "not confirmed" in c[0]["detail"]

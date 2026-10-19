@@ -70,14 +70,13 @@ def _tax_clear(doc, f, rules):
 
 
 # ---------------- package ----------------
-_LEGAL_FORMS = (" s.r.o.", " s. r. o.", " sro", " a.s.", " a. s.", " as", " spol.", " k.s.", " v.o.s.")
+_LEGAL_FORM = r"(?:spol\.?\s*s\s*r\.?\s*o\.?|s\.?\s*r\.?\s*o\.?|a\.?\s*s\.?|k\.?\s*s\.?|v\.?\s*o\.?\s*s\.?)"
 
 
 def _company(v) -> str:
+    """Company name without its legal form ('s.r.o.', 's. r. o', 'a.s.') and punctuation."""
     import re
-    t = " " + _plain(v)
-    for lf in _LEGAL_FORMS:
-        t = t.replace(lf, " ")
+    t = re.sub(r"[\s,]+" + _LEGAL_FORM + r"\s*$", "", _plain(v).strip())
     return re.sub(r"[^a-z0-9]+", "", t)
 
 
@@ -108,6 +107,10 @@ def _recency(docs, rules, run_date):
             f = d["fields"].get(spec["field"]) or {}
             if not f.get("normalized"):
                 outcome, detail = "undated", "issue date not read"
+            elif f.get("status") in ("manual_review", "missing"):
+                # never call a document stale/recent on a date the two engines did not agree on
+                outcome, detail = "undated", (f"issue date not confirmed (engines disagree: "
+                                              f"{f.get('textract')!r} vs {f.get('bedrock')!r})")
             else:
                 age = (_d.fromisoformat(ref[:10]) - _d.fromisoformat(str(f["normalized"])[:10])).days
                 # issued after the contract date is fine (documents often follow the signature)
