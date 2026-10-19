@@ -228,3 +228,32 @@ class RulesResponse(_Open):
     label: str
     path: str
     yaml: str
+
+
+class RuleProposalsResponse(_Open):
+    rules_version: str
+    rules_label: str
+    min_support: int
+    auto_applied: Literal[False]
+    proposals: List[Dict[str, Any]] = Field(..., description="One-value rules.yaml patches with impact on audited runs")
+    history: List[Dict[str, Any]] = Field(..., description="Last events of the hash-chained rules ledger")
+
+
+class RuleReviewRequest(BaseModel):
+    model_config = ConfigDict(json_schema_extra={"examples": [
+        {"action": "approve", "reviewer": "lead_ana", "comment": "bonus months explain the gap"}]})
+    action: Literal["approve", "reject"]
+    reviewer: str = Field(..., max_length=100)
+    comment: str = Field("", max_length=2000)
+
+
+class RuleReviewResponse(_Open):
+    proposal_id: str
+    action: str
+    rules_version_new: Optional[str]
+    path: Optional[str]
+    yaml: Optional[str]
+    activation: Optional[str] = Field(None, description="How to activate the new version (never automatic)")
+    event: Dict[str, Any]
+    ledger: Dict[str, Any]
+

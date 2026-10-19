@@ -358,6 +358,28 @@ def get_rules(request: Request):
     return {"rules_version": r.version, "label": r.label, "path": Path(r.path).name, "yaml": r.raw_text}
 
 
+@app.get("/rules/proposals", response_model=M.RuleProposalsResponse, responses=ERR, tags=["audit"])
+def rule_proposals(request: Request, min_support: int = Query(3, ge=1, le=1000)):
+    """Concrete rules.yaml changes learned from human decisions, with offline impact. Never auto-applied."""
+    _check_key(request)
+    from . import rule_changes
+    return rule_changes.proposals(min_support=min_support)
+
+
+@app.post("/rules/proposals/{proposal_id}/review", response_model=M.RuleReviewResponse, responses=ERR,
+          tags=["audit"])
+def review_rule_proposal(proposal_id: str, body: M.RuleReviewRequest, request: Request,
+                         min_support: int = Query(3, ge=1, le=1000)):
+    """Approve (writes a new rules version, not activated) or reject a proposal; logged in the ledger."""
+    _check_key(request)
+    from . import rule_changes
+    try:
+        return rule_changes.review(proposal_id, body.action, body.reviewer, body.comment,
+                                   min_support=min_support)
+    except _audit.AuditError as e:
+        raise _audit_http(e) from e
+
+
 @app.get("/", response_class=HTMLResponse, include_in_schema=False)
 def demo_page():
     return HTMLResponse(DEMO_HTML)

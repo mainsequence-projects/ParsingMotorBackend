@@ -82,7 +82,8 @@ def test_openapi_documents_every_endpoint_and_matches_docs_file(client):
     for path, method in [("/health", "get"), ("/session", "get"), ("/extract", "post"),
                          ("/extract_json", "post"), ("/runs/{run_id}", "get"),
                          ("/runs/{run_id}/decisions", "post"), ("/runs/{run_id}/verify", "get"),
-                         ("/learning", "get"), ("/rules", "get")]:
+                         ("/learning", "get"), ("/rules", "get"), ("/rules/proposals", "get"),
+                         ("/rules/proposals/{proposal_id}/review", "post")]:
         op = spec["paths"][path][method]
         assert "$ref" in json.dumps(op["responses"]["200"]), path
         if path != "/health":
@@ -146,9 +147,12 @@ def test_every_endpoint_except_health_requires_the_key(monkeypatch, client):
     monkeypatch.setattr(api, "API_KEY", "k")
     calls = [("get", "/session"), ("post", "/extract"), ("post", "/extract_json"),
              ("get", f"/runs/{RUN}"), ("post", f"/runs/{RUN}/decisions"),
-             ("get", f"/runs/{RUN}/verify"), ("get", "/learning"), ("get", "/rules")]
+             ("get", f"/runs/{RUN}/verify"), ("get", "/learning"), ("get", "/rules"),
+             ("get", "/rules/proposals"), ("post", "/rules/proposals/abc/review")]
     for m, path in calls:
         kw = {"json": {"action": "confirm", "reviewer": "x", "field": "a.b"}} if "decisions" in path else {}
+        if path.endswith("/review"):
+            kw = {"json": {"action": "approve", "reviewer": "x"}}
         if path == "/extract":
             kw = {"files": {"files": ("a.png", b"x")}}
         if path == "/extract_json":

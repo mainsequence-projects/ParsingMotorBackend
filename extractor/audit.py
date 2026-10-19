@@ -10,6 +10,7 @@ from __future__ import annotations
 import fcntl
 import hashlib
 import json
+import math
 import os
 import re
 import subprocess
@@ -117,7 +118,11 @@ def _last_event(f):
 
 
 def append(run_id: str, etype: str, payload: dict, base: Path | None = None) -> dict:
-    path = run_path(run_id, base)
+    return append_to(run_path(run_id, base), run_id, etype, payload)
+
+
+def append_to(path: Path, run_id: str, etype: str, payload: dict) -> dict:
+    """Hash-chained append to any log file (runs, and the rules change ledger)."""
     with _locked(path) as f:
         last = _last_event(f)
         ev = {"run_id": run_id, "seq": (last["seq"] + 1) if last else 0, "ts": utcnow(),
@@ -336,6 +341,10 @@ def _count(it):
 
 
 # ---------------- learning report (suggestions only) ----------------
+def _most_overridden(by_outcome) -> str:
+    return max(by_outcome, key=lambda o: by_outcome[o].get("edit", 0) + by_outcome[o].get("reject", 0))
+
+
 def learning_report(base: Path | None = None, min_support: int = 3) -> dict:
     base = base or audit_dir()
     per_rule = defaultdict(lambda: {"decisions": 0, "confirm": 0, "edit": 0, "reject": 0,
@@ -344,7 +353,7 @@ def learning_report(base: Path | None = None, min_support: int = 3) -> dict:
                                     "rejected_details": []})
     runs = 0
     for p in sorted(base.glob("*.jsonl")):
-        if p.name == "index.jsonl":
+        if not RUN_ID_RE.match(p.stem):          # index.jsonl, rules_ledger.jsonl are not runs
             continue
         try:
             events = read_events(path=p)
@@ -389,7 +398,8 @@ def learning_report(base: Path | None = None, min_support: int = 3) -> dict:
                 suggestions.append({"rule_id": rid, "param": "pass_conf",
                                     "suggestion": f"reviewers confirmed {len(lc)} low-confidence fields "
                                                   f"(min Textract conf {min(lc):.2f}); consider lowering "
-                                                  f"pass_conf towards {min(lc):.2f} after a wider sample"})
+                                                  f"pass_conf towards {min(lc):.2f} after a wider sample",
+                                    "change": {"path": "params.pass_conf", "new": math.floor(round(min(lc) * 100, 6)) / 100}})
             for outcome, acts in s["by_outcome"].items():
                 n = sum(acts.values())
                 ov = acts.get("edit", 0) + acts.get("reject", 0)
@@ -397,16 +407,21 @@ def learning_report(base: Path | None = None, min_support: int = 3) -> dict:
                     suggestions.append({"rule_id": rid, "param": f"severity.{outcome}",
                                         "suggestion": f"humans corrected {ov}/{n} fields with outcome "
                                                       f"'{outcome}'; consider a stricter severity for it "
-                                                      "(e.g. manual_review)"})
-            if len(s["overridden_passed_conf"]) >= min_support:
+                                                      "(e.g. manual_review)",
+                                        "change": {"path": f"severity.{outcome}", "new": "manual_review"}})
+            oc = [c for c in s["overridden_passed_conf"] if c]
+            if len(s["overridden_passed_conf"]) >= min_support and oc:
                 suggestions.append({"rule_id": rid, "param": "pass_conf",
                                     "suggestion": f"{len(s['overridden_passed_conf'])} auto-passed fields "
-                                                  "were corrected by humans; consider raising pass_conf"})
+                                                  "were corrected by humans; consider raising pass_conf",
+                                    "change": {"path": "params.pass_conf",
+                                               "new": min(0.99, (math.ceil(round(max(oc) * 100, 6)) + 1) / 100)}})
         elif rate >= 0.5:
             suggestions.append({"rule_id": rid, "suggestion":
                                 f"humans overrode {overrides}/{s['decisions']} findings "
                                 f"({rate:.0%}); review params/severity of {rid}",
-                                "evidence": s["rejected_details"][:5]})
+                                "evidence": s["rejected_details"][:5],
+                                "change": {"path": f"severity.{_most_overridden(s['by_outcome'])}", "milder": True}})
         elif s["confirm"] == s["decisions"]:
             suggestions.append({"rule_id": rid, "suggestion":
                                 f"all {s['decisions']} findings confirmed by humans; rule looks well calibrated"})
