@@ -6,8 +6,15 @@
 > secretos en git (el token de la demo vive solo en `.deploy_token`). Presupuesto: 800 USD cuenta,
 > tope 20 USD para el build. Code freeze **mar 20-oct-2026 13:30 (Praga)**. Este archivo es para
 > que otra IA (Claude) continúe sin contexto: lee las secciones 4, 9, 10 y 12 primero.
+>
+> **Estado (19-oct 16:00):** v0.4.0 desplegada en la MISMA Lambda (commit `7c604b0`, env y token
+> conservados), verificada por CloudFront (/health, extract firmado, protocolo HTML+PDF). 7 tipos
+> checos, 12 paquetes sintéticos, protocolo citado, borrador CZ+EN. Eval real SIN caché: campos
+> 98,3 %, checks 96,9 %, problemas sembrados 13/13, siguiente paso 7/12 exacto y 12/12 seguro.
+> Gasto de esta tarea 5,74 USD; acumulado ≈ 9,10 USD (tope 20). Hallazgo clave: **Textract no lee
+> checo** (pierde ř/č/š/í…); se compensa con reglas deterministas.
 
-Last updated: 2026-10-19 (Europe/Prague). Keep this file updated after every commit.
+Last updated: 2026-10-19 16:00 Europe/Prague (v0.4.0, commit 7c604b0 deployed). Keep this file updated after every commit.
 
 ---
 
@@ -83,21 +90,28 @@ human decisions (suggestions, never silently auto-applied).
 package (PDF/JPG/PNG, 1..12 files, ≤20 pages)
   │ ingest.py  magic-byte sniff, limits, render pages @150 dpi, sha256 per file/page
   ▼
-classify.py   Bedrock Claude Haiku 4.5 per page → doc_type, page x/y marker, doc_key, rotation
-  ▼
+classify.py   Bedrock Claude Haiku 4.5 per page → doc_type (7 Czech types + other), page x/y marker,
+  ▼           doc_key, rotation
 splitter.py   deterministic grouping (file, type, doc_key, page numbers) → logical documents
-  ▼                         (works for shuffled pages; detects missing pages from markers)
+  ▼           (shuffled pages; 'page 2 of 2' never starts a doc; unnumbered scan pages fill gaps;
+              missing pages from markers)
 extract.py    per document, IN PARALLEL:
               ├─ Textract AnalyzeDocument QUERIES (value + confidence + page + bbox, + OCR lines)
-              └─ Bedrock Claude Sonnet 4.5 Converse (JSON, value + page)
+              │    + `textract: lines_rule` fields: deterministic regex on OCR text (tax arrears)
+              └─ Bedrock Claude Sonnet 4.5 Converse (JSON, value + page; gets the same question)
   ▼
 reconcile.py  CODE, not AI: normalize both values, compare (exact / numeric tol / similarity),
-              pick value + status per field (rules.yaml FIELD_RECONCILE)
+              pick value + status per field (rules.yaml FIELD_RECONCILE). Textract has NO Czech
+              model: if the only difference is dropped accented letters → agree_ocr_no_diacritics,
+              keep the LLM spelling (normalize.ocr_dropped_diacritics)
   ▼
-cross_checks.py + rules.yaml   document checks (rodné číslo, dates), package checks (names,
-              RČ, address, income, completeness vs Contract, page continuity, unexpected docs)
+cross_checks.py + rules.yaml   document checks (rodné číslo, dates, TAX_CLEAR), package checks
+              (names, RČ, address, income incl. employer confirmation, XDOC_EMPLOYER, DOC_RECENT
+              ≤30 days configurable, XDOC_HOLDER_RC certificate holder = ID, completeness vs
+              Contract, page continuity, unexpected docs)
   ▼
-evaluate.py   next step policy + client draft;  audit.py  hash-chained JSONL per run
+evaluate.py   next step policy + client draft (cs + en);  audit.py  hash-chained JSONL per run
+protocol.py   cited control protocol HTML/PDF rebuilt from the audit log
   ▼
 api.py (FastAPI/Mangum on Lambda) → JSON for Jose's frontend; HITL decisions re-evaluate offline
 ```
@@ -127,22 +141,24 @@ Diagram: `arquitectura_motor.png` (source `/workspace/hack/diagram/arch.py`).
 | `extractor/pipeline.py` | orchestrates a run, writes audit events, returns the API JSON |
 | `extractor/audit.py` | hash-chained JSONL per run, decisions, verify, learning report |
 | `extractor/api.py` | FastAPI endpoints + demo HTML; `api_models.py` = response models |
-| `extractor/cli.py` | `python -m extractor ...` (run, recheck, decide, verify, learn) |
-| `scripts/gen_samples.py`, `scripts/gen_hard_samples.py` | synthetic package generators (truth from inputs) |
+| `extractor/protocol.py` | control protocol (HTML; PDF via PyMuPDF Story) from the audit log |
+| `extractor/cli.py` | `python -m extractor ...` (run, recheck, decide, verify, learn, protocol) |
+| `scripts/gen_packages.py` | the 12 Czech synthetic packages (12 people, valid RČ, 2–3 layouts per type, 5 fonts, scan/photo degradations; truth from inputs) |
+| `scripts/md_to_docx.py` | Markdown → .docx for the spec (PDF via `soffice --headless --convert-to pdf`) |
 | `scripts/eval.py` | scores every package vs `ground_truth.json` → `samples/out/eval_summary.json` |
 | `scripts/export_openapi.py` | writes `docs/openapi.json` (a test fails if stale) |
 | `deploy/deploy.sh` / `deploy.py` / `deploy_cloudfront.py` | build zip, update Lambda (env preserved), CloudFront |
 | `deploy/signed_extract.py` | CLI: `/session` → SigV4 POST to the Function URL |
 | `deploy/teardown.sh` | removes the deployed resources |
 | `api/kb_extractor/main.py` | Main Sequence entry point (same FastAPI app) |
-| `tests/` | ~157 tests, no AWS (`tests/fixtures` hold recorded runs) |
+| `tests/` | 270 tests, no AWS (`tests/fixtures` hold recorded runs) |
 | `docs/API.md`, `docs/openapi.json` | HTTP contract for Jose (ES+EN) |
 | `NOTAS_CARLOS.md` | Spanish decision log: every action and why |
 
 ### 4.2 Key JSON (full schemas: `docs/openapi.json`, models: `extractor/api_models.py`)
 ```jsonc
 // POST /extract → ExtractResponse (abridged)
-{"run_id":"20261019T125642Z-161958ed","rules_version":"4932db49748e6d14","engine_version":"0.3.0",
+{"run_id":"20261019T125642Z-161958ed","rules_version":"4932db49748e6d14","engine_version":"0.4.0",
  "models":{"classification":"eu.anthropic.claude-haiku-4-5-…","extraction":"eu.anthropic.claude-sonnet-4-5-…"},
  "inputs":[{"name":"package.pdf","bytes":12345,"sha256":"…"}],
  "documents":[{"doc_id":"d1","doc_type":"contract","pages":[{"source_file":"package.pdf","page":1}],
@@ -154,7 +170,8 @@ Diagram: `arquitectura_motor.png` (source `/workspace/hack/diagram/arch.py`).
    "status":"discrepancy","detail":"52000.0 vs 38000.0 (diff=26.92%, tol=1%)","evidence":[{"doc_id":"d1","field":"declared_monthly_income","value":"…","page":1}]}],
  "required_documents":["contract","id_card",…],"missing_documents":[],"missing_pages":[],
  "unexpected_documents":[],"recommended_next_step":"manual_review_discrepancy",
- "draft_client_message":"Dear …"}
+ "draft_client_message":"Dear …","draft_client_messages":{"cs":"Vážená/ý …","en":"Dear …"}}
+// GET /runs/{id}/protocol?format=html|pdf → cited protocol (CLI: python -m extractor protocol <run_id> -o p.pdf)
 // POST /runs/{id}/decisions  {"field":"contract.declared_monthly_income","action":"edit","new_value":"38000","reviewer":"jose"}
 ```
 Statuses: field `passed|warning|manual_review|missing`; check `passed|warning|discrepancy|manual_review`.
@@ -169,6 +186,8 @@ python -m venv .venv && source .venv/bin/activate && pip install -e '.[dev]'
 python -m pytest -q                                  # no AWS
 python -m extractor samples/01_*/package.pdf -o /tmp/o.json --cache
 python -m extractor verify <run_id>; python -m extractor recheck <run_id> --rules x.yaml
+python -m extractor protocol <run_id> -o /tmp/protocol.pdf
+python scripts/gen_packages.py                       # regenerates samples/ (PDF bytes change → new cache keys)
 uvicorn extractor.api:app --port 8000                # Swagger at /docs
 python scripts/eval.py --cache                       # all packages; drop --cache for a real re-run
 python scripts/export_openapi.py                     # after any API change
@@ -198,10 +217,35 @@ GETs go through CloudFront (OAC signs). POST bodies can't be signed by OAC, so: 
 (service `lambda`). See `docs/API.md` §1 and `deploy/signed_extract.py`.
 
 ## 7. Current numbers (measured, not estimated)
-v0.3.0 eval, 9 old packages (4–5 doc types each, single template): page classification 1.0,
-grouping 9/9, fields 255/255, expected flags 8/8, false alarms 0, next step 7/9 (9/9 safe).
-Lambda: 5-page package 13 s, 0.13 USD uncached. **Cumulative AWS spend ≈ 3.36 USD.**
-(Will be replaced by the new 5–7-type package eval — see NOTAS_CARLOS.md latest section.)
+**v0.4.0, 12 Czech packages, full run WITHOUT cache on real AWS** (`samples/out/eval_summary.json`,
+log `samples/out/eval_nocache_run.log`). The cached run gave identical numbers (temperature 0).
+
+| Package | Types | Fields | Checks | Seeded flags | False alarms | Next step (expected) |
+|---|---|---|---|---|---|---|
+| 01_happy_all7_A | 7 | 48/48 | 32/32 | 0/0 | 0 | spot_check_warnings (approve_ready) |
+| 02_happy_all7_B | 7 | 47/48 | 31/32 | 0/0 | 1 | spot_check_warnings (approve_ready) |
+| 03_missing_tax_certificate | 6 of 7 | 40/42 | 26/28 | 1/1 | 1 | request_missing_documents ✓ |
+| 04_missing_statement_page | 6 | 43/44 | 30/31 | 1/1 | 1 | request_missing_documents ✓ |
+| 05_income_mismatch_employer | 7 | 48/48 | 32/32 | 2/2 | 0 | manual_review_discrepancy ✓ |
+| 06_employer_mismatch_stale_cert | 7 | 46/48 | 31/32 | 2/2 | 1 | manual_review_discrepancy ✓ |
+| 07_invalid_rc_name_typo | 6 | 42/42 | 24/27 | 3/3 | 0 | manual_review_discrepancy ✓ |
+| 08_scanned_noisy_5types | 5 | 38/38 | 27/27 | 0/0 | 0 | spot_check_warnings (approve_ready) |
+| 09_shuffled_6types | 6 | 42/44 | 29/31 | 0/0 | 2 | manual_review_extraction (approve_ready) |
+| 10_photo_id_tax_arrears | 7 | 47/48 | 31/32 | 1/1 | 1 | manual_review_discrepancy ✓ |
+| 11_extra_doc_cert_other_person | 7 + other | 44/44 | 31/31 | 3/3 | 0 | manual_review_discrepancy ✓ |
+| 12_happy_5types_B | 5 | 33/33 | 23/23 | 0/0 | 0 | spot_check_warnings (approve_ready) |
+
+Overall: page classification **100 %**, grouping **12/12**, fields **518/527 = 98.3 %**, checks
+**347/358 = 96.9 %**, seeded problems **13/13**, false alarms 7 (6/12 packages clean), next step
+**7/12 exact, 12/12 safe** (every miss is MORE cautious), missing docs/pages/unexpected 12/12.
+Before the v0.4 fixes the first full run scored fields 97.0 %, checks 94.7 %, next step 5/12, one
+UNSAFE miss (tax arrears read as "none" by both engines) — fixed.
+Remaining false alarms: employer-confirmation issue date in Czech prose letters (Textract picks the
+employment-start date → engines disagree → manual review, never "stale"); one 'Č'→'A' OCR misread.
+
+Cost: uncached run 2.30 USD for 85 pages ≈ **0.027 USD/page, ≈ 0.19 USD per package** (0.215 for
+an 8-page 7-type package). Lambda: 5-page package ≈ 15 s. Spend this task **5.74 USD**; cumulative
+**≈ 9.10 USD** of the 20 USD build cap (ledger `.cost/task2_2026-10-19.json`, gitignored).
 
 ## 8. Status vs the brief (summary; full matrix in `docs/MAIN_GOAL_SPEC.md` §2)
 | Area | Status |
@@ -210,27 +254,24 @@ Lambda: 5-page package 13 s, 0.13 USD uncached. **Cumulative AWS spend ≈ 3.36 
 | Classification + split/shuffle | Done |
 | Extraction with citation + confidence (dual engine) | Done |
 | Configurable rules engine (rules.yaml, versioned) | Done |
+| Packages with 5–7 different types per Contract (7 Czech types) | Done (v0.4) |
+| Cited control protocol HTML/PDF (+ CLI) | Done (v0.4, deployed) |
+| Czech + English client draft | Done (v0.4) |
 | HITL confirm/edit/reject/request_documents (API) | Done (UI = Jose) |
-| Audit trail (hashes, versions, timestamps, human history, verify) | Done (Lambda storage ephemeral) |
-| Packages with 5–7 different types per Contract | **In progress** (employer_confirmation, tax_or_debt_certificate) |
-| Cited control protocol HTML/PDF | **In progress** |
-| Czech + English client draft | **In progress** |
+| Audit trail (hashes, versions, timestamps, human history, verify) | Partial: Lambda storage ephemeral |
 | Learning loop from decisions | Partial (report + suggestions, never auto-applied) |
 | Back-office UI | Jose (frontend repo) |
-| Durable audit on Lambda | Missing (needs S3/DynamoDB = new resource type → ask Carlos) |
+| Durable audit on Lambda | Missing: needs S3/DynamoDB = new resource type → **Carlos must approve** |
 
 ## 9. Exact next steps (in order)
-1. Add doc types `employer_confirmation`, `tax_or_debt_certificate` (schemas.yaml, classifier
-   hints, rules: employer/income vs payslip, certificate ≤30 days, holder = ID).
-2. Regenerate ALL synthetic packages: Czech persons, ≥2 layouts per type, different fonts,
-   Contracts requiring 5–7 types; happy path (7), missing doc, missing page, inconsistent value,
-   scanned, shuffled, one Contract requiring only 5. Truth from generator inputs only.
-3. `GET /runs/{id}/protocol` (HTML + PDF) + CLI `protocol`.
-4. Czech + English client draft.
-5. Full eval on real AWS (cache, then one uncached re-run), update NOTAS, API.md, openapi.json.
-6. Redeploy same Lambda, verify `/health`, protocol, one extract via CloudFront; rebuild
-   `/workspace/hack/extractor.zip` (no secrets/.cache/.cost/audit).
-7. Hand Jose the contract (`docs/API.md`) and demo script (`docs/MAIN_GOAL_SPEC.md` §6).
+1. Jose / Main Sequence: wire `/extract_json`, `/runs/{id}`, `/runs/{id}/decisions`,
+   `/runs/{id}/protocol` (open the protocol right after the extract: audit is per container).
+2. Carlos decides on durable audit (S3 bucket or DynamoDB table). Do NOT create without approval.
+3. Optional engine work: issue date in Czech prose letters (OCR line rule like `lines_rule`
+   for "V <city> dne <date>"), happy paths reaching `approve_ready` (warnings come from
+   low-confidence Textract on Czech text / llm_only fields).
+4. Rehearse the demo (`docs/MAIN_GOAL_SPEC.md` §6); freeze rules.yaml before 13:30 Tue.
+5. Push only when Carlos says so.
 
 ## 10. Known limits and gotchas
 - **AWS SSO creds expire** (hours). Symptom `ExpiredToken`: stop, ask Carlos to re-login.
@@ -245,6 +286,12 @@ Lambda: 5-page package 13 s, 0.13 USD uncached. **Cumulative AWS spend ≈ 3.36 
 - Only first 6 pages of a document go to Bedrock; two same-type docs without a distinguishing key are merged.
 - Hash chain is not anchored externally.
 - `deploy.sh` must run on a clean tree so `EXTRACTOR_GIT_COMMIT` is exact.
+- **Textract has no Czech model**: drops ř/č/š/ž/ů/í ('Ondřej'→'Ondej', 'Kč'→'K', 'října'→'rjna')
+  and cannot reason over Czech prose (letters). Handled deterministically (diacritic-tolerant
+  agreement, OCR month variants, amount with lost decimal comma, `lines_rule`); don't "fix" by
+  tuning ground truth.
+- Regenerating samples changes PDF bytes (reportlab timestamps) → AWS cache misses → real spend.
+- A Bedrock prompt change invalidates the whole Bedrock cache (key includes the prompt).
 
 ## 11. Where things are
 Repo `/workspace/hack/ParsingMotorBackend` (Carlos's box). Zip for sharing: `/workspace/hack/extractor.zip`.
