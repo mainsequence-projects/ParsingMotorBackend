@@ -7,6 +7,14 @@ from difflib import SequenceMatcher
 MONTHS = {m: i + 1 for i, m in enumerate(
     ["january", "february", "march", "april", "may", "june", "july",
      "august", "september", "october", "november", "december"])}
+MONTHS |= {m[:3]: i for m, i in list(MONTHS.items())}
+# Czech, without diacritics: nominative + genitive ('1. května 1988' -> kvetna)
+for _i, _forms in enumerate([("leden", "ledna"), ("unor", "unora"), ("brezen", "brezna"),
+                             ("duben", "dubna"), ("kveten", "kvetna"), ("cerven", "cervna"),
+                             ("cervenec", "cervence"), ("srpen", "srpna"), ("zari",),
+                             ("rijen", "rijna"), ("listopad", "listopadu"), ("prosinec", "prosince")]):
+    for _f in _forms:
+        MONTHS[_f] = _i + 1
 
 
 def strip_diacritics(s: str) -> str:
@@ -38,10 +46,15 @@ def norm_date(v):
         if m:
             d, mo, y = map(int, m.groups())
         else:
-            m = re.search(r"(\d{1,2})\.?\s+([A-Za-z]+)\s+(\d{4})", s)
-            if not m or m.group(2).lower() not in MONTHS:
-                return None
-            d, mo, y = int(m.group(1)), MONTHS[m.group(2).lower()], int(m.group(3))
+            t = strip_diacritics(s).lower()
+            m = re.search(r"(\d{1,2})\.?\s+([a-z]+)\.?,?\s+(\d{4})", t)
+            if m and m.group(2) in MONTHS:
+                d, mo, y = int(m.group(1)), MONTHS[m.group(2)], int(m.group(3))
+            else:
+                m = re.search(r"([a-z]+)\.?\s+(\d{1,2}),?\s+(\d{4})", t)   # 'April 12, 1988'
+                if not m or m.group(1) not in MONTHS:
+                    return None
+                d, mo, y = int(m.group(2)), MONTHS[m.group(1)], int(m.group(3))
     try:
         return date(y, mo, d).isoformat()
     except ValueError:

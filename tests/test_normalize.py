@@ -28,3 +28,14 @@ def test_unparseable_ocr_amount_is_manual_review_not_llm_only(raw03):
     assert f["textract"] == "15200E.00"
     assert f["outcome"] == "ocr_unparseable" and f["status"] == "manual_review"
     assert f["normalized"] == 52000.0
+
+
+@pytest.mark.parametrize("raw,exp", [
+    ("1. 5. 1988", "1988-05-01"), ("01.05.1988", "1988-05-01"), ("1.5.1988", "1988-05-01"),
+    ("1988-05-01", "1988-05-01"), ("1. května 1988", "1988-05-01"), ("12. dubna 1988", "1988-04-12"),
+    ("12 April 1988", "1988-04-12"), ("April 12, 1988", "1988-04-12"), ("28. září 2026", "2026-09-28"),
+    ("31.02.1988", None), ("01.05.88", None), ("", None), (None, None),
+])
+def test_dates_czech_formats(raw, exp):
+    from extractor.normalize import norm_date
+    assert norm_date(raw) == exp
