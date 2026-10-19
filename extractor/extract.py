@@ -7,7 +7,8 @@ from .config import MAX_WORKERS, SCHEMAS
 
 SYSTEM = (
     "You extract structured fields from bank KYC / loan documents. "
-    "Return ONLY JSON. Use null when a field is not present. Never invent values."
+    "Return ONLY JSON. Use null when a field is not present. "
+    "Never invent values. Never convert or recalculate amounts — copy the printed figure."
 )
 
 

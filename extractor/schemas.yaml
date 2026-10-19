@@ -12,7 +12,7 @@ doc_types:
       birth_number: {type: birth_number, query: "What is the client's birth number (rodne cislo)?"}
       address: {type: address, query: "What is the client's permanent address?"}
       loan_amount: {type: amount, query: "What is the loan amount?"}
-      declared_monthly_income: {type: amount, query: "What is the declared monthly net income?"}
+      declared_monthly_income: {type: amount, query: "What is the Declared monthly net income amount (CZK)?"}
       contract_date: {type: date, query: "What is the contract date (date of signature)?"}
       required_documents:
         type: doc_list

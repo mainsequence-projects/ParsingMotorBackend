@@ -167,12 +167,16 @@ def draft_client_message(missing: list[str], checks: list[dict], client_name: st
 
 
 def recommended_next_step(missing, checks, fields_statuses) -> str:
+    """Priority: hard rule discrepancy > missing docs > extraction conflicts > warnings."""
     if any(c["status"] == "discrepancy" for c in checks):
         return "manual_review_discrepancy"
     if missing:
         return "request_missing_documents"
-    if any(s == "manual_review" for s in fields_statuses):
+    # Field-level engine disagreements still need a clerk glance, but do not
+    # block a clean package harder than a warning when no rule fired.
+    n_mr = sum(1 for s in fields_statuses if s == "manual_review")
+    if n_mr >= 3:
         return "manual_review_extraction"
-    if any(s == "warning" for s in fields_statuses):
+    if n_mr >= 1 or any(s == "warning" for s in fields_statuses):
         return "spot_check_warnings"
     return "approve_ready"
