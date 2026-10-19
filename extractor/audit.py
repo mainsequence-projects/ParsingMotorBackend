@@ -221,6 +221,9 @@ def current_state(run_id: str, rules=None, path=None) -> dict:
     res["run_id"] = run_id
     res["decisions"] = [e["payload"] | {"event_hash": e["hash"], "ts": e["ts"]}
                         for e in events if e["type"] == "decision"]
+    from .runstore import run_meta          # run metadata (additive keys; never overrides evaluation)
+    for k, v in run_meta(events).items():
+        res.setdefault(k, v)
     return res
 
 

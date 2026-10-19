@@ -1,4 +1,4 @@
-# KB Document Control Extractor — API v0.4.0
+# KB Document Control Extractor — API v0.5.0
 
 > ES: Contrato HTTP para Jose (frontend + Main Sequence). La fuente de verdad formal es
 > [`docs/openapi.json`](openapi.json) (generado con `python scripts/export_openapi.py`; un
@@ -64,12 +64,16 @@ off by default; never on Lambda (duplicated headers break browsers).
 | POST | `/extract_json` | key (+SigV4 en Lambda) | JSON con archivos en base64 | JSON with base64 files |
 | POST | `/classify_json` | key (+SigV4 en Lambda) | Solo clasificación | Discovery only, supplied type catalog |
 | POST | `/extract_typed_json` | key (+SigV4 en Lambda) | Tipo explícito + esquemas completos | Explicit type + full canonical/draft schemas |
-| GET | `/runs/{run_id}` | key | Estado actual (motor + decisiones humanas) | Current state |
+| GET | `/runs?limit=50&next_step=` | key | Cola del dashboard (índice del audit, más reciente primero) — 0.5 | Dashboard queue — 0.5 |
+| GET | `/runs/{run_id}` | key | Estado actual (motor + decisiones humanas) + metadatos del run (0.5) | Current state + run metadata |
+| GET | `/runs/{run_id}/events` | key | Timeline del audit: seq, ts, tipo, hash, prev_hash, resumen — 0.5 | Audit timeline — 0.5 |
+| GET | `/runs/{run_id}/pages/{n}.png?dpi=110` | key | Página n renderizada (PyMuPDF) desde la entrada guardada — 0.5 | Page render from kept input — 0.5 |
 | POST | `/runs/{run_id}/decisions` | key | Añade decisión humana y recalcula | Append human decision, re-evaluate |
 | GET | `/runs/{run_id}/verify` | key | Verifica la cadena de hashes | Verify hash chain |
 | GET | `/runs/{run_id}/protocol?format=html\|pdf` | key | Protocolo de control citado (HTML/PDF) | Cited control protocol |
 | GET | `/learning?min_support=3` | key | Overrides humanos por regla (sugerencias, nunca auto) | Human overrides per rule |
-| GET | `/rules` | key | rules.yaml activo + versión | Active rules.yaml + version |
+| GET | `/rules` | key | rules.yaml activo + versión + `rules[]` con texto en inglés (0.5) | Active rules.yaml + version + plain-English list |
+| GET | `/eval/summary` | key | Evaluación offline de los 12 paquetes (KPIs + paso esperado por paquete) — 0.5 | Offline eval KPIs — 0.5 |
 | GET | `/rules/proposals?min_support=3` | key | Cambios concretos de rules.yaml aprendidos de decisiones + impacto | Learned rules.yaml changes + impact |
 | POST | `/rules/proposals/{proposal_id}/review` | key | Aprobar/rechazar propuesta → nueva versión (no se activa sola) | Approve/reject → new version (not auto-activated) |
 | GET | `/` | — | Página demo HTML | HTML demo |
@@ -103,14 +107,17 @@ Salida (resumen; ver openapi para todo):
 | `run_id` | id del run y de su audit log | run / audit id |
 | `documents[]` | documentos lógicos: `doc_id`, `doc_type`, `pages[]` (archivo+página citados), `fields{}`, `checks[]` | logical documents |
 | `documents[].fields.X` | `value`, `normalized`, `textract`/`textract_conf`/`textract_page`, `bedrock`/`bedrock_page`, `source` (`both`/`textract`/`bedrock`), `confidence` (null = solo LLM), `page`, `bbox`, `outcome`, `status`, `rule_ids` | per-field result with both engines and the cited page |
-| `checks[]` | checks del paquete (cruce de documentos, completitud): `check_id`, `rule_id`, `status`, `detail`, `evidence[]` | package checks |
+| `checks[]` | checks del paquete (cruce de documentos, completitud): `check_id`, `rule_id`, `status`, `detail`, `evidence[]`, `description` (0.5: texto en inglés de rules.yaml) | package checks + plain-English `description` |
 | `required_documents`, `required_documents_source` | lista requerida (del contrato o por defecto) | required list |
 | `missing_documents`, `missing_pages`, `unexpected_documents` | faltantes / páginas faltantes / sobrantes | completeness |
-| `combined_confidence`, `fields_auto_validated_pct` | métricas | metrics |
+| `fields_passed`, `fields_total`, `fields_passed_pct` (0.5) | KPI estricto: campos con `status == passed` (p. ej. 39/48 en el paquete 05) | strict KPI: fields with status passed |
+| `field_status_counts`, `check_status_counts`, `client_name` (0.5) | conteos por estado y nombre del cliente (primer doc con nombre) | status counts, client name |
+| `combined_confidence`, `fields_auto_validated_pct` | **compatibilidad**: % de campos `passed` **o** `warning` (no van a revisión manual). No significa "pasados": usar `fields_passed_pct` | **compat**: % passed OR warning; not "passed" |
+| `timings_ms` (0.5) | `{ingest, classify, extract, evaluate, total}` en ms medidos | measured stage times (ms) |
 | `recommended_next_step` | ver §3 | see §3 |
 | `draft_client_message` | borrador de email al cliente (inglés, compatibilidad) o `null` | client email draft (EN) or null |
 | `draft_client_messages` | `{"cs": "...", "en": "..."}` el mismo borrador en checo (el que se envía) e inglés, o `null` | same draft in Czech + English |
-| `models`, `rules_version`, `engine_version`, `git_commit`, `inputs[]` (sha256) | trazabilidad | provenance |
+| `models`, `rules_version`, `engine_version`, `git_commit`, `inputs[]` (sha256, `pages` en 0.5) | trazabilidad | provenance |
 | `cost` | coste del run y caché | run cost |
 
 `field.status`: `passed` · `warning` · `manual_review` · `missing`.
@@ -257,13 +264,65 @@ del audit con `seq`, `hash`, `prev_hash`). Nunca se modifica un evento anterior.
 Igual que la evaluación de `/extract` aplicando las decisiones, más `decisions[]`. Campos o
 checks tocados por un humano llevan `engine` (lo que dijo el motor) y `human`.
 
+0.5 añade (solo claves nuevas, leídas de los eventos `run_started`/`run_completed`, nunca
+re-evaluadas): `package_id`, `engine_version`, `git_commit`, `region`, `models`,
+`rules {version,label,sha256}`, `inputs[] {name, sha256, bytes, pages, stored}`,
+`pages[] {n, source_file, page, sha256}` (n = índice para `/pages/{n}.png`),
+`cost {run, cache_hits}`, `timings_ms`, `started_at`, `completed_at`,
+`run_status` (`completed|failed|running`), `audit_events`, `head_hash`.
+`timings_ms.source`: `measured` (runs 0.5+, del evento `run_completed`) o `event_timestamps`
+(runs anteriores: derivado de los `ts` de los eventos; `ingest` = null porque ocurre antes de
+`run_started`). `check.description` sale de las reglas **del run** (las de su audit): en runs
+anteriores a 0.5 es `description.en`, en los nuevos el `summary` más corto.
+EN: additive run metadata; timings measured (0.5+) or derived from event timestamps.
+
+### 2.4a `GET /runs` → `RunsResponse` (0.5)
+Cola del dashboard desde `index.jsonl` del audit, más reciente primero. Por run:
+`run_id, package_id, run_status, started_at, completed_at, client_name, contract_number,
+next_step` (el **actual**: tras la última decisión humana; si no, el del motor),
+`engine_next_step, decisions, last_reviewer, check_status_counts, field_status_counts,
+fields_passed, fields_total, documents, doc_types, required_documents, missing_documents,
+pages, duration_ms, usd, rules_version`. Los runs 0.5+ escriben ese resumen en la línea
+`run_completed` del índice; para runs anteriores se reconstruye desde su log.
+Filtros: `limit` (1–500), `next_step`. `storage: ephemeral` en Lambda: **solo lista los runs de
+ese contenedor** (igual que `/runs/{id}`); una cola real necesita almacenamiento durable o que
+el gateway de Main Sequence guarde los runs.
+
+### 2.4b `GET /runs/{run_id}/events` → `AuditEventsResponse` (0.5)
+`{"run_id", "verify": {ok, events, head_hash, errors}, "events": [{seq, ts, type, prev_hash, hash,
+summary}]}`. Los hashes son los del log (se puede comprobar la cadena); el `summary` es pequeño:
+`run_started` (versiones, reglas sin texto, modelos, entradas, nº páginas), `classification`
+(páginas, tipos, cache hits), `extraction` (doc, páginas, llamadas), `evaluation` (siguiente paso,
+conteos), `run_completed` (usd, cache, `timings_ms`), `decision`, `reevaluation`, `run_failed`.
+No devuelve `rules.text`, listas de páginas ni respuestas brutas de los motores.
+
+### 2.4c `GET /runs/{run_id}/pages/{n}.png?dpi=110` → `image/png` (0.5)
+Página `n` (1-based, `RunState.pages[].n`) renderizada con PyMuPDF (dpi 36–200) desde los bytes
+subidos, que 0.5 guarda junto al audit en `<run_id>.inputs/<sha256>.bin` (nombre por contenido;
+límite `EXTRACTOR_KEEP_INPUTS_MAX_MB`=40 por run; desactivable con `EXTRACTOR_KEEP_INPUTS=0`).
+Antes de renderizar se re-verifica el sha256 contra `run_started.inputs` (si no coincide → 409).
+La imagen sale **derecha como la vieron los motores** (se aplica la rotación de la clasificación),
+así que `field.bbox` (normalizado 0–1 de Textract) se superpone directamente. Cabeceras
+`x-page`, `x-rotation`, `x-source-file-sha256`. 404 si la página no existe o los bytes no se
+guardaron (run anterior a 0.5, límite de tamaño, u **otro contenedor Lambda: `/tmp` es efímero**).
+⚠ Los bytes son documentos con datos personales: mismo almacenamiento y retención que el audit.
+
+### 2.4d `GET /eval/summary` → `EvalSummaryResponse` (0.5)
+`samples/out/eval_summary.json` empaquetado (deploy lo copia a `extractor/eval_summary.json`):
+KPIs del dashboard (`field_accuracy`, `fields` "518/527", `check_accuracy`, `expected_flags_hit`,
+`false_alarms`, `next_step_safe`, `eval_usd`, …) y `rows[]` por paquete con `next_step` vs
+`next_step_expected`. Es un fichero estático de la última evaluación offline, no se calcula en
+vivo. Override: env `EXTRACTOR_EVAL_SUMMARY`.
+
 ### 2.5 `GET /runs/{run_id}/verify` → `VerifyResponse`
 `{"ok":true,"file":"<run>.jsonl","run_id":"...","events":7,"head_hash":"...","errors":[]}`.
 `ok:false` si alguien editó/borró/reordenó una línea.
 
 ### 2.6 `GET /learning` → `LearningResponse`, `GET /rules` → `RulesResponse`
 Learning agrega decisiones por `rule_id` y sugiere ajustes (`auto_applied` siempre `false`).
-Rules devuelve el YAML activo y su versión (sha256[:16]).
+Rules devuelve el YAML activo y su versión (sha256[:16]); 0.5 añade `rules[]`:
+`{id, scope, check, summary, description{es,en}, checks{nombre: summary}}`. El texto en inglés
+(`summary`) se edita en `rules.yaml` sin tocar código (cambia `rules_version`).
 
 ### 2.6b Ciclo de mejora de reglas / Rule-learning loop
 `GET /rules/proposals` → `RuleProposalsResponse`: cada propuesta cambia **un solo valor** de
@@ -377,3 +436,5 @@ curl -s --aws-sigv4 "aws:amz:eu-central-1:lambda" --user "$AWS_ACCESS_KEY_ID:$AW
 - La cadena de hashes no está anclada fuera (quien controla el disco puede reescribirla entera).
 - Sin verificación IBAN mod-97.
 - Tiempos: ~30–70 s por paquete de 5 páginas sin caché; timeout Lambda 180 s.
+- 0.5: `/runs`, `/runs/{id}/events` y `/runs/{id}/pages/{n}.png` leen el mismo almacenamiento
+  del audit: en Lambda solo ven los runs de ese contenedor.

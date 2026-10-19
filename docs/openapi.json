@@ -3,7 +3,7 @@
   "info": {
     "title": "KB Document Control Extractor",
     "description": "Komerční banka back-office document controls. Dual Textract + Bedrock extraction, deterministic reconciliation and rules (rules.yaml), hash-chained audit trail and human decisions. Auth: header `x-api-key` (when EXTRACTOR_API_KEY is set). See docs/API.md.",
-    "version": "0.4.0"
+    "version": "0.5.0"
   },
   "paths": {
     "/health": {
@@ -831,12 +831,166 @@
         }
       }
     },
+    "/runs": {
+      "get": {
+        "tags": [
+          "audit"
+        ],
+        "summary": "List Runs",
+        "description": "Dashboard queue: newest first, from the audit index (run_started / run_completed summary /\ndecisions). `next_step` is the current one (after the latest human decision). Same storage as\nthe runs: on Lambda it is per container and ephemeral.",
+        "operationId": "list_runs_runs_get",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 500,
+              "minimum": 1,
+              "default": 50,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "next_step",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 60
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Next Step"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RunsResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Content Too Large"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unsupported Media Type"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Gateway"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        }
+      }
+    },
     "/runs/{run_id}": {
       "get": {
         "tags": [
           "human-in-the-loop"
         ],
         "summary": "Get Run",
+        "description": "Current state (re-evaluated with the run's own rules + human decisions) plus run metadata:\npackage_id, versions, models, inputs (sha256, pages, stored), pages, cost, timings_ms.",
         "operationId": "get_run_runs__run_id__get",
         "parameters": [
           {
@@ -1095,6 +1249,289 @@
         }
       }
     },
+    "/runs/{run_id}/events": {
+      "get": {
+        "tags": [
+          "audit"
+        ],
+        "summary": "Run Events",
+        "description": "Audit timeline: every event with seq, ts, type, prev_hash, hash and a small summary.\nHeavy payloads (rules text, page lists, raw engine answers) are not returned.",
+        "operationId": "run_events_runs__run_id__events_get",
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Run Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuditEventsResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Content Too Large"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unsupported Media Type"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Gateway"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        }
+      }
+    },
+    "/runs/{run_id}/pages/{n}.png": {
+      "get": {
+        "tags": [
+          "audit"
+        ],
+        "summary": "Run Page",
+        "description": "Page n (1-based, RunState.pages[].n) rendered with PyMuPDF from the input bytes kept next to\nthe audit log (sha256 re-verified), upright as the engines saw it so normalised bboxes overlay.\n404 if the bytes were not kept (older run, size cap, other Lambda container).",
+        "operationId": "run_page_runs__run_id__pages__n__png_get",
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Run Id"
+            }
+          },
+          {
+            "name": "n",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "N"
+            }
+          },
+          {
+            "name": "dpi",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 200,
+              "minimum": 36,
+              "default": 110,
+              "title": "Dpi"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Rendered page (PNG)",
+            "content": {
+              "image/png": {}
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Content Too Large"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unsupported Media Type"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Gateway"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        }
+      }
+    },
     "/runs/{run_id}/protocol": {
       "get": {
         "tags": [
@@ -1236,6 +1673,128 @@
               }
             },
             "description": "Service Unavailable"
+          }
+        }
+      }
+    },
+    "/eval/summary": {
+      "get": {
+        "tags": [
+          "meta"
+        ],
+        "summary": "Eval Summary",
+        "description": "Offline evaluation over the 12 synthetic packages (samples/): KPI cards and, per package,\nexpected vs actual next step. A bundled file, not computed live.",
+        "operationId": "eval_summary_eval_summary_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EvalSummaryResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Content Too Large",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "Unsupported Media Type",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Content",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Bad Gateway",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         }
       }
@@ -1836,6 +2395,86 @@
         ],
         "title": "AuditEvent"
       },
+      "AuditEventView": {
+        "properties": {
+          "seq": {
+            "type": "integer",
+            "title": "Seq"
+          },
+          "ts": {
+            "type": "string",
+            "title": "Ts"
+          },
+          "type": {
+            "type": "string",
+            "title": "Type",
+            "examples": [
+              "run_started",
+              "classification",
+              "extraction",
+              "evaluation",
+              "run_completed",
+              "decision",
+              "reevaluation",
+              "run_failed"
+            ]
+          },
+          "prev_hash": {
+            "type": "string",
+            "title": "Prev Hash"
+          },
+          "hash": {
+            "type": "string",
+            "title": "Hash"
+          },
+          "summary": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Summary",
+            "description": "small payload view; heavy payloads stay in the log"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "seq",
+          "ts",
+          "type",
+          "prev_hash",
+          "hash",
+          "summary"
+        ],
+        "title": "AuditEventView"
+      },
+      "AuditEventsResponse": {
+        "properties": {
+          "run_id": {
+            "type": "string",
+            "title": "Run Id"
+          },
+          "verify": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Verify",
+            "description": "{ok, events, head_hash, errors}"
+          },
+          "events": {
+            "items": {
+              "$ref": "#/components/schemas/AuditEventView"
+            },
+            "type": "array",
+            "title": "Events"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "run_id",
+          "verify",
+          "events"
+        ],
+        "title": "AuditEventsResponse"
+      },
       "Body_extract_extract_post": {
         "properties": {
           "files": {
@@ -1946,6 +2585,21 @@
               }
             ],
             "title": "Human"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description",
+            "description": "Plain-English meaning of the check, from rules.yaml (params entry `summary` > rule `summary` > description.en)",
+            "examples": [
+              "Income declared on the contract matches the net income on the payslip."
+            ]
           }
         },
         "additionalProperties": true,
@@ -2347,6 +3001,83 @@
         ],
         "title": "ErrorResponse"
       },
+      "EvalSummaryResponse": {
+        "properties": {
+          "packages": {
+            "type": "integer",
+            "title": "Packages"
+          },
+          "page_classification_accuracy": {
+            "type": "number",
+            "title": "Page Classification Accuracy"
+          },
+          "field_accuracy": {
+            "type": "number",
+            "title": "Field Accuracy"
+          },
+          "fields": {
+            "type": "string",
+            "title": "Fields",
+            "examples": [
+              "518/527"
+            ]
+          },
+          "check_accuracy": {
+            "type": "number",
+            "title": "Check Accuracy"
+          },
+          "checks": {
+            "type": "string",
+            "title": "Checks"
+          },
+          "expected_flags_hit": {
+            "type": "string",
+            "title": "Expected Flags Hit"
+          },
+          "false_alarms": {
+            "type": "integer",
+            "title": "False Alarms"
+          },
+          "next_step_accuracy": {
+            "type": "string",
+            "title": "Next Step Accuracy"
+          },
+          "next_step_safe": {
+            "type": "string",
+            "title": "Next Step Safe"
+          },
+          "eval_usd": {
+            "type": "number",
+            "title": "Eval Usd"
+          },
+          "rows": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Rows",
+            "description": "per package: expected vs actual next step, errors"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "packages",
+          "page_classification_accuracy",
+          "field_accuracy",
+          "fields",
+          "check_accuracy",
+          "checks",
+          "expected_flags_hit",
+          "false_alarms",
+          "next_step_accuracy",
+          "next_step_safe",
+          "eval_usd",
+          "rows"
+        ],
+        "title": "EvalSummaryResponse"
+      },
       "Evidence": {
         "properties": {
           "doc_id": {
@@ -2491,7 +3222,96 @@
           },
           "fields_auto_validated_pct": {
             "type": "number",
-            "title": "Fields Auto Validated Pct"
+            "title": "Fields Auto Validated Pct",
+            "description": "COMPAT: % of fields with status passed OR warning (not routed to manual review). Not 'passed'; use fields_passed_pct."
+          },
+          "fields_passed": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fields Passed",
+            "description": "fields with status == passed (e.g. 39)"
+          },
+          "fields_total": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fields Total",
+            "description": "all fields read (e.g. 48)"
+          },
+          "fields_passed_pct": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fields Passed Pct",
+            "description": "100 * fields_passed / fields_total"
+          },
+          "field_status_counts": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "type": "integer"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Field Status Counts",
+            "examples": [
+              {
+                "passed": 39,
+                "warning": 9
+              }
+            ]
+          },
+          "check_status_counts": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "type": "integer"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Check Status Counts",
+            "examples": [
+              {
+                "discrepancy": 2,
+                "passed": 30
+              }
+            ]
+          },
+          "client_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Client Name",
+            "description": "first document carrying first/last name"
           },
           "recommended_next_step": {
             "type": "string",
@@ -2594,6 +3414,17 @@
             ],
             "title": "Audit File",
             "description": "audit log file name (server side)"
+          },
+          "timings_ms": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Timings"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "per-stage wall time in ms (0.5.0+)"
           }
         },
         "additionalProperties": true,
@@ -3050,6 +3881,18 @@
           "sha256": {
             "type": "string",
             "title": "Sha256"
+          },
+          "pages": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pages",
+            "description": "pages of this file in the package"
           }
         },
         "additionalProperties": true,
@@ -3240,6 +4083,72 @@
         ],
         "title": "PageRef"
       },
+      "RuleInfo": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "scope": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Scope"
+          },
+          "check": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Check"
+          },
+          "summary": {
+            "type": "string",
+            "title": "Summary",
+            "description": "plain-English text (summary or description.en)"
+          },
+          "description": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Description",
+            "description": "{es, en}"
+          },
+          "checks": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Checks",
+            "description": "check name -> summary, for multi-check rules"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "id",
+          "summary",
+          "description"
+        ],
+        "title": "RuleInfo"
+      },
       "RuleProposalsResponse": {
         "properties": {
           "rules_version": {
@@ -3422,6 +4331,20 @@
           "yaml": {
             "type": "string",
             "title": "Yaml"
+          },
+          "rules": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/RuleInfo"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rules"
           }
         },
         "additionalProperties": true,
@@ -3433,6 +4356,363 @@
           "yaml"
         ],
         "title": "RulesResponse"
+      },
+      "RunInput": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "original_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Original Name"
+          },
+          "bytes": {
+            "type": "integer",
+            "title": "Bytes"
+          },
+          "sha256": {
+            "type": "string",
+            "title": "Sha256"
+          },
+          "pages": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pages",
+            "description": "pages of this file in the package"
+          },
+          "stored": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stored",
+            "description": "bytes kept for GET /runs/{id}/pages/{n}.png"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "name",
+          "bytes",
+          "sha256"
+        ],
+        "title": "RunInput"
+      },
+      "RunListItem": {
+        "properties": {
+          "run_id": {
+            "type": "string",
+            "title": "Run Id"
+          },
+          "package_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Package Id"
+          },
+          "run_status": {
+            "type": "string",
+            "enum": [
+              "completed",
+              "failed",
+              "running"
+            ],
+            "title": "Run Status"
+          },
+          "started_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Started At"
+          },
+          "completed_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Completed At"
+          },
+          "client_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Client Name"
+          },
+          "contract_number": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Contract Number"
+          },
+          "next_step": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Step",
+            "description": "current: after the latest human decision, else engine's"
+          },
+          "engine_next_step": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Engine Next Step"
+          },
+          "decisions": {
+            "type": "integer",
+            "title": "Decisions",
+            "default": 0
+          },
+          "last_reviewer": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Reviewer"
+          },
+          "check_status_counts": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "type": "integer"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Check Status Counts"
+          },
+          "field_status_counts": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "type": "integer"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Field Status Counts"
+          },
+          "fields_passed": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fields Passed"
+          },
+          "fields_total": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fields Total"
+          },
+          "documents": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Documents"
+          },
+          "doc_types": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Doc Types"
+          },
+          "required_documents": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Required Documents"
+          },
+          "missing_documents": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Missing Documents"
+          },
+          "pages": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pages"
+          },
+          "duration_ms": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Duration Ms"
+          },
+          "usd": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Usd"
+          },
+          "rules_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rules Version"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "run_id",
+          "run_status"
+        ],
+        "title": "RunListItem"
+      },
+      "RunPage": {
+        "properties": {
+          "n": {
+            "type": "integer",
+            "title": "N",
+            "description": "1-based package page index for GET /runs/{id}/pages/{n}.png"
+          },
+          "source_file": {
+            "type": "string",
+            "title": "Source File"
+          },
+          "page": {
+            "type": "integer",
+            "title": "Page"
+          },
+          "sha256": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sha256"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "n",
+          "source_file",
+          "page"
+        ],
+        "title": "RunPage"
       },
       "RunState": {
         "properties": {
@@ -3500,7 +4780,96 @@
           },
           "fields_auto_validated_pct": {
             "type": "number",
-            "title": "Fields Auto Validated Pct"
+            "title": "Fields Auto Validated Pct",
+            "description": "COMPAT: % of fields with status passed OR warning (not routed to manual review). Not 'passed'; use fields_passed_pct."
+          },
+          "fields_passed": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fields Passed",
+            "description": "fields with status == passed (e.g. 39)"
+          },
+          "fields_total": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fields Total",
+            "description": "all fields read (e.g. 48)"
+          },
+          "fields_passed_pct": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fields Passed Pct",
+            "description": "100 * fields_passed / fields_total"
+          },
+          "field_status_counts": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "type": "integer"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Field Status Counts",
+            "examples": [
+              {
+                "passed": 39,
+                "warning": 9
+              }
+            ]
+          },
+          "check_status_counts": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "type": "integer"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Check Status Counts",
+            "examples": [
+              {
+                "discrepancy": 2,
+                "passed": 30
+              }
+            ]
+          },
+          "client_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Client Name",
+            "description": "first document carrying first/last name"
           },
           "recommended_next_step": {
             "type": "string",
@@ -3552,6 +4921,186 @@
             "type": "array",
             "title": "Decisions",
             "description": "human decision events, oldest first"
+          },
+          "package_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Package Id"
+          },
+          "engine_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Engine Version"
+          },
+          "git_commit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Git Commit"
+          },
+          "region": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Region"
+          },
+          "models": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Models"
+          },
+          "rules": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rules",
+            "description": "{version, label, sha256} of the run's rules"
+          },
+          "inputs": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/RunInput"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Inputs"
+          },
+          "pages": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/RunPage"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pages"
+          },
+          "cost": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cost",
+            "description": "{run: {usd, ...}, cache_hits}"
+          },
+          "timings_ms": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Timings"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "started_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Started At"
+          },
+          "completed_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Completed At"
+          },
+          "run_status": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "completed",
+                  "failed",
+                  "running"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Run Status"
+          },
+          "audit_events": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Audit Events"
+          },
+          "head_hash": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Head Hash"
           }
         },
         "additionalProperties": true,
@@ -3573,6 +5122,38 @@
           "decisions"
         ],
         "title": "RunState"
+      },
+      "RunsResponse": {
+        "properties": {
+          "runs": {
+            "items": {
+              "$ref": "#/components/schemas/RunListItem"
+            },
+            "type": "array",
+            "title": "Runs"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total",
+            "description": "runs in the index (before filter/limit)"
+          },
+          "storage": {
+            "type": "string",
+            "enum": [
+              "persistent",
+              "ephemeral"
+            ],
+            "title": "Storage"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "runs",
+          "total",
+          "storage"
+        ],
+        "title": "RunsResponse"
       },
       "SchemaIssue": {
         "properties": {
@@ -3677,6 +5258,85 @@
           "page_sha256"
         ],
         "title": "SourcePage"
+      },
+      "Timings": {
+        "properties": {
+          "ingest": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ingest",
+            "description": "ms; null for runs before 0.5.0 (happens before run_started)"
+          },
+          "classify": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Classify"
+          },
+          "extract": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Extract"
+          },
+          "evaluate": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Evaluate"
+          },
+          "total": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "measured",
+                  "event_timestamps"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source",
+            "description": "RunState only: measured (0.5.0+) or derived from audit event timestamps"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "title": "Timings"
       },
       "VerifyResponse": {
         "properties": {

@@ -111,6 +111,10 @@ def build_zip():
     ])
     shutil.copytree(ROOT / "extractor", BUILD / "extractor",
                     ignore=shutil.ignore_patterns("__pycache__", "*.pyc", "samples"))
+    # GET /eval/summary serves the offline evaluation of samples/ (only extractor/ is bundled)
+    ev = ROOT / "samples" / "out" / "eval_summary.json"
+    if ev.exists():
+        shutil.copy(ev, BUILD / "extractor" / "eval_summary.json")
     for p in BUILD.rglob("__pycache__"):
         shutil.rmtree(p, ignore_errors=True)
     with zipfile.ZipFile(ZIP, "w", zipfile.ZIP_DEFLATED) as z:

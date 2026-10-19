@@ -65,7 +65,7 @@ def test_tampered_log_fails_verify(client, tmp_path):
 
 def test_health_reports_version_rules_and_limits(client):
     h = client.get("/health").json()
-    assert h["version"] == __version__ == "0.4.0"
+    assert h["version"] == __version__ == "0.5.0"
     assert len(h["rules_version"]) == 16 and h["limits"]["max_pages"] >= 1
 
 
@@ -83,11 +83,13 @@ def test_openapi_documents_every_endpoint_and_matches_docs_file(client):
                          ("/extract_json", "post"), ("/runs/{run_id}", "get"),
                          ("/runs/{run_id}/decisions", "post"), ("/runs/{run_id}/verify", "get"),
                          ("/learning", "get"), ("/rules", "get"), ("/rules/proposals", "get"),
-                         ("/rules/proposals/{proposal_id}/review", "post")]:
+                         ("/rules/proposals/{proposal_id}/review", "post"), ("/runs", "get"),
+                         ("/runs/{run_id}/events", "get"), ("/eval/summary", "get")]:
         op = spec["paths"][path][method]
         assert "$ref" in json.dumps(op["responses"]["200"]), path
         if path != "/health":
             assert "401" in op["responses"], path
+    assert "401" in spec["paths"]["/runs/{run_id}/pages/{n}.png"]["get"]["responses"]
     assert "requestBody" in spec["paths"]["/extract_json"]["post"]
     on_disk = json.loads((ROOT / "docs" / "openapi.json").read_text())
     assert on_disk == spec, "docs/openapi.json is stale: run python scripts/export_openapi.py"

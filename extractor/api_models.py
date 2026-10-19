@@ -103,6 +103,9 @@ class Check(_Open):
     evidence: List[Evidence] = []
     engine: Optional[Dict[str, Any]] = None
     human: Optional[Dict[str, Any]] = None
+    description: Optional[str] = Field(None, description="Plain-English meaning of the check, from rules.yaml "
+                                       "(params entry `summary` > rule `summary` > description.en)",
+                                       examples=["Income declared on the contract matches the net income on the payslip."])
 
 
 class Document(_Open):
@@ -137,7 +140,14 @@ class Evaluation(_Open):
     missing_pages: List[MissingPages]
     unexpected_documents: List[str]
     combined_confidence: float
-    fields_auto_validated_pct: float
+    fields_auto_validated_pct: float = Field(..., description="COMPAT: % of fields with status passed OR warning "
+                                             "(not routed to manual review). Not 'passed'; use fields_passed_pct.")
+    fields_passed: Optional[int] = Field(None, description="fields with status == passed (e.g. 39)")
+    fields_total: Optional[int] = Field(None, description="all fields read (e.g. 48)")
+    fields_passed_pct: Optional[float] = Field(None, description="100 * fields_passed / fields_total")
+    field_status_counts: Optional[Dict[str, int]] = Field(None, examples=[{"passed": 39, "warning": 9}])
+    check_status_counts: Optional[Dict[str, int]] = Field(None, examples=[{"discrepancy": 2, "passed": 30}])
+    client_name: Optional[str] = Field(None, description="first document carrying first/last name")
     recommended_next_step: str = Field(..., examples=[
         "approve_ready", "spot_check_warnings", "manual_review_extraction",
         "request_missing_documents", "manual_review_discrepancy"])
@@ -150,6 +160,17 @@ class InputRef(_Open):
     original_name: Optional[str] = None
     bytes: int
     sha256: str
+    pages: Optional[int] = Field(None, description="pages of this file in the package")
+
+
+class Timings(_Open):
+    ingest: Optional[int] = Field(None, description="ms; null for runs before 0.5.0 (happens before run_started)")
+    classify: Optional[int] = None
+    extract: Optional[int] = None
+    evaluate: Optional[int] = None
+    total: Optional[int] = None
+    source: Optional[Literal["measured", "event_timestamps"]] = Field(
+        None, description="RunState only: measured (0.5.0+) or derived from audit event timestamps")
 
 
 class ExtractResponse(Evaluation):
@@ -164,11 +185,102 @@ class ExtractResponse(Evaluation):
     pages_classified: List[Dict[str, Any]]
     cost: Dict[str, Any]
     audit_file: Optional[str] = Field(None, description="audit log file name (server side)")
+    timings_ms: Optional[Timings] = Field(None, description="per-stage wall time in ms (0.5.0+)")
+
+
+class RunInput(InputRef):
+    stored: Optional[bool] = Field(None, description="bytes kept for GET /runs/{id}/pages/{n}.png")
+
+
+class RunPage(_Open):
+    n: int = Field(..., description="1-based package page index for GET /runs/{id}/pages/{n}.png")
+    source_file: str
+    page: int
+    sha256: Optional[str] = None
 
 
 class RunState(Evaluation):
     run_id: str
     decisions: List[Dict[str, Any]] = Field(..., description="human decision events, oldest first")
+    # run metadata from run_started / run_completed (additive, 0.5.0+)
+    package_id: Optional[str] = None
+    engine_version: Optional[str] = None
+    git_commit: Optional[str] = None
+    region: Optional[str] = None
+    models: Optional[Dict[str, Any]] = None
+    rules: Optional[Dict[str, Any]] = Field(None, description="{version, label, sha256} of the run's rules")
+    inputs: Optional[List[RunInput]] = None
+    pages: Optional[List[RunPage]] = None
+    cost: Optional[Dict[str, Any]] = Field(None, description="{run: {usd, ...}, cache_hits}")
+    timings_ms: Optional[Timings] = None
+    started_at: Optional[str] = None
+    completed_at: Optional[str] = None
+    run_status: Optional[Literal["completed", "failed", "running"]] = None
+    audit_events: Optional[int] = None
+    head_hash: Optional[str] = None
+
+
+class AuditEventView(_Open):
+    seq: int
+    ts: str
+    type: str = Field(..., examples=["run_started", "classification", "extraction", "evaluation",
+                                     "run_completed", "decision", "reevaluation", "run_failed"])
+    prev_hash: str
+    hash: str
+    summary: Dict[str, Any] = Field(..., description="small payload view; heavy payloads stay in the log")
+
+
+class AuditEventsResponse(_Open):
+    run_id: str
+    verify: Dict[str, Any] = Field(..., description="{ok, events, head_hash, errors}")
+    events: List[AuditEventView]
+
+
+class RunListItem(_Open):
+    run_id: str
+    package_id: Optional[str] = None
+    run_status: Literal["completed", "failed", "running"]
+    started_at: Optional[str] = None
+    completed_at: Optional[str] = None
+    client_name: Optional[str] = None
+    contract_number: Optional[str] = None
+    next_step: Optional[str] = Field(None, description="current: after the latest human decision, else engine's")
+    engine_next_step: Optional[str] = None
+    decisions: int = 0
+    last_reviewer: Optional[str] = None
+    check_status_counts: Optional[Dict[str, int]] = None
+    field_status_counts: Optional[Dict[str, int]] = None
+    fields_passed: Optional[int] = None
+    fields_total: Optional[int] = None
+    documents: Optional[int] = None
+    doc_types: Optional[List[str]] = None
+    required_documents: Optional[int] = None
+    missing_documents: Optional[List[str]] = None
+    pages: Optional[int] = None
+    duration_ms: Optional[int] = None
+    usd: Optional[float] = None
+    rules_version: Optional[str] = None
+
+
+class RunsResponse(_Open):
+    runs: List[RunListItem]
+    total: int = Field(..., description="runs in the index (before filter/limit)")
+    storage: Literal["persistent", "ephemeral"]
+
+
+class EvalSummaryResponse(_Open):
+    packages: int
+    page_classification_accuracy: float
+    field_accuracy: float
+    fields: str = Field(..., examples=["518/527"])
+    check_accuracy: float
+    checks: str
+    expected_flags_hit: str
+    false_alarms: int
+    next_step_accuracy: str
+    next_step_safe: str
+    eval_usd: float
+    rows: List[Dict[str, Any]] = Field(..., description="per package: expected vs actual next step, errors")
 
 
 class AuditEvent(_Open):
@@ -223,11 +335,21 @@ class LearningResponse(_Open):
     suggestions: List[Dict[str, Any]]
 
 
+class RuleInfo(_Open):
+    id: str
+    scope: Optional[str] = None
+    check: Optional[str] = None
+    summary: str = Field(..., description="plain-English text (summary or description.en)")
+    description: Dict[str, str] = Field(..., description="{es, en}")
+    checks: Optional[Dict[str, str]] = Field(None, description="check name -> summary, for multi-check rules")
+
+
 class RulesResponse(_Open):
     rules_version: str
     label: str
     path: str
     yaml: str
+    rules: Optional[List[RuleInfo]] = None
 
 
 class RuleProposalsResponse(_Open):

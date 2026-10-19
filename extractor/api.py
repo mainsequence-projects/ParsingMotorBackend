@@ -9,7 +9,7 @@ from pathlib import Path
 import boto3
 from fastapi import Depends, FastAPI, File, HTTPException, Query, Request, UploadFile
 from fastapi.exceptions import RequestValidationError
-from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.responses import HTMLResponse, JSONResponse, Response
 from starlette.concurrency import run_in_threadpool
 
 from . import __version__, document_service
@@ -298,8 +298,21 @@ def post_decision(run_id: str, decision: M.DecisionRequest, request: Request):
             "decision_event": r["decision_event"], "reevaluation_event": r["reevaluation_event"]}
 
 
+@app.get("/runs", response_model=M.RunsResponse, responses=ERR, tags=["audit"])
+def list_runs(request: Request, limit: int = Query(50, ge=1, le=500),
+              next_step: str | None = Query(None, max_length=60)):
+    """Dashboard queue: newest first, from the audit index (run_started / run_completed summary /
+    decisions). `next_step` is the current one (after the latest human decision). Same storage as
+    the runs: on Lambda it is per container and ephemeral."""
+    _check_key(request)
+    from . import runstore
+    return runstore.list_runs(limit=limit, next_step=next_step)
+
+
 @app.get("/runs/{run_id}", response_model=M.RunState, responses=ERR, tags=["human-in-the-loop"])
 def get_run(run_id: str, request: Request):
+    """Current state (re-evaluated with the run's own rules + human decisions) plus run metadata:
+    package_id, versions, models, inputs (sha256, pages, stored), pages, cost, timings_ms."""
     _check_key(request)
     try:
         return _audit.current_state(run_id)
@@ -318,6 +331,38 @@ def verify_run(run_id: str, request: Request):
         return v
     except _audit.AuditError as e:
         raise _audit_http(e) from e
+
+
+@app.get("/runs/{run_id}/events", response_model=M.AuditEventsResponse, responses=ERR, tags=["audit"])
+def run_events(run_id: str, request: Request):
+    """Audit timeline: every event with seq, ts, type, prev_hash, hash and a small summary.
+    Heavy payloads (rules text, page lists, raw engine answers) are not returned."""
+    _check_key(request)
+    from . import runstore
+    try:
+        return runstore.events_view(run_id)
+    except _audit.AuditError as e:
+        raise _audit_http(e) from e
+
+
+@app.get("/runs/{run_id}/pages/{n}.png", responses={**ERR, 200: {"content": {"image/png": {}},
+                                                              "description": "Rendered page (PNG)"}},
+         response_class=Response, tags=["audit"])
+def run_page(run_id: str, n: int, request: Request,
+             dpi: int = Query(110, ge=36, le=200)):
+    """Page n (1-based, RunState.pages[].n) rendered with PyMuPDF from the input bytes kept next to
+    the audit log (sha256 re-verified), upright as the engines saw it so normalised bboxes overlay.
+    404 if the bytes were not kept (older run, size cap, other Lambda container)."""
+    from . import runstore
+    _check_key(request)
+    try:
+        png, meta = runstore.render_page(run_id, n, dpi)
+    except _audit.AuditError as e:
+        raise _audit_http(e) from e
+    return Response(png, media_type="image/png", headers={
+        "cache-control": "private, max-age=3600",
+        "x-source-file-sha256": meta["input_sha256"], "x-page": str(meta["page"]),
+        "x-rotation": str(meta["rotation"])})
 
 
 @app.get("/runs/{run_id}/protocol", responses={**ERR, 200: {"content": {"text/html": {}, "application/pdf": {}},
@@ -343,6 +388,24 @@ def get_protocol(run_id: str, request: Request, format: str = Query("html", patt
     return HTMLResponse(html)
 
 
+@app.get("/eval/summary", response_model=M.EvalSummaryResponse, responses=ERR, tags=["meta"])
+def eval_summary(request: Request):
+    """Offline evaluation over the 12 synthetic packages (samples/): KPI cards and, per package,
+    expected vs actual next step. A bundled file, not computed live."""
+    import json
+    _check_key(request)
+    here = Path(__file__).resolve().parent
+    for p in (os.getenv("EXTRACTOR_EVAL_SUMMARY"), here / "eval_summary.json",
+              here.parent / "samples" / "out" / "eval_summary.json"):
+        if p and Path(p).is_file():
+            data = json.loads(Path(p).read_text(encoding="utf-8"))
+            led = data.get("ledger")
+            if isinstance(led, dict) and led.get("ledger"):
+                data["ledger"] = {**led, "ledger": Path(str(led["ledger"])).name}   # no server paths
+            return data
+    raise HTTPException(404, "no eval summary bundled")
+
+
 @app.get("/learning", response_model=M.LearningResponse, responses=ERR, tags=["audit"])
 def learning(request: Request, min_support: int = Query(3, ge=1, le=1000)):
     """Aggregated human overrides per rule_id with suggestions. Never auto-applied."""
@@ -355,7 +418,16 @@ def get_rules(request: Request):
     _check_key(request)
     from .rules_engine import load_rules
     r = load_rules()
-    return {"rules_version": r.version, "label": r.label, "path": Path(r.path).name, "yaml": r.raw_text}
+    rules = []
+    for rid, rule in r.rules.items():
+        multi = {item["check"]: r.describe(rid, item["check"])
+                 for v in (rule.get("params") or {}).values() if isinstance(v, list)
+                 for item in v if isinstance(item, dict) and item.get("check")}
+        rules.append({"id": rid, "scope": rule.get("scope"), "check": rule.get("check"),
+                      "summary": r.describe(rid, rule.get("check")), "description": rule["description"],
+                      "checks": multi or None})
+    return {"rules_version": r.version, "label": r.label, "path": Path(r.path).name, "yaml": r.raw_text,
+            "rules": rules}
 
 
 @app.get("/rules/proposals", response_model=M.RuleProposalsResponse, responses=ERR, tags=["audit"])

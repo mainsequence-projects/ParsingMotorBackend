@@ -1,10 +1,11 @@
 """End-to-end pipeline: ingest -> classify (per page) -> split -> dual extract -> evaluate -> audit."""
 from __future__ import annotations
 
+import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 
-from . import __version__, audit
+from . import __version__, audit, runstore
 from . import cost as costmeter
 from .aws import textract_api_info
 from .classify import classify_pages
@@ -50,11 +51,20 @@ def _field_audit(docs):
     return rows
 
 
+def _ms(t0: float, t1: float) -> int:
+    return round((t1 - t0) * 1000)
+
+
 def run_package(pages, *, inputs=None, package_id: str = "package", explain: bool = False,
-                rules: Rules | None = None, audit_enabled: bool = True) -> dict:
+                rules: Rules | None = None, audit_enabled: bool = True,
+                files: list[tuple[str, bytes]] | None = None, ingest_ms: int | None = None) -> dict:
+    """files: the original uploads (name, bytes); kept next to the audit log for page renders."""
+    t_start = time.monotonic()
     rules = rules or load_rules()
     before = costmeter.snapshot()
     run_id = audit.new_run_id()
+    if audit_enabled and files:
+        runstore.save_inputs(run_id, files)
     models = {"classification": BEDROCK_CLASSIFY_MODEL, "extraction": BEDROCK_MODEL,
               "textract": textract_api_info()}
     gi = audit.git_info()
@@ -70,28 +80,36 @@ def run_package(pages, *, inputs=None, package_id: str = "package", explain: boo
         })
         audit.index_append({"run_id": run_id, "event": "run_started", "package_id": package_id,
                             "rules_version": rules.version, "git_commit": gi["commit"]})
+    t = {"ingest": ingest_ms}
     try:
+        t0 = time.monotonic()
         classified = classify_pages(pages)
+        t["classify"] = _ms(t0, time.monotonic())
         if audit_enabled:
             audit.append(run_id, "classification", {"pages": [
                 {k: c.get(k) for k in _PAGE_KEYS + ("doc_type", "reason", "model", "cache_hit")}
                 for c in classified]})
+        t0 = time.monotonic()
         groups = group_documents(classified)
         raw_docs = [None] * len(groups)
         with ThreadPoolExecutor(max_workers=min(4, max(1, len(groups)))) as pool:
             futs = {pool.submit(_raw_doc, g): i for i, g in enumerate(groups)}
             for fut in as_completed(futs):
                 raw_docs[futs[fut]] = fut.result()
+        t["extract"] = _ms(t0, time.monotonic())
         if audit_enabled:
             for rd in raw_docs:
                 audit.append(run_id, "extraction", {"document": {k: v for k, v in rd.items() if k != "calls"},
                                                     "calls": rd["calls"]})
         # same reference date as /runs/{id} re-evaluations (not the box's local "today")
+        t0 = time.monotonic()
         result = evaluate_package(raw_docs, rules, run_date=audit.run_date(run_id))
     except Exception as e:
         if audit_enabled:
             audit.append(run_id, "run_failed", {"error": f"{type(e).__name__}: {e}",
                                                 "cost": costmeter.run_delta(before)})
+            audit.index_append({"run_id": run_id, "event": "run_failed", "package_id": package_id,
+                                "error": type(e).__name__})
         raise
 
     if explain:
@@ -99,6 +117,8 @@ def run_package(pages, *, inputs=None, package_id: str = "package", explain: boo
             for name, f in d["fields"].items():
                 if f["status"] == "manual_review":
                     f["explanation"] = explain_disagreement(d["doc_type"], name, f["textract"], f["bedrock"])
+    t["evaluate"] = _ms(t0, time.monotonic())
+    t["total"] = _ms(t_start, time.monotonic()) + (ingest_ms or 0)
 
     run_cost = costmeter.run_delta(before)
     cache_hits = {"textract": sum(1 for rd in raw_docs for c in rd["calls"]["textract"] if c.get("cache_hit")),
@@ -113,9 +133,11 @@ def run_package(pages, *, inputs=None, package_id: str = "package", explain: boo
             "unexpected_documents": result["unexpected_documents"],
             "next_step": result["recommended_next_step"]})
         audit.append(run_id, "run_completed", {"cost": run_cost, "cache_hits": cache_hits,
-                                               "cumulative_usd": costmeter.snapshot()["total_usd"]})
+                                               "cumulative_usd": costmeter.snapshot()["total_usd"],
+                                               "timings_ms": t})
         audit.index_append({"run_id": run_id, "event": "run_completed", "package_id": package_id,
-                            "next_step": result["recommended_next_step"], "usd": run_cost["usd"]})
+                            "next_step": result["recommended_next_step"], "usd": run_cost["usd"],
+                            "summary": runstore.completed_summary(result, len(pages), t)})
 
     for d, rd in zip(result["documents"], raw_docs):
         d.pop("calls", None)
@@ -129,22 +151,34 @@ def run_package(pages, *, inputs=None, package_id: str = "package", explain: boo
         "bedrock_model": BEDROCK_MODEL,
         "generated_at": audit.utcnow(),
         **result,
-        "inputs": inputs or [],
+        "inputs": _inputs_with_pages(inputs, pages),
         "pages_classified": [
             {k: c.get(k) for k in ("source_file", "page", "doc_type", "confidence", "reason",
                                    "page_number", "page_count", "doc_key", "rotation", "cache_hit")}
             for c in classified],
         "cost": {"run": run_cost, "cache_hits": cache_hits, "ledger": _public_ledger(costmeter.snapshot())},
+        "timings_ms": t,
         "audit_file": audit.run_path(run_id).name if audit_enabled else None,
     }
 
 
+def _inputs_with_pages(inputs, pages) -> list[dict]:
+    n: dict = {}
+    for p in pages:
+        n[p.source_file] = n.get(p.source_file, 0) + 1
+    return [{**i, "pages": n.get(i["name"], 0)} for i in inputs or []]
+
+
 def run_path(paths, **kwargs) -> dict:
+    from .ingest import _files
     if isinstance(paths, (str, Path)):
         paths = [paths]
+    t0 = time.monotonic()
     pages, inputs = load_inputs(paths)
+    ingest_ms = _ms(t0, time.monotonic())
     pid = kwargs.pop("package_id", None) or Path(paths[0]).name
-    return run_package(pages, inputs=inputs, package_id=pid, **kwargs)
+    files = [(f.name, f.read_bytes()) for f in _files(paths)]
+    return run_package(pages, inputs=inputs, package_id=pid, files=files, ingest_ms=ingest_ms, **kwargs)
 
 
 def _public_ledger(snap: dict) -> dict:
@@ -157,6 +191,7 @@ def _public_ledger(snap: dict) -> dict:
 
 def run_uploads(files: list[tuple[str, bytes]], **kwargs) -> dict:
     from .ingest import check_package, safe_name, sha256
+    t0 = time.monotonic()
     pages, inputs, seen = [], [], set()
     for original, data in files:
         name = safe_name(original, seen)
@@ -164,4 +199,4 @@ def run_uploads(files: list[tuple[str, bytes]], **kwargs) -> dict:
         pages += load_bytes(name, data)
         check_package(pages, len(inputs))     # stop before rendering more than the limit
     check_package(pages, len(inputs))
-    return run_package(pages, inputs=inputs, **kwargs)
+    return run_package(pages, inputs=inputs, files=files, ingest_ms=_ms(t0, time.monotonic()), **kwargs)
