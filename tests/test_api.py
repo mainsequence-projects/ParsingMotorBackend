@@ -90,3 +90,25 @@ def test_audit_endpoints_status_codes(tmp_path, monkeypatch):
         assert C.post(f"/runs/{rid}/decisions", json=dec).status_code == 404
     assert C.post("/runs/x/decisions", json={**dec, "action": "approve"}).status_code == 422
     assert C.get("/learning?min_support=-5").status_code == 422
+
+
+def test_long_extraction_does_not_block_health(monkeypatch):
+    import threading
+    import time
+    started = threading.Event()
+
+    def slow(pages, **k):
+        started.set()
+        time.sleep(1.5)
+        return {"ok": True}
+    monkeypatch.setattr(pipeline, "run_package", slow)
+    b = io.BytesIO()
+    Image.new("RGB", (40, 40), "white").save(b, "PNG")
+    with TestClient(app) as c:      # one shared event loop, like uvicorn
+        t = threading.Thread(target=lambda: c.post("/extract", files={"files": ("a.png", b.getvalue())}))
+        t.start()
+        assert started.wait(5)
+        t0 = time.monotonic()
+        assert c.get("/health").status_code == 200
+        assert time.monotonic() - t0 < 0.8
+        t.join()

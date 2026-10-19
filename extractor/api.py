@@ -9,6 +9,7 @@ from pathlib import Path
 import boto3
 from fastapi import FastAPI, File, UploadFile, HTTPException, Query, Request
 from fastapi.responses import HTMLResponse, JSONResponse
+from starlette.concurrency import run_in_threadpool
 
 from . import __version__
 from .cost import BudgetExceeded
@@ -77,7 +78,9 @@ def session(request: Request):
 
 async def _run_files(files_payload, explain: bool):
     try:
-        return run_uploads(files_payload, explain=explain)
+        # The pipeline is blocking (boto3, PyMuPDF): run it in a worker thread so one
+        # 60 s extraction does not freeze /health, /runs and other users' requests.
+        return await run_in_threadpool(run_uploads, files_payload, explain=explain)
     except InputError as e:          # bad upload -> 4xx, never a 500
         raise HTTPException(e.status, str(e)) from e
     except BudgetExceeded as e:
