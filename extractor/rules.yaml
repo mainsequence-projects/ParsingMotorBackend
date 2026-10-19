@@ -223,5 +223,6 @@ next_step:
     - {when: any_check_discrepancy, step: manual_review_discrepancy}
     - {when: missing_documents_or_pages, step: request_missing_documents}
     - {when: many_field_manual_review, step: manual_review_extraction}
+    - {when: any_field_missing, step: manual_review_extraction}   # un dato clave sin leer nunca se aprueba
     - {when: any_warning_or_manual_review, step: spot_check_warnings}
     - {when: always, step: approve_ready}

@@ -13,7 +13,7 @@ CHECK_SEVERITIES = {"passed", "discrepancy", "warning", "manual_review"}
 FIELD_SEVERITIES = CHECK_SEVERITIES | {"missing"}
 NEXT_STEP_CONDITIONS = {
     "any_check_discrepancy", "missing_documents_or_pages", "many_field_manual_review",
-    "any_warning_or_manual_review", "always",
+    "any_warning_or_manual_review", "any_field_missing", "always",
 }
 
 # Outcomes the engine emits per rule; config must map every one to a severity.

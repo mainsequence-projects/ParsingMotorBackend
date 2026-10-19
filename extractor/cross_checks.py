@@ -240,6 +240,7 @@ def recommended_next_step(rules: Rules, checks, field_statuses, missing, gaps) -
         "missing_documents_or_pages": bool(missing) or bool(gaps),
         "many_field_manual_review": n_mr >= rules.next_step["params"]["manual_review_extraction_min_fields"],
         "any_warning_or_manual_review": any(s in ("warning", "manual_review") for s in statuses),
+        "any_field_missing": any(s == "missing" for s in field_statuses),
         "always": True,
     }
     for item in rules.next_step["order"]:
