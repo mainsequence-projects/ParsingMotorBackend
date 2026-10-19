@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import base64
 import hmac
+import logging
 import os
 from pathlib import Path
 
@@ -17,6 +18,7 @@ from .ingest import InputError
 from .pipeline import run_uploads
 from .rules_engine import RulesConfigError
 
+log = logging.getLogger("extractor.api")
 app = FastAPI(
     title="KB Document Control Extractor",
     version=__version__,
@@ -33,10 +35,12 @@ FUNCTION_URL = os.getenv("FUNCTION_URL", "")  # Lambda Function URL for browser 
 
 
 def _check_key(request: Request):
+    """Header only: a token in the query string ends up in CloudFront/Lambda logs and history."""
     if not API_KEY:
         return
-    provided = request.headers.get("x-api-key") or request.query_params.get("api_key") or ""
-    if not hmac.compare_digest(provided, API_KEY):
+    provided = request.headers.get("x-api-key") or ""
+    # compare bytes: compare_digest(str, str) raises TypeError on non-ASCII input (-> 500)
+    if not hmac.compare_digest(provided.encode("utf-8", "surrogateescape"), API_KEY.encode()):
         raise HTTPException(status_code=401, detail="missing or invalid x-api-key")
 
 
@@ -63,7 +67,8 @@ def session(request: Request):
             DurationSeconds=900,
         )
     except Exception as e:
-        raise HTTPException(500, f"assume_role failed: {e}") from e
+        log.error("assume_role failed: %s", type(e).__name__)   # no ARN/account in the response
+        raise HTTPException(502, "could not mint demo session") from e
     c = resp["Credentials"]
     return {
         "accessKeyId": c["AccessKeyId"],

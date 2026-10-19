@@ -112,3 +112,14 @@ def test_long_extraction_does_not_block_health(monkeypatch):
         assert c.get("/health").status_code == 200
         assert time.monotonic() - t0 < 0.8
         t.join()
+
+
+def test_token_only_in_header(monkeypatch):
+    import extractor.api as api
+    monkeypatch.setattr(api, "API_KEY", "s3cret-token")
+    assert C.get("/rules").status_code == 401
+    assert C.get("/rules?api_key=s3cret-token").status_code == 401       # no query-string tokens
+    assert C.get("/rules", headers={"x-api-key": "wrong"}).status_code == 401
+    assert C.get("/rules", headers={"x-api-key": "ñandú".encode("latin-1")}).status_code == 401   # non-ASCII: 401, not 500
+    assert C.get("/rules", headers={"x-api-key": "s3cret-token"}).status_code == 200
+    assert C.get("/health").status_code == 200
