@@ -15,6 +15,7 @@
 > checo** (pierde ř/č/š/í…); se compensa con reglas deterministas.
 
 Last updated: 2026-10-19 16:10 Europe/Prague. Deployed: v0.4.0 commit 7c604b0. Local HEAD adds only docs commits after it (handoff, spec md/docx/pdf, NOTAS §17-20); no code change since the deploy. Keep this file updated after every commit.
+**19-oct ~18:00 — v0.5.0 on local branch `feat/engine-mockup-parity`** (from origin/main `99a7a8f`, which already contains PR #1 rules proposals and Jose's typed endpoints). NOT pushed, NOT deployed (Lambda still runs 0.4.0). Adds the engine side of the mockups: `GET /runs`, `GET /runs/{id}/events`, `GET /runs/{id}/pages/{n}.png` (inputs now kept next to the audit, sha256-verified), `GET /eval/summary`, `timings_ms`, run metadata in RunState, `check.description` from rules.yaml `summary`, `fields_passed/fields_total`. 377 tests green. Details: NOTAS §22, docs/API.md §2.4–2.4d. Redeploy needs Carlos's OK.
 **19-oct (later):** rule-learning loop committed on `feat/kb-extractor` (NOTAS §21), 277 tests green, NOT pushed and NOT deployed. `origin/main` has Jose's 2da7cc0 (typed document endpoints) touching api.py/api_models.py/openapi.json: expect conflicts on merge (regenerate openapi.json).
 
 ---
@@ -271,6 +272,11 @@ an 8-page 7-type package). Lambda: 5-page package ≈ 15 s. Spend this task **5.
 | Durable audit on Lambda | Missing: needs S3/DynamoDB = new resource type → **Carlos must approve** |
 
 ## 9. Exact next steps (in order)
+0. (v0.5.0, local) With Carlos's OK: push `feat/engine-mockup-parity`, PR to main, redeploy the SAME
+   Lambda with `deploy.sh` on a clean tree (bundles `eval_summary.json`). Frontend widgets map:
+   queue → `GET /runs` (+ `/eval/summary` KPI cards); review screen → `GET /runs/{id}` (fields,
+   bbox, checks+description, drafts, timings, inputs/pages) + `/pages/{n}.png` + `/events` +
+   `/verify`; actions → `POST /decisions`; protocol → `/protocol?format=pdf`.
 1. Jose / Main Sequence: wire `/extract_json`, `/runs/{id}`, `/runs/{id}/decisions`,
    `/runs/{id}/protocol` (open the protocol right after the extract: audit is per container).
 2. Carlos decides on durable audit (S3 bucket or DynamoDB table). Do NOT create without approval.
@@ -284,7 +290,9 @@ an 8-page 7-type package). Lambda: 5-page package ≈ 15 s. Spend this task **5.
 - **AWS SSO creds expire** (hours). Symptom `ExpiredToken`: stop, ask Carlos to re-login.
 - **Function URL is AWS_IAM** because the org (SCP) blocks anonymous Function URL access (403 even with `Principal:*`).
 - **Reserved concurrency cannot be set**: account has 10 concurrent executions total; AWS needs ≥10 unreserved.
-- **Audit on Lambda lives in `/tmp`**: per container, lost on cold start → `/runs/{id}` can 404. Budget guard also per container.
+- **Audit on Lambda lives in `/tmp`**: per container, lost on cold start → `/runs/{id}` can 404. Budget guard also per container. Since 0.5.0 the same applies to `GET /runs`, `/events` and `/pages/{n}.png` (kept input bytes = personal data, same retention as the audit; `EXTRACTOR_KEEP_INPUTS=0` disables).
+- `check.description` comes from the run's own rules (audit), so pre-0.5 runs show `description.en`, not the new `summary`.
+- `fields_auto_validated_pct` = passed + warning (compat). The "39/48 passed" KPI is `fields_passed/fields_total`.
 - **`eu.*` Bedrock inference profiles** may process in other EU regions (data stays in the EU, not only Frankfurt).
 - **The Main Sequence wheel is missing the server part** (Jose's scaffold); run the API with uvicorn/Lambda meanwhile.
 - CloudFront origin read timeout is 60 s (that's why POST goes directly to the Function URL; Lambda allows 180 s).

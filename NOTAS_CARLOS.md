@@ -746,6 +746,59 @@ justo lo que tiene que ver el revisor antes de aprobar.
 Tests: `tests/test_rule_changes.py` (7) + contrato API actualizado; 277 en verde.
 `docs/openapi.json` regenerado.
 
+## 22. Motor a la par con los mockups v0.5.0 (19-oct-2026, ~18:00 Praga) — rama local `feat/engine-mockup-parity`, SIN push, SIN deploy
+
+**Por qué:** los mockups (pantalla de revisión, dashboard, protocolo, flujo) mostraban datos que el
+motor no devolvía (tiempos por etapa, cola de runs, timeline del audit, imagen de página con bbox,
+texto de cada check en inglés, "39/48 campos"). Si el frontend los inventa, la demo enseña algo que
+el motor no hace. Ahora cada elemento sale de un campo o endpoint real, sin tocar AWS.
+
+**Qué hay nuevo** (todo aditivo: no se quita ninguna clave; `/classify_json` y
+`/extract_typed_json` de Jose no se tocan):
+1. `GET /runs/{id}/events`: timeline del audit (seq, ts, tipo, hash, prev_hash) con un resumen
+   pequeño por evento; no devuelve el texto de reglas, listas de páginas ni respuestas brutas.
+2. `timings_ms {ingest, classify, extract, evaluate, total}` medidos en `run_completed` y en la
+   respuesta de `/extract`. Para runs viejos se derivan de los `ts` de los eventos
+   (`source: event_timestamps`, `ingest` = null porque pasa antes de `run_started`).
+3. `GET /runs/{id}` añade metadatos del run: package_id, versión, commit, modelos, reglas,
+   entradas (sha256, páginas, si se guardaron), páginas numeradas, coste, tiempos, estado.
+4. `description` en cada check: texto en inglés llano desde rules.yaml (`summary` nuevo por regla
+   y por par de XDOC_INCOME / DOC_RECENT; si falta, `description.en`). Se edita sin código y
+   cambia `rules_version` (16cf8df605962bb3). `GET /rules` devuelve la lista.
+   Los runs viejos muestran la descripción de **sus** reglas (las del audit), no las actuales:
+   el protocolo de un run no debe cambiar porque alguien editó rules.yaml después.
+5. KPI de campos: `fields_passed / fields_total / fields_passed_pct` (paquete 05: 39/48 = 81,2 %).
+   `fields_auto_validated_pct` se queda por compatibilidad pero significa *passed + warning*
+   (05 da 100 %); está documentado para que nadie lo enseñe como "aprobados".
+6. `GET /runs`: cola del dashboard desde `index.jsonl` (cliente, contrato, next step actual tras
+   decisiones humanas, conteos, docs/páginas, duración, usd). Los runs nuevos escriben ese resumen
+   en la línea `run_completed` del índice; los viejos se reconstruyen desde su log. Los runs que
+   fallan también quedan en el índice (`run_failed`).
+7. `GET /runs/{id}/pages/{n}.png`: el motor ahora guarda los bytes subidos junto al audit
+   (`<run>.inputs/<sha256>.bin`, nombre por contenido, tope 40 MB por run, `EXTRACTOR_KEEP_INPUTS=0`
+   lo apaga), re-verifica el sha256 antes de renderizar con PyMuPDF y aplica la rotación de la
+   clasificación para que los bbox normalizados de Textract encajen. **Son documentos con datos
+   personales**: misma retención que el audit. En Lambda es `/tmp`: efímero y por contenedor.
+8. `GET /eval/summary`: sirve `samples/out/eval_summary.json` (deploy lo copia dentro del zip;
+   la ruta del ledger se recorta al nombre).
+9. Versión 0.5.0 para que `/health` distinga del 0.4.0 desplegado.
+
+**Verificación offline (paquete 05, solo caché, presupuesto 0 → cualquier fallo de caché habría
+parado antes de llamar a AWS):** 23 cache hits, 0 llamadas, 0,00 USD. Sale
+`manual_review_discrepancy`, 39/48 campos, 2 discrepancias (contrato y nómina 56 000 vs
+confirmación del empleador 41 000), 43/48 campos con bbox, borrador CZ+EN, 11 eventos con cadena
+OK, página 1 renderizada. Los tiempos de esta corrida son de caché (1,3 s); en Lambda sin caché
+son 30–70 s.
+
+**Lo que NO resuelve el motor:** durabilidad (Lambda `/tmp`): la cola, los eventos y las páginas
+solo existen en el contenedor que hizo el run. Para la demo: o el gateway de Main Sequence guarda
+`ExtractResponse` + decisiones, o Carlos aprueba S3/DynamoDB. Y el redeploy (0.5.0) necesita su OK.
+
+PR #1 (rules proposals, `e58f691`) ya estaba mergeado en `origin/main` (`99a7a8f`) cuando se creó
+la rama, así que esta rama lo incluye; no hubo que mergear nada a mano.
+
+Tests: `tests/test_mockup_parity.py` (18) + contrato API ampliado; 377 en verde.
+
 ---
 
 ## Archivos clave
