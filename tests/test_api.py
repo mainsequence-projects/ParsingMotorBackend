@@ -78,3 +78,15 @@ def test_extract_json_bad_pdf_is_422():
     r = C.post("/extract_json", json={"files": [{"filename": "a.pdf",
                                                   "content_base64": base64.b64encode(b"%PDF-x").decode()}]})
     assert r.status_code == 422
+
+
+def test_audit_endpoints_status_codes(tmp_path, monkeypatch):
+    monkeypatch.setenv("EXTRACTOR_AUDIT_DIR", str(tmp_path))
+    (tmp_path / "index.jsonl").write_text('{"ts":"x","run_id":"y"}\n')
+    dec = {"field": "contract.first_name", "action": "confirm", "reviewer": "x"}
+    for rid in ("20990101T000000Z-deadbeef", "index", "nope"):
+        assert C.get(f"/runs/{rid}").status_code == 404
+        assert C.get(f"/runs/{rid}/verify").status_code == 404
+        assert C.post(f"/runs/{rid}/decisions", json=dec).status_code == 404
+    assert C.post("/runs/x/decisions", json={**dec, "action": "approve"}).status_code == 422
+    assert C.get("/learning?min_support=-5").status_code == 422

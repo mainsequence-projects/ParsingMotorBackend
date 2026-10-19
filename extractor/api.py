@@ -239,6 +239,12 @@ class Decision(BaseModel):
     comment: str = ""
 
 
+def _audit_http(e: Exception) -> HTTPException:
+    code = (404 if isinstance(e, _audit.NotFound) else 409 if isinstance(e, _audit.Conflict)
+            else 422 if isinstance(e, _audit.Invalid) else 400)
+    return HTTPException(code, str(e))
+
+
 @app.post("/runs/{run_id}/decisions")
 def post_decision(run_id: str, decision: Decision, request: Request):
     """Append a human decision (never mutates) and return the recomputed next step."""
@@ -246,7 +252,7 @@ def post_decision(run_id: str, decision: Decision, request: Request):
     try:
         r = _audit.record_decision(run_id, decision.model_dump())
     except _audit.AuditError as e:
-        raise HTTPException(409 if "broken" in str(e) else 400, str(e)) from e
+        raise _audit_http(e) from e
     return {"run_id": run_id, "next_step_before": r["next_step_before"], "next_step": r["next_step"],
             "decision_event": r["decision_event"], "reevaluation_event": r["reevaluation_event"]}
 
@@ -257,20 +263,22 @@ def get_run(run_id: str, request: Request):
     try:
         return _audit.current_state(run_id)
     except _audit.AuditError as e:
-        raise HTTPException(404, str(e)) from e
+        raise _audit_http(e) from e
 
 
 @app.get("/runs/{run_id}/verify")
 def verify_run(run_id: str, request: Request):
     _check_key(request)
     try:
+        if not _audit.run_path(run_id).exists():
+            raise _audit.NotFound(f"no audit log for run {run_id}")
         return _audit.verify(run_id)
     except _audit.AuditError as e:
-        raise HTTPException(400, str(e)) from e
+        raise _audit_http(e) from e
 
 
 @app.get("/learning")
-def learning(request: Request, min_support: int = 3):
+def learning(request: Request, min_support: int = Query(3, ge=1, le=1000)):
     """Aggregated human overrides per rule_id with suggestions. Never auto-applied."""
     _check_key(request)
     return _audit.learning_report(min_support=min_support)
