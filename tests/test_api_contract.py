@@ -122,3 +122,35 @@ def test_cost_ledger_path_is_not_exposed():
     from extractor.pipeline import _public_ledger
     assert _public_ledger({"total_usd": 1, "ledger": "/tmp/x/.cost/ledger.json"}) == {
         "total_usd": 1, "ledger": "ledger.json"}
+
+
+def test_upstream_error_text_is_not_returned(monkeypatch):
+    import io
+    from PIL import Image
+    from extractor import pipeline
+    from extractor.api import app
+
+    def boom(pages, **k):
+        raise RuntimeError("AccessDeniedException: arn:aws:iam::123456789012:role/x is not authorized")
+    monkeypatch.setattr(pipeline, "run_package", boom)
+    b = io.BytesIO()
+    Image.new("RGB", (40, 40), "white").save(b, "PNG")
+    r = TestClient(app).post("/extract", files={"files": ("a.png", b.getvalue())})
+    assert r.status_code == 502
+    assert "123456789012" not in r.text and "RuntimeError" in r.json()["detail"]
+
+
+def test_every_endpoint_except_health_requires_the_key(monkeypatch, client):
+    import extractor.api as api
+    monkeypatch.setattr(api, "API_KEY", "k")
+    calls = [("get", "/session"), ("post", "/extract"), ("post", "/extract_json"),
+             ("get", f"/runs/{RUN}"), ("post", f"/runs/{RUN}/decisions"),
+             ("get", f"/runs/{RUN}/verify"), ("get", "/learning"), ("get", "/rules")]
+    for m, path in calls:
+        kw = {"json": {"action": "confirm", "reviewer": "x", "field": "a.b"}} if "decisions" in path else {}
+        if path == "/extract":
+            kw = {"files": {"files": ("a.png", b"x")}}
+        if path == "/extract_json":
+            kw = {"json": {"files": [{"filename": "a", "content_base64": "eA=="}]}}
+        assert getattr(client, m)(path, **kw).status_code == 401, path
+    assert client.get("/health").status_code == 200

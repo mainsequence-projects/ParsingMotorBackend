@@ -28,7 +28,7 @@ app = FastAPI(
                  "human decisions. Auth: header `x-api-key` (when EXTRACTOR_API_KEY is set). "
                  "See docs/API.md."),
 )
-ERR = {c: {"model": M.ErrorResponse} for c in (400, 401, 404, 409, 413, 415, 422, 502, 503)}
+ERR = {c: {"model": M.ErrorResponse} for c in (400, 401, 404, 409, 413, 415, 422, 500, 502, 503)}
 
 # CORS only when asked for (Jose's frontend on localhost / Main Sequence). NOT on Lambda: the
 # Function URL already adds CORS headers and doubled headers make browsers reject the response.
@@ -117,7 +117,9 @@ async def _run_files(files_payload, explain: bool):
     except RulesConfigError as e:
         raise HTTPException(500, f"rules.yaml invalid: {e}") from e
     except Exception as e:
-        raise HTTPException(502, f"extraction failed ({type(e).__name__}): {e}") from e
+        # AWS error texts carry account ids / ARNs / model ids: log them, return only the class
+        log.exception("extraction failed")
+        raise HTTPException(502, f"extraction failed ({type(e).__name__}); see server logs") from e
 
 
 @app.post("/extract", response_model=M.ExtractResponse, responses=ERR, tags=["extraction"])
