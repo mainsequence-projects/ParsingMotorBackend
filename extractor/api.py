@@ -310,6 +310,29 @@ def verify_run(run_id: str, request: Request):
         raise _audit_http(e) from e
 
 
+@app.get("/runs/{run_id}/protocol", responses={**ERR, 200: {"content": {"text/html": {}, "application/pdf": {}},
+                                                       "description": "Control protocol (HTML or PDF)"}},
+         response_class=HTMLResponse, tags=["audit"])
+def get_protocol(run_id: str, request: Request, format: str = Query("html", pattern="^(html|pdf)$")):
+    """Cited control protocol: header (case, versions, input hashes), summary, every check with
+    evidence from both engines, missing items + client draft (CZ/EN), human decision history.
+    Rebuilt from the hash-chained audit log; footer states AI output is not a final approval."""
+    from fastapi.responses import Response
+
+    from . import protocol
+    _check_key(request)
+    try:
+        if not _audit.run_path(run_id).exists():
+            raise _audit.NotFound(f"no audit log for run {run_id}")
+        html = protocol.render_html(protocol.build(run_id))
+    except _audit.AuditError as e:
+        raise _audit_http(e) from e
+    if format == "pdf":
+        return Response(protocol.render_pdf(html), media_type="application/pdf",
+                        headers={"content-disposition": f'inline; filename="protocol_{run_id}.pdf"'})
+    return HTMLResponse(html)
+
+
 @app.get("/learning", response_model=M.LearningResponse, responses=ERR, tags=["audit"])
 def learning(request: Request, min_support: int = Query(3, ge=1, le=1000)):
     """Aggregated human overrides per rule_id with suggestions. Never auto-applied."""

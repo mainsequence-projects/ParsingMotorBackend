@@ -65,7 +65,7 @@ def test_tampered_log_fails_verify(client, tmp_path):
 
 def test_health_reports_version_rules_and_limits(client):
     h = client.get("/health").json()
-    assert h["version"] == __version__ == "0.3.0"
+    assert h["version"] == __version__ == "0.4.0"
     assert len(h["rules_version"]) == 16 and h["limits"]["max_pages"] >= 1
 
 

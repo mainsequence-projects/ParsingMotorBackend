@@ -5,6 +5,7 @@
   python -m extractor decide <run_id> --field payslip.last_name --action confirm --reviewer ana
   python -m extractor verify <run_id | path.jsonl>
   python -m extractor learn [--min-support 3]
+  python -m extractor protocol <run_id> -o protocol.html|protocol.pdf
 """
 from __future__ import annotations
 
@@ -14,7 +15,7 @@ import os
 import sys
 from pathlib import Path
 
-SUB = {"recheck", "decide", "verify", "learn", "extract"}
+SUB = {"recheck", "decide", "verify", "learn", "extract", "protocol"}
 
 
 def _dump(obj, out=None):
@@ -118,10 +119,28 @@ def _learn(argv):
     return 0
 
 
+def _protocol(argv):
+    p = argparse.ArgumentParser(prog="extractor protocol")
+    p.add_argument("run_id")
+    p.add_argument("-o", "--out", help="output file; .pdf -> PDF, anything else -> HTML (default stdout)")
+    a = p.parse_args(argv)
+    from . import protocol
+    html = protocol.render_html(protocol.build(a.run_id))
+    if a.out and a.out.lower().endswith(".pdf"):
+        Path(a.out).write_bytes(protocol.render_pdf(html))
+    elif a.out:
+        Path(a.out).write_text(html, encoding="utf-8")
+    else:
+        print(html)
+    if a.out:
+        print(f"wrote {a.out}", file=sys.stderr)
+    return 0
+
+
 def main(argv=None):
     argv = list(sys.argv[1:] if argv is None else argv)
     if argv and argv[0] in SUB:
         cmd, rest = argv[0], argv[1:]
         return {"recheck": _recheck, "decide": _decide, "verify": _verify, "learn": _learn,
-                "extract": _extract}[cmd](rest)
+                "extract": _extract, "protocol": _protocol}[cmd](rest)
     return _extract(argv)
