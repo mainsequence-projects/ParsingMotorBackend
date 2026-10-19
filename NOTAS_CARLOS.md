@@ -204,7 +204,7 @@ Tags en todos: `project=fintechers-kb`, `owner=carlos`.
 **URL pública (para Jose / jurado):**
 `https://d31su4idgeitei.cloudfront.net/`
 
-**Token API:** solo en `/workspace/hack/extractor/.deploy_token` (gitignored). No va al repo ni a estas notas.
+**Token API:** solo en `ParsingMotorBackend/.deploy_token` (gitignored, chmod 600). `deploy.py` lo lee del archivo o del env de la Lambda; no lo rota. No va al repo ni a estas notas.
 
 ### Por qué no AuthType NONE
 
@@ -230,7 +230,7 @@ página demo hace:
 
 ```bash
 PUBLIC=https://d31su4idgeitei.cloudfront.net/
-TOKEN=$(cat /workspace/hack/extractor/.deploy_token)
+TOKEN=$(cat .deploy_token)   # desde ParsingMotorBackend/
 
 # 1) Health abierto
 curl -sS "$PUBLIC/health"
@@ -242,7 +242,7 @@ curl -sS "$PUBLIC" | head
 curl -sS -o /dev/null -w "%{http_code}\n" "$PUBLIC/session"
 
 # 4) Extract firmado (recomendado)
-cd /workspace/hack/extractor
+cd /workspace/hack/ParsingMotorBackend
 source ../venv/bin/activate
 python deploy/signed_extract.py samples/02_missing_payslip/id_card.pdf | python -m json.tool | head
 ```
@@ -368,8 +368,7 @@ spot_check_warnings`; verify ok (11 eventos). La copia manipulada del run 03 fal
 podría reescribir el fichero entero y recalcular hashes. En producción: anclar el
 `head_hash` fuera (S3 Object Lock / firma KMS / WORM). Los logs contienen datos de
 documentos (aquí solo sintéticos): `audit/` está en `.gitignore`. El audit vive en el
-disco local; en Lambda iría a `/tmp` (efímero) → la Lambda desplegada NO se ha
-actualizado (sigue en 0.1.0, sin audit).
+disco local; en Lambda va a `/tmp` (efímero, por contenedor). Redesplegada en v0.3.0 (§16).
 
 ---
 
@@ -477,13 +476,117 @@ con las mismas env vars.
 documentos → solo para datos sintéticos/dev; con la caché, el coste por paquete
 depende del orden de ejecución (02 sale gratis porque reusa las páginas de 01).
 
+## 14. Umbral de confianza: por qué 01/06/09 nunca llegaban a `approve_ready`
+
+**Síntoma (v0.2):** paquetes limpios (01, 06, 09) terminaban en `spot_check_warnings` aunque
+los dos motores leían **exactamente** lo mismo. Causa: `FIELD_RECONCILE` exigía conf Textract
+≥ 0,9 también cuando Textract y Bedrock coincidían al carácter tras normalizar. Textract
+QUERIES da 0,7–0,85 en campos limpios del PDF sintético, así que siempre caía en
+`agree_low_conf → warning`.
+
+**Decisión:** nuevo outcome `agree_exact`: si `t_norm == b_norm` (igualdad exacta tras
+normalizar, no fuzzy) y conf Textract ≥ **0,5** → `passed`. Los fuzzy (SequenceMatcher ≥ 0,92)
+siguen pidiendo 0,9; los desacuerdos siguen en `manual_review`; los checks cruzados no cambian.
+
+**Por qué 0,5 y no otro número:** se fijó *a priori*, no ajustado al eval: por debajo de 0,5
+Textract está diciendo que lo más probable es que su lectura esté mal; por encima, dos
+lectores independientes (OCR clásico + LLM visual) coinciden al carácter, y la probabilidad
+de que ambos se equivoquen *en el mismo valor* es mucho menor que la de cada uno. Es un
+parámetro en `rules.yaml` (`agree_exact_min_conf`); si se quita, el motor se comporta como
+v0.2. **Riesgo asumido:** error correlacionado (los dos leen mal el mismo píxel); mitigado
+porque los checks cruzados (ingreso contrato vs nómina vs extracto, RČ, nombres) siguen
+activos y en el eval detectan 8/8 problemas.
+
+**Efecto aislado (mismo caché, coste 0):** sin `agree_exact` next_step 5/9; con él 7/9.
+Campos, flags y falsas alarmas idénticos en ambos.
+
+**05 leía 182000:** no era el modelo. En `scripts/gen_samples.py` la etiqueta
+`DECLARED_MONTHLY_NET_INCOME` (larga) se pintaba encima del importe → el PDF mostraba
+"…INCOME15200…" solapado. Textract leía `15200E.00` (conf 0,37–0,55) y Bedrock 182000.
+Fix en `162b6b8` (x del valor = max(85 mm, ancho etiqueta + 4 mm)). Ahora 05 lee
+52000 en los dos motores. 05 y 09 siguen en `spot_check_warnings` **a propósito**: en 05
+Textract mete el ruido del escaneo en la dirección (`… Praha (phote) 2`), en 09 lee
+`Praha2` vs `Praha 2` con conf 0,75 (fuzzy). Son casos reales de "mira esto 10 segundos";
+no se tocó el umbral para forzarlos (sería sobreajustar al eval).
+
+---
+
+## 15. Revisión independiente (19-oct-2026)
+
+Revisión caja negra (atacar el API desplegado/local con entradas malas, concurrencia,
+paquetes raros) y luego caja blanca (leer cada módulo). Cada bug: un commit con el *por
+qué* en español y un test de regresión que falla sin el fix.
+
+**Resumen:** 24 hallazgos — **6 altos, 12 medios, 6 bajos**. Tests: 139 → **157 passed**
+(sin AWS). Rama `feat/kb-extractor`, sin push.
+
+| # | Bug | Sev. | Cómo se encontró | Fix | Commit | Test |
+|---|---|---|---|---|---|---|
+| 1 | Dos archivos `contract.pdf` se fusionaban en un documento | Alta | caja negra: subir 2 archivos con el mismo nombre | `safe_name` + sufijo `__2`, guarda `original_name` | b08d064 | test_ingest |
+| 2 | Paquete **sin contrato** → `spot_check_warnings`, `missing=[]` | Alta | caja negra: quitar el contrato | `always_required: [contract]` | 177024b | test_completeness |
+| 3 | Varios contratos en un paquete pasaban sin aviso | Media | caja blanca (`_first`) | regla `CONTRACT_SINGLE` | 67df8f6 | test_completeness |
+| 4 | Campo clave `missing` no bloqueaba `approve_ready` | Alta | caja blanca next_step | condición `any_field_missing` | 4dae3c7 | test_next_step |
+| 5 | Importes "arreglados" en silencio: `1O000`→1000, `15200E.00`→15200, `2024: 52000`→202452000, `,-`, menos unicode | Media | fuzz de `norm_amount` | parser estricto + outcome `ocr_unparseable` → manual_review | 21d4844 | test_normalize |
+| 6 | Fechas con mes checo / "April 12, 1988" no se entendían | Baja | caja blanca | meses CZ sin diacríticos | 707f064 | test_normalize |
+| 7 | RČ con fecha futura, +20/+70 antes de 2004 y dígito legacy después de 1985 aceptados | Media | casos límite de la norma | parámetros en RC_VALID | 7ac8b92 | test_birth_number |
+| 8 | Página/bbox/conf citaban Textract aunque el valor fuera de Bedrock | Media | caja blanca reconcile | `source` y cita del motor elegido | 38b9ca5 | test_reconcile |
+| 9 | `required_documents` solo lo leía el LLM; tipos desconocidos se perdían; `approve_ready` estructuralmente imposible | Alta | caja blanca + eval | 2º lector: Textract LINES + parser determinista | ea4e8f0 | test_doclist |
+| 10 | Decisiones humanas sin validar (edit vacío, "lol", 5 MB, run parcial, run "index" → 500) y sin lock | Media | caja negra /runs | `_validate_decision` + lock por run | 4fcd496 | test_audit |
+| 11 | PDF corrupto/cifrado, txt, PNG roto, JSON no-dict → **500**; sin límite de páginas | Media | caja negra | `InputError` → 400/413/415/422 antes de gastar AWS | 4986f0b | test_api |
+| 12 | /runs: run desconocido 409/200, códigos incoherentes | Baja | caja negra | 404/409/422 | f4b516c | test_api |
+| 13 | La extracción bloqueaba el event loop (/health colgado 60 s) | Media | caja negra: 2 peticiones a la vez | `run_in_threadpool` | dda6454 | test_api |
+| 14 | Caché y ledger de coste: archivos tmp chocaban y se perdían sumas entre procesos | Media | caja blanca + test concurrente | tmp únicos + lock fcntl | 3791005 | test_concurrency |
+| 15 | Página tamaño póster → OOM; bomba de descompresión → 500; EXIF ignorado; PNG > 3,75 MB rechazado por Bedrock | Media | fuzz ingest | dpi acotado, 50 MP, exif_transpose, JPEG q85 | 37e1ae8 | test_ingest |
+| 16 | Fallback de modelo silencioso; confianza no numérica del LLM tumbaba el run | Media | caja blanca aws/classify | regla `MODEL_PRIMARY` (warning) + `_conf()` | e51a2ee | test_models |
+| 17 | Token aceptado en query string; cabecera no-ASCII → 500; /session filtraba el error de IAM | Media | caja negra | solo cabecera, compare bytes, 502 genérico | 7fe6536 | test_api |
+| 18 | `/extract` y `/runs/{id}` evaluaban con fechas distintas | Baja | caja blanca | `run_date` del run_id | 2b0600c | test_pipeline |
+| 19 | Redesplegar borraba el env de Lambda (rompía /session) y rotaba el token | Alta | caja blanca deploy.py | merge de env + token de archivo/Lambda | 36973be | test_deploy |
+| 20 | Etiqueta tapaba el importe en los samples → 182000 en 05, 2 falsas alarmas | Alta | eval (05) + ver el PDF | posición x del valor | 162b6b8 | test_samples |
+| 21 | El 502 devolvía el texto de AWS (cuenta, ARNs, ids de modelo) | Media | caja blanca api | log completo, cliente solo la clase | cf533fb | test_api_contract |
+| 22 | `audit_file` con ruta absoluta del servidor | Baja | revisión del contrato | solo nombre | 52ac5f7 | test_api_contract |
+| 23 | `cost.ledger.ledger` con ruta absoluta | Baja | idem | solo nombre | 412bf3b | test_api_contract |
+| 24 | `/verify` con ruta absoluta | Baja | smoke local | solo nombre | 47449cf | test_api_contract |
+
+Además (no bugs): umbral `agree_exact` (a0d6eb0, §14); modelos pydantic de respuesta +
+`docs/openapi.json` + CORS por `EXTRACTOR_CORS_ORIGINS` + v0.3.0 (20560de); `docs/API.md`
+ES+EN para Jose (b639316); deps dev (6adeba8); resultados del eval (5cb6672).
+
+### Eval antes / después (9 paquetes, mismos PDFs salvo las páginas de contrato regeneradas)
+
+| Métrica | Antes (v0.2) | Después (v0.3) | Sin `agree_exact` (aislado) |
+|---|---|---|---|
+| Clasificación de páginas | 1,0 | 1,0 | 1,0 |
+| Agrupación | 9/9 | 9/9 | 9/9 |
+| Campos correctos | 254/255 (05: 182000) | **255/255** | 255/255 |
+| Flags esperados detectados | 8/8 | 8/8 | 8/8 |
+| Falsas alarmas | 2 (05 ingresos ×2) | **0** | 0 |
+| next_step correcto | 5/9 | **7/9** | 5/9 |
+| next_step seguro (nunca aprobar lo malo) | 9/9 | 9/9 | 9/9 |
+| Faltantes / páginas / sobrantes | 9/9 · 9/9 · 9/9 | 9/9 · 9/9 · 9/9 | igual |
+| Coste del eval | 0,4346 USD (sin caché) | 0,1706 USD (caché; solo páginas de contrato nuevas) | 0 USD |
+
+Por paquete después: 01/06 → `approve_ready` (antes spot_check); 02/07 → `request_missing_documents`;
+03/04 → `manual_review_discrepancy`; 08 → `spot_check_warnings`; 05/09 → `spot_check_warnings`
+(esperado approve, ver §14: decisión consciente).
+
+**Historia de la demo verificada (local, caché, 0 USD; y como test offline
+`tests/test_api_contract.py::test_demo_story_discrepancy_draft_human_edit_verify`):**
+01 → `approve_ready`, sin borrador. 03 → `manual_review_discrepancy` + borrador al cliente
+("The income figures on your documents do not match…"). Edición humana
+`contract.declared_monthly_income = 38000` → `approve_ready`, borrador `null`. `/verify` → `ok: true`.
+
+### Coste de la revisión
+Ledger `.cost/review_2026-10-19.json` (tope 1,5 USD): **0,1869 USD** antes del redeploy
+(eval 0,1706 + pruebas 0,0163). Ver §16 para el redeploy.
+
 ---
 
 ## Archivos clave
 
 - Motor: `extractor/` (reglas: `rules.yaml`, `rules_engine.py`; audit: `audit.py`;
   splitter: `splitter.py`; evaluación pura: `evaluate.py`)
-- Tests: `tests/` (31 tests, sin AWS)
+- Tests: `tests/` (157 tests, sin AWS)
+- Contrato HTTP para Jose: `docs/API.md` (ES+EN), `docs/openapi.json`
 - Notas: `NOTAS_CARLOS.md` (este archivo)
 - Samples + eval: `samples/`, `scripts/gen_samples.py`, `scripts/gen_hard_samples.py`, `scripts/eval.py`
 - Zip: `/workspace/hack/extractor.zip`
@@ -495,7 +598,7 @@ depende del orden de ejecución (02 sale gratis porque reusa las páginas de 01)
 Pre-requisitos: credenciales SSO de la team account en el entorno, región Frankfurt.
 ```bash
 cd ParsingMotorBackend && python -m venv .venv && source .venv/bin/activate
-pip install -e . pytest
+pip install -e '.[dev]'
 export AWS_REGION=eu-central-1 EXTRACTOR_BUDGET_USD=1.0 EXTRACTOR_CACHE=1
 ```
 
@@ -503,7 +606,7 @@ export AWS_REGION=eu-central-1 EXTRACTOR_BUDGET_USD=1.0 EXTRACTOR_CACHE=1
 ```bash
 python -m pytest -q
 ```
-Esperado: `31 passed`.
+Esperado: `157 passed`.
 
 ### Paso B — Salud AWS
 ```bash
