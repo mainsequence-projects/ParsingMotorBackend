@@ -9,6 +9,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import uuid
 from pathlib import Path
 
 
@@ -40,6 +41,7 @@ def put(k: str, value) -> None:
     if not enabled():
         return
     p = _dir() / f"{k}.json"
-    tmp = p.with_suffix(".tmp")
+    # unique temp name: two runs of the same page at once must not share a temp file
+    tmp = p.with_name(f"{p.name}.{os.getpid()}.{uuid.uuid4().hex[:8]}.tmp")
     tmp.write_text(json.dumps(value, ensure_ascii=False, default=str))
     tmp.replace(p)

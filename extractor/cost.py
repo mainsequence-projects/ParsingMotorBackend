@@ -7,6 +7,7 @@
 """
 from __future__ import annotations
 
+import fcntl
 import json
 import os
 import threading
@@ -44,7 +45,33 @@ class BudgetExceeded(RuntimeError):
     pass
 
 
-_lock = threading.Lock()
+_tlock = threading.Lock()
+
+
+class _Lock:
+    """Thread lock + cross-process flock on '<ledger>.lock' (two CLI/eval runs at once)."""
+
+    def __enter__(self):
+        _tlock.acquire()
+        try:
+            p = _ledger_path()
+            p.parent.mkdir(parents=True, exist_ok=True)
+            self._f = open(p.with_suffix(".lock"), "a+")
+            fcntl.flock(self._f, fcntl.LOCK_EX)
+        except BaseException:
+            _tlock.release()
+            raise
+        return self
+
+    def __exit__(self, *exc):
+        try:
+            fcntl.flock(self._f, fcntl.LOCK_UN)
+            self._f.close()
+        finally:
+            _tlock.release()
+
+
+_lock = _Lock()
 _COUNTERS = ("total_usd", "textract_pages", "bedrock_calls", "bedrock_input_tokens",
              "bedrock_output_tokens", "cache_hits_textract", "cache_hits_bedrock")
 
@@ -71,7 +98,7 @@ def _save(state: dict):
     p.parent.mkdir(parents=True, exist_ok=True)
     state["entries_tail"] = state["entries_tail"][-100:]
     out = {**state, "budget_usd": _budget(), "updated_at": datetime.now(timezone.utc).isoformat()}
-    tmp = p.with_suffix(".tmp")
+    tmp = p.with_name(f"{p.name}.{os.getpid()}.{threading.get_ident()}.tmp")
     tmp.write_text(json.dumps(out, indent=2))
     tmp.replace(p)
 
