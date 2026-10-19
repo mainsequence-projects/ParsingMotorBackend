@@ -85,16 +85,16 @@ def _make_rc(prefix9: str) -> str:
     raise AssertionError
 
 
-@pytest.mark.parametrize("mm,sex", [("04", "M"), ("24", "M"), ("54", "F"), ("74", "F")])
-def test_rc_month_offsets(mm, sex):
-    rc = _make_rc(f"88{mm}12000")
-    info = parse_birth_number(rc, load_rules().params("RC_VALID"))
+@pytest.mark.parametrize("yy,mm,sex", [("88", "04", "M"), ("08", "24", "M"), ("88", "54", "F"), ("08", "74", "F")])
+def test_rc_month_offsets(yy, mm, sex):
+    rc = _make_rc(f"{yy}{mm}12000")
+    info = parse_birth_number(rc, load_rules().params("RC_VALID"), today="2026-10-19")
     assert info["valid"], info
-    assert info["birth_date"] == "1988-04-12" and info["sex"] == sex
+    assert info["birth_date"] == f"{'19' if yy == '88' else '20'}{yy}-04-12" and info["sex"] == sex
 
 
 def test_rc_offsets_come_from_config():
-    rc = _make_rc("882412000")  # +20 offset
+    rc = _make_rc("082412000")  # +20 offset, born 2008
     p = load_rules().params("RC_VALID")
     p2 = {**p, "male_month_offsets": []}
     assert parse_birth_number(rc, p)["valid"]

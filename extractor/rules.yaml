@@ -42,6 +42,9 @@ rules:
       female_month_offsets: [50, 70]
       male_month_offsets: [20]       # +20 / +70 exist since 2004 when numbers ran out
       allow_legacy_check_digit_zero: true   # first 9 digits mod 11 == 10 and last digit 0
+      legacy_check_digit_until_year: 1985   # esa excepción solo existió hasta 1985
+      extra_offsets_from_year: 2004         # +20 / +70 solo para nacidos desde 2004
+      reject_future_dates: true             # fecha codificada posterior a la del run → inválido
     severity:
       valid: passed
       invalid: discrepancy

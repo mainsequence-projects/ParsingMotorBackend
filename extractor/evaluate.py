@@ -73,7 +73,7 @@ def evaluate_package(raw_docs: list[dict], rules: Rules, *, field_overrides=(), 
 
     checks = []
     for d in docs:
-        dc = document_checks(d, rules)
+        dc = document_checks(d, rules, run_date=run_date)
         d["checks"] = dc
         checks.extend(dc)
     checks.extend(package_checks(docs, rules, run_date=run_date))

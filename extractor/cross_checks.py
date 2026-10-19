@@ -24,11 +24,11 @@ def _first(docs, doc_type, field):
 
 
 # ---------------- per document ----------------
-def document_checks(doc: dict, rules: Rules) -> list[dict]:
+def document_checks(doc: dict, rules: Rules, run_date: str | None = None) -> list[dict]:
     checks, fields, dt = [], doc["fields"], doc["doc_type"]
     bn = fields.get("birth_number") or {}
     if bn.get("normalized"):
-        info = parse_birth_number(str(bn["normalized"]), rules.params("RC_VALID"))
+        info = parse_birth_number(str(bn["normalized"]), rules.params("RC_VALID"), today=run_date)
         checks.append(rules.check("RC_VALID", "valid" if info["valid"] else "invalid",
                                   detail=info["reason"], page=bn.get("page"), doc_type=dt,
                                   evidence=[_ev(doc, "birth_number")]))
