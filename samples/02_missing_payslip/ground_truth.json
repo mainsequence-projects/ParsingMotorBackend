@@ -1,0 +1,14 @@
+{
+  "package_id": "02_missing_payslip",
+  "expected_docs": [
+    "contract",
+    "id_card",
+    "bank_statement",
+    "proof_of_address"
+  ],
+  "expected_missing": [
+    "payslip"
+  ],
+  "expected_issues": [],
+  "expected_next_step": "request_missing_documents"
+}
