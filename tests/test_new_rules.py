@@ -49,14 +49,39 @@ def test_certificate_older_than_30_days_is_stale():
     assert _status(package_checks(docs, R), "DOC_RECENT", "tax_certificate_recent") == "manual_review"
 
 
-def test_tax_arrears_wording():
-    clear = _doc("tax_or_debt_certificate", {"arrears_status": _f("no tax arrears")})
-    assert document_checks(clear, R)[0]["status"] == "passed"
-    bad = _doc("tax_or_debt_certificate", {"arrears_status": _f("has outstanding tax arrears")})
-    assert document_checks(bad, R)[0]["status"] == "discrepancy"
-    # Czech "no arrears" must win even though the word "nedoplatky" is present
-    cz = _doc("tax_or_debt_certificate", {"arrears_status": _f("nemá žádné daňové nedoplatky")})
-    assert document_checks(cz, R)[0]["outcome"] == "clear"
+def test_tax_arrears_is_a_yes_no_read_by_both_engines():
+    def cert(v, status="passed"):
+        f = _f(v, None, status=status)
+        from extractor.normalize import norm_yesno
+        f["normalized"] = norm_yesno(v)
+        return _doc("tax_or_debt_certificate", {"has_tax_arrears": f})
+    assert document_checks(cert("no"), R)[0]["status"] == "passed"
+    assert document_checks(cert("ano"), R)[0]["status"] == "discrepancy"
+    assert document_checks(cert("maybe"), R)[0]["status"] == "manual_review"
+    # engines disagreed -> never 'clear' on a single reader
+    assert document_checks(cert("no", status="manual_review"), R)[0]["status"] == "manual_review"
+
+
+def test_textract_without_czech_letters_counts_as_agreement():
+    from extractor.reconcile import reconcile_fields
+    out = reconcile_fields(
+        "id_card",
+        {"first_name": {"value": "Ondej", "confidence": 0.95, "page": 1},
+         "address": {"value": "koln 2, 400 01 st nad Labem", "confidence": 0.66, "page": 1},
+         "last_name": {"value": "Novak", "confidence": 0.95, "page": 1}},
+        {"first_name": {"value": "Ondřej", "page": 1},
+         "address": {"value": "Školní 2, 400 01 Ústí nad Labem", "page": 1},
+         "last_name": {"value": "Nováková", "page": 1}}, R)
+    assert out["first_name"]["outcome"] == "agree_ocr_no_diacritics"
+    assert out["first_name"]["value"] == "Ondřej" and out["first_name"]["status"] == "passed"
+    assert out["address"]["value"] == "Školní 2, 400 01 Ústí nad Labem"
+    assert out["last_name"]["outcome"] == "disagree"          # real difference, not just accents
+
+
+def test_czech_month_without_diacritics_from_ocr():
+    from extractor.normalize import norm_date
+    assert norm_date("2.rjna 2026") == "2026-10-02"
+    assert norm_date("15. zari 2026") == "2026-09-15"
 
 
 def test_certificate_holder_must_match_the_id():

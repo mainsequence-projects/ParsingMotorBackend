@@ -1,5 +1,5 @@
 # Per-document-type field schemas.
-# type: name | text | address | date | birth_number | amount | iban | id | doc_list
+# type: name | text | address | date | birth_number | amount | iban | id | doc_list | yesno
 # query: Textract QUERIES question (omit / textract: false => Bedrock-only field)
 doc_types:
   contract:
@@ -11,8 +11,8 @@ doc_types:
       birth_date: {type: date, query: "What is the client's date of birth?"}
       birth_number: {type: birth_number, query: "What is the client's birth number (rodne cislo)?"}
       address: {type: address, query: "What is the client's permanent address?"}
-      loan_amount: {type: amount, query: "What is the LOAN_AMOUNT?"}
-      declared_monthly_income: {type: amount, query: "What is the DECLARED_MONTHLY_NET_INCOME amount?"}
+      loan_amount: {type: amount, query: "What is the loan amount?"}
+      declared_monthly_income: {type: amount, query: "What is the declared monthly net income?"}
       contract_date: {type: date, query: "What is the contract date (date of signature)?"}
       required_documents:
         type: doc_list
@@ -80,7 +80,7 @@ doc_types:
       tax_office: {type: text, query: "Which tax office issued the certificate?"}
       certificate_number: {type: id, query: "What is the certificate reference number (cislo jednaci)?"}
       issue_date: {type: date, query: "What is the date of issue of the certificate?"}
-      arrears_status: {type: text, query: "Does the certificate state that the taxpayer has any tax arrears?"}
+      has_tax_arrears: {type: yesno, query: "Does the certificate state that the taxpayer has any tax arrears?"}
   other:
     description: Anything else
     fields: {}

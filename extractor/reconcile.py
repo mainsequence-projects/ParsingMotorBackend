@@ -3,10 +3,11 @@ from __future__ import annotations
 
 from .config import SCHEMAS
 from .doclist import parse_required_documents
-from .normalize import normalize, values_agree
+from .normalize import normalize, ocr_dropped_diacritics, values_agree
 from .rules_engine import Rules
 
 RULE_ID = "FIELD_RECONCILE"
+_DIACRITIC_TYPES = ("name", "text", "address")
 
 
 def _amount_agree(a, b, tol):
@@ -50,6 +51,8 @@ def reconcile_fields(doc_type: str, textract: dict, bedrock: dict, rules: Rules)
             else:
                 outcome = "agree_low_conf"
             chosen_raw, chosen_norm = (t_raw, t_norm) if t_raw not in (None, "") else (b_raw, b_norm)
+            if ftype in _DIACRITIC_TYPES and ocr_dropped_diacritics(t_raw, b_raw):
+                chosen_raw, chosen_norm = b_raw, b_norm      # keep the spelling with háčky/čárky
             source = "both"
         elif t_norm is None and t_raw not in (None, "") and b_norm is not None:
             # OCR printed something the strict normaliser cannot parse ('15200E.00'):
@@ -61,6 +64,12 @@ def reconcile_fields(doc_type: str, textract: dict, bedrock: dict, rules: Rules)
         elif b_norm is None:
             outcome = "ocr_only_high_conf" if conf >= p["pass_conf"] else "ocr_only_low_conf"
             chosen_raw, chosen_norm, source = t_raw, t_norm, "textract"
+        elif (ftype in _DIACRITIC_TYPES and "agree_ocr_no_diacritics" in rules.rule(RULE_ID)["severity"]
+              and ocr_dropped_diacritics(t_raw, b_raw)):
+            # Same text, OCR lost the Czech letters it cannot read: agreement, keep the LLM spelling.
+            floor = p.get("agree_exact_min_conf", p["pass_conf"])
+            outcome = "agree_ocr_no_diacritics" if conf >= floor else "agree_low_conf"
+            chosen_raw, chosen_norm, source = b_raw, b_norm, "both"
         else:
             outcome = "disagree"
             if ftype == "amount":

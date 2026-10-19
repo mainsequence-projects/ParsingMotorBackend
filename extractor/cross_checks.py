@@ -40,7 +40,7 @@ def document_checks(doc: dict, rules: Rules, run_date: str | None = None) -> lis
                 detail=f"field={bd['normalized']} encoded={info['birth_date']}",
                 page=bd.get("page"), doc_type=dt,
                 evidence=[_ev(doc, "birth_date"), _ev(doc, "birth_number")]))
-    st = fields.get("arrears_status") or {}
+    st = fields.get("has_tax_arrears") or {}
     if dt == "tax_or_debt_certificate" and "TAX_CLEAR" in rules.rules:
         checks.append(_tax_clear(doc, st, rules))
     loan, decl = fields.get("loan_amount") or {}, fields.get("declared_monthly_income") or {}
@@ -60,21 +60,13 @@ def _plain(s) -> str:
 
 
 def _tax_clear(doc, f, rules):
-    p = rules.params("TAX_CLEAR")
-    # read both engines: a "clear" verdict needs the printed text to say so
-    texts = [_plain(x) for x in (f.get("value"), f.get("textract"), f.get("bedrock")) if x]
-    if not texts:
-        outcome = "unclear"
-    elif any(any(c in t for c in p.get("clear_phrases", [])) for t in texts) and not any(
-            any(a in t for a in p.get("arrears_phrases", [])) and
-            not any(c in t for c in p.get("clear_phrases", [])) for t in texts):
-        outcome = "clear"
-    elif any(any(a in t for a in p.get("arrears_phrases", [])) for t in texts):
-        outcome = "has_arrears"
-    else:
-        outcome = "unclear"
-    return rules.check("TAX_CLEAR", outcome, detail=f"status={f.get('value')!r}", page=f.get("page"),
-                       doc_type=doc["doc_type"], evidence=[_ev(doc, "arrears_status")])
+    """Deterministic on the reconciled yes/no value (both engines answered the same question)."""
+    v = f.get("normalized")
+    outcome = "clear" if v is False else "has_arrears" if v is True else "unclear"
+    if f.get("status") in ("manual_review", "missing") and outcome == "clear":
+        outcome = "unclear"           # engines disagreed: never call it clear on one reader
+    return rules.check("TAX_CLEAR", outcome, detail=f"has_tax_arrears={v!r} ({f.get('outcome')})",
+                       page=f.get("page"), doc_type=doc["doc_type"], evidence=[_ev(doc, "has_tax_arrears")])
 
 
 # ---------------- package ----------------

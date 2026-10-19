@@ -31,6 +31,9 @@ rules:
       ocr_only_low_conf: manual_review
       disagree: manual_review
       ocr_unparseable: manual_review   # OCR leyó algo no parseable (p. ej. '15200E.00'): no es "solo LLM"
+      # Textract no soporta checo: pierde ř/š/č/í/ú ('Ondřej' -> 'Ondej'). Si la ÚNICA diferencia son
+      # esas letras, es coincidencia; se guarda la grafía del LLM (con diacríticos). Ver NOTAS §17.
+      agree_ocr_no_diacritics: passed
       both_missing: missing
 
   - id: RC_VALID
@@ -283,14 +286,9 @@ rules:
     scope: document
     check: no_tax_arrears
     description:
-      es: "El certificado del Finanční úřad declara que no hay deudas fiscales."
-      en: "The tax office certificate states there are no tax arrears."
-    params:
-      # sin diacríticos y en minúsculas; se mira primero "clear" y luego "arrears"
-      clear_phrases: ["no arrears", "no tax arrears", "does not have any tax arrears", "without debt",
-                      "nema zadne", "zadne danove nedoplatky", "zadne nedoplatky", "bez nedoplatku",
-                      "nevykazuje nedoplatky", "bez dluhu"]
-      arrears_phrases: ["arrears", "nedoplatek", "nedoplatky", "dluh", "debt"]
+      es: "El certificado del Finanční úřad declara que no hay deudas fiscales (campo sí/no leído por los dos motores)."
+      en: "The tax office certificate states there are no tax arrears (yes/no field read by both engines)."
+    params: {}
     severity:
       clear: passed
       has_arrears: discrepancy

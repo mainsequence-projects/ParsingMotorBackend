@@ -17,6 +17,33 @@ for _i, _forms in enumerate([("leden", "ledna"), ("unor", "unora"), ("brezen", "
         MONTHS[_f] = _i + 1
 
 
+def _ocr_variants(word: str):
+    """Spellings an OCR without Czech support produces: each accented letter dropped or plain."""
+    import itertools
+    import unicodedata as _u
+    opts = []
+    for ch in word:
+        base = "".join(c for c in _u.normalize("NFKD", ch) if not _u.combining(c))
+        opts.append({base, ""} if base != ch else {ch})
+    return {"".join(t) for t in itertools.product(*opts)}
+
+
+# Textract does not support Czech: 'října' comes back as 'rjna' / 'rijna'. Add those variants
+# unless they collide with another month (then the date stays unparseable -> human review).
+_cz_full = [("ledna",), ("února", "únor"), ("března", "březen"), ("dubna",), ("května", "květen"),
+            ("června", "červen"), ("července", "červenec"), ("srpna",), ("září",), ("října", "říjen"),
+            ("listopadu",), ("prosince",)]
+_seen: dict = {}
+for _i, _forms in enumerate(_cz_full):
+    for _f in _forms:
+        for _v in _ocr_variants(_f):
+            if len(_v) >= 3:
+                _seen.setdefault(_v, set()).add(_i + 1)
+for _v, _ms in _seen.items():
+    if len(_ms) == 1 and _v not in MONTHS:
+        MONTHS[_v] = next(iter(_ms))
+
+
 def strip_diacritics(s: str) -> str:
     return "".join(c for c in unicodedata.normalize("NFKD", s) if not unicodedata.combining(c))
 
@@ -47,7 +74,7 @@ def norm_date(v):
             d, mo, y = map(int, m.groups())
         else:
             t = strip_diacritics(s).lower()
-            m = re.search(r"(\d{1,2})\.?\s+([a-z]+)\.?,?\s+(\d{4})", t)
+            m = re.search(r"(\d{1,2})\.?\s*([a-z]+)\.?,?\s+(\d{4})", t)
             if m and m.group(2) in MONTHS:
                 d, mo, y = int(m.group(1)), MONTHS[m.group(2)], int(m.group(3))
             else:
@@ -137,10 +164,48 @@ def norm_doc_list(v):
     return sorted({norm_text(x).replace(" ", "_") for x in v if norm_text(x)}) or None
 
 
+def norm_yesno(v):
+    """yes/no answers (Textract QUERIES and the LLM answer the same question) -> bool."""
+    if isinstance(v, bool):
+        return v
+    t = norm_text(v)
+    if not t:
+        return None
+    first = t.split()[0]
+    if first in ("no", "ne", "false", "n", "none"):
+        return False
+    if first in ("yes", "ano", "true", "y"):
+        return True
+    return None
+
+
+def ocr_dropped_diacritics(ocr, llm) -> bool:
+    """True if `ocr` is `llm` with Czech accented letters dropped or flattened.
+
+    Textract has no Czech model: 'Ondřej' -> 'Ondej', 'Ústí nad Labem' -> 'st nad Labem'.
+    Deterministic, letter by letter: only accented letters may differ, everything else must match.
+    """
+    if not isinstance(ocr, str) or not isinstance(llm, str) or not ocr.strip() or not llm.strip():
+        return False
+    o = re.sub(r"\s+", " ", ocr.strip().lower())
+    pat = []
+    for ch in re.sub(r"\s+", " ", llm.strip().lower()):
+        if ch == " ":
+            pat.append(r"\s*")
+        elif ord(ch) < 128:
+            pat.append(re.escape(ch))
+        else:
+            base = strip_diacritics(ch)
+            pat.append(f"(?:{re.escape(base)})?" if base and ord(base[0]) < 128 else "")
+    if not any(ord(c) > 127 for c in llm):
+        return False                     # nothing accented: a plain mismatch, not this case
+    return re.fullmatch("".join(pat), o) is not None
+
+
 NORMALIZERS = {
     "name": norm_name, "text": norm_text, "address": norm_text, "date": norm_date,
     "birth_number": norm_birth_number, "amount": norm_amount, "iban": norm_iban,
-    "id": norm_id, "doc_list": norm_doc_list,
+    "id": norm_id, "doc_list": norm_doc_list, "yesno": norm_yesno,
 }
 
 

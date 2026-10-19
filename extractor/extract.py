@@ -57,6 +57,8 @@ def _bedrock_for_doc(doc: dict):
             v = list(_DOC_CODES)
         elif meta.get("type") == "amount":
             v = 0.0
+        elif meta.get("type") == "yesno":
+            v = "yes or no"
         else:
             v = "string or null"
         hint[name] = {"value": v, "image": 1}
@@ -72,6 +74,7 @@ def _bedrock_for_doc(doc: dict):
         "next to that label, never the loan amount.\n"
         "- birth_number (rodne cislo) digits with optional slash, exactly as printed.\n"
         "- Copy names exactly as printed, including typos. Do not correct spelling.\n"
+        "- yes/no fields: answer exactly \"yes\" or \"no\" according to what the document states.\n"
         f"- For required_documents, map free text to the codes: {', '.join(_DOC_CODES)}. "
         "Only include those listed as required.\n"
         "- Do not invent. Missing => null (or [] for lists)."
