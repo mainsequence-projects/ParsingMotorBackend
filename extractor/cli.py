@@ -6,6 +6,8 @@
   python -m extractor verify <run_id | path.jsonl>
   python -m extractor learn [--min-support 3]
   python -m extractor protocol <run_id> -o protocol.html|protocol.pdf
+  python -m extractor rules propose [--min-support 3]             # learned rules.yaml changes
+  python -m extractor rules review <proposal_id> --action approve --reviewer ana [--write extractor/rules.yaml]
 """
 from __future__ import annotations
 
@@ -15,7 +17,7 @@ import os
 import sys
 from pathlib import Path
 
-SUB = {"recheck", "decide", "verify", "learn", "extract", "protocol"}
+SUB = {"recheck", "decide", "verify", "learn", "extract", "protocol", "rules"}
 
 
 def _dump(obj, out=None):
@@ -137,10 +139,38 @@ def _protocol(argv):
     return 0
 
 
+def _rules(argv):
+    p = argparse.ArgumentParser(prog="extractor rules")
+    p.add_argument("cmd", choices=["propose", "review"])
+    p.add_argument("proposal_id", nargs="?")
+    p.add_argument("--action", choices=["approve", "reject"])
+    p.add_argument("--reviewer")
+    p.add_argument("--comment", default="")
+    p.add_argument("--write", help="also write the approved rules here (e.g. extractor/rules.yaml)")
+    p.add_argument("--min-support", type=int, default=3)
+    p.add_argument("--audit-dir")
+    a = p.parse_args(argv)
+    from . import audit, rule_changes
+    base = Path(a.audit_dir) if a.audit_dir else None
+    if a.cmd == "propose":
+        _dump(rule_changes.proposals(base=base, min_support=a.min_support))
+        return 0
+    if not (a.proposal_id and a.action and a.reviewer):
+        p.error("review needs <proposal_id> --action and --reviewer")
+    try:
+        r = rule_changes.review(a.proposal_id, a.action, a.reviewer, a.comment, base=base,
+                                min_support=a.min_support, write_to=a.write)
+    except audit.AuditError as e:
+        print(f"error: {e}", file=sys.stderr)
+        return 2
+    _dump({k: v for k, v in r.items() if k != "yaml"})
+    return 0
+
+
 def main(argv=None):
     argv = list(sys.argv[1:] if argv is None else argv)
     if argv and argv[0] in SUB:
         cmd, rest = argv[0], argv[1:]
         return {"recheck": _recheck, "decide": _decide, "verify": _verify, "learn": _learn,
-                "extract": _extract, "protocol": _protocol}[cmd](rest)
+                "extract": _extract, "protocol": _protocol, "rules": _rules}[cmd](rest)
     return _extract(argv)

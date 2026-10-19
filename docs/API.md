@@ -68,6 +68,8 @@ off by default; never on Lambda (duplicated headers break browsers).
 | GET | `/runs/{run_id}/protocol?format=html\|pdf` | key | Protocolo de control citado (HTML/PDF) | Cited control protocol |
 | GET | `/learning?min_support=3` | key | Overrides humanos por regla (sugerencias, nunca auto) | Human overrides per rule |
 | GET | `/rules` | key | rules.yaml activo + versión | Active rules.yaml + version |
+| GET | `/rules/proposals?min_support=3` | key | Cambios concretos de rules.yaml aprendidos de decisiones + impacto | Learned rules.yaml changes + impact |
+| POST | `/rules/proposals/{proposal_id}/review` | key | Aprobar/rechazar propuesta → nueva versión (no se activa sola) | Approve/reject → new version (not auto-activated) |
 | GET | `/` | — | Página demo HTML | HTML demo |
 
 `run_id` = `^\d{8}T\d{6}Z-[0-9a-f]{8}$` (ej. `20261019T125642Z-161958ed`).
@@ -152,6 +154,23 @@ checks tocados por un humano llevan `engine` (lo que dijo el motor) y `human`.
 ### 2.6 `GET /learning` → `LearningResponse`, `GET /rules` → `RulesResponse`
 Learning agrega decisiones por `rule_id` y sugiere ajustes (`auto_applied` siempre `false`).
 Rules devuelve el YAML activo y su versión (sha256[:16]).
+
+### 2.6b Ciclo de mejora de reglas / Rule-learning loop
+`GET /rules/proposals` → `RuleProposalsResponse`: cada propuesta cambia **un solo valor** de
+rules.yaml (`rule_id`, `path` p. ej. `severity.out_of_tolerance`, `old` → `new`), con `rationale`,
+`support` (nº de decisiones) e `impact`: todos los runs auditados re-evaluados offline (sin AWS)
+con reglas actuales vs candidatas — `status_changes`, `next_step_changes` y
+**`less_cautious_runs`** (runs que pasarían a un paso menos prudente: mirar antes de aprobar).
+`history` = últimos eventos del ledger encadenado `rules_ledger.jsonl`.
+
+`POST /rules/proposals/{proposal_id}/review` body `{"action":"approve|reject","reviewer":"…","comment":"…"}`
+→ `RuleReviewResponse`. Approve guarda `rules/rules-<version>.yaml` en el audit dir y devuelve el
+`yaml`; **no lo activa**: hay que poner `EXTRACTOR_RULES` o commitearlo como `extractor/rules.yaml`
+y redesplegar. Propuesta desconocida, ya revisada o de otra versión base → 409. Reject: la
+propuesta no se vuelve a ofrecer. En Lambda el audit es por contenedor: solo ve los runs de ese
+contenedor.
+EN: each proposal is a one-value patch with offline impact; approving writes a new version that a
+human must activate. Nothing is applied automatically.
 
 ### 2.7 `GET /runs/{run_id}/protocol?format=html|pdf` → HTML o PDF
 Protocolo de control citado para firmar/archivar, reconstruido solo desde el audit log

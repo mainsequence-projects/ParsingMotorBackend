@@ -711,6 +711,43 @@ contenedor: hay que abrir el protocolo justo después del extract.
 
 ---
 
+## 21. Ciclo de mejora de reglas cerrado (19-oct-2026, tarde) — commit en feat/kb-extractor, SIN push, SIN deploy
+
+**Por qué:** el brief pide que "las reglas mejoren continuamente con decisiones reales". Antes solo
+había un informe con sugerencias en texto; nadie podía pasar de la sugerencia a una versión nueva
+de forma trazable.
+
+**Qué hace ahora** (`extractor/rule_changes.py`):
+1. `GET /rules/proposals` (o `python -m extractor rules propose`): cada sugerencia del learning
+   report se convierte en un cambio de **un solo valor** de rules.yaml (`old` → `new`).
+2. Cada propuesta trae su **impacto**: todos los runs auditados se re-evalúan offline (coste 0)
+   con reglas actuales vs candidatas: estados que cambian, next steps que cambian y
+   `less_cautious_runs` (runs que acabarían en un paso menos prudente).
+3. Una persona aprueba o rechaza (`POST /rules/proposals/{id}/review` o `rules review`). Queda en
+   `rules_ledger.jsonl`, encadenado con hashes igual que los runs.
+4. Aprobar escribe un fichero de reglas nuevo (nueva `rules_version`). **No se activa solo**: hay
+   que apuntar `EXTRACTOR_RULES` o commitearlo como `extractor/rules.yaml` y redesplegar.
+
+**Decisiones:**
+- El parche edita la línea en el texto (no `yaml.dump`) para no perder los comentarios, y comprueba
+  que **solo** cambió ese valor; después pasa el mismo validador que el motor.
+- "Más suave" nunca baja de `warning`: un hallazgo que los humanos rechazan sigue visible.
+- La evidencia usada en un cambio aprobado no vuelve a empujar el mismo valor (si no, cada versión
+  nueva propondría otro escalón con las mismas decisiones). Solo vuelve si hay decisiones nuevas.
+- Lo rechazado no se vuelve a ofrecer.
+- La proposal_id es un hash de (versión base, regla, ruta, valor nuevo): si cambian las reglas,
+  la propuesta caduca → 409.
+
+**Ojo para la demo:** con la política actual de next step, un check en `manual_review` acaba en
+`spot_check_warnings` (la condición `many_field_manual_review` solo cuenta campos). Por eso la
+propuesta "XDOC_INCOME discrepancy → manual_review" sale con `less_cautious_runs = 3`. Es
+justo lo que tiene que ver el revisor antes de aprobar.
+
+Tests: `tests/test_rule_changes.py` (7) + contrato API actualizado; 277 en verde.
+`docs/openapi.json` regenerado.
+
+---
+
 ## Archivos clave
 
 - Motor: `extractor/` (reglas: `rules.yaml`, `rules_engine.py`; audit: `audit.py`;
