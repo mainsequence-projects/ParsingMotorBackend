@@ -13,6 +13,10 @@ rules:
       en: "Reconciles Textract and Bedrock per field. Code decides; the LLM never picks the value."
     params:
       pass_conf: 0.9                 # Textract conf needed for 'passed' when both engines agree
+      # Doble grabación: si OCR y LLM dan EXACTAMENTE el mismo valor normalizado, basta con que
+      # Textract no diga que es más probable que esté mal (conf >= 0.5). Coincidencias difusas
+      # (direcciones/texto por similitud) siguen necesitando pass_conf. Ver NOTAS §14.
+      agree_exact_min_conf: 0.5
       amount_ocr_wins_min_conf: 0.9  # on amount disagreement, OCR value is kept only at >= this conf; else Bedrock
       ocr_preferred_min_conf: 0.4    # other OCR-native types: keep OCR value on disagreement from this conf
       ocr_preferred_types: [amount, date, birth_number, iban, id, name]
@@ -20,6 +24,7 @@ rules:
       amount_tolerance: 0.01         # relative tolerance for amounts to count as agreement
     severity:
       agree_high_conf: passed
+      agree_exact: passed
       agree_low_conf: warning
       llm_only: warning
       ocr_only_high_conf: warning

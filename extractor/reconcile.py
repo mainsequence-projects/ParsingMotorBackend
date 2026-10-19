@@ -42,7 +42,13 @@ def reconcile_fields(doc_type: str, textract: dict, bedrock: dict, rules: Rules)
         if t_norm is None and b_norm is None:
             outcome, chosen_raw, chosen_norm, source = "both_missing", None, None, None
         elif agree:
-            outcome = "agree_high_conf" if conf >= p["pass_conf"] else "agree_low_conf"
+            exact_floor = p.get("agree_exact_min_conf")    # optional (absent in v0.2 rules)
+            if conf >= p["pass_conf"]:
+                outcome = "agree_high_conf"
+            elif exact_floor is not None and t_norm == b_norm and conf >= exact_floor:
+                outcome = "agree_exact"      # two independent readers, identical after normalising
+            else:
+                outcome = "agree_low_conf"
             chosen_raw, chosen_norm = (t_raw, t_norm) if t_raw not in (None, "") else (b_raw, b_norm)
             source = "both"
         elif t_norm is None and t_raw not in (None, "") and b_norm is not None:

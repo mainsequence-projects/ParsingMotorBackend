@@ -140,6 +140,8 @@ def validate(data, path="rules.yaml") -> None:
         if not isinstance(params, dict):
             _err(path, f"{rid}.params must be a mapping")
         missing_out = (REQUIRED_OUTCOMES.get(rid) or OPTIONAL_OUTCOMES.get(rid, set())) - set(sev)
+        if rid == "FIELD_RECONCILE" and "agree_exact_min_conf" in params and "agree_exact" not in sev:
+            missing_out = missing_out | {"agree_exact"}
         if missing_out:
             _err(path, f"{rid}.severity missing outcomes {sorted(missing_out)}")
         missing_par = REQUIRED_PARAMS.get(rid, set()) - set(params)

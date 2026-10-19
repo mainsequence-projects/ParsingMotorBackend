@@ -108,8 +108,11 @@ def test_decision_refused_on_broken_chain(audit_dir, raw03):
 
 def test_learning_report_suggests_never_applies(audit_dir, raw03):
     before = DEFAULT_RULES_PATH.read_bytes()
+    import copy
+    raw = copy.deepcopy(raw03)
+    raw[2]["raw"]["textract"]["iban"]["confidence"] = 0.45      # agree_low_conf -> warning
     for _ in range(3):
-        rid = _fake_run(raw03)
+        rid = _fake_run(raw)
         audit.record_decision(rid, {"field": "bank_statement.iban", "action": "confirm", "reviewer": "ana"})
         audit.record_decision(rid, {"check": "XDOC_INCOME:income_contract_vs_payslip:package",
                                     "action": "reject", "reviewer": "ana"})

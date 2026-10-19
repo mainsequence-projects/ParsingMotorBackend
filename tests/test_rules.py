@@ -66,11 +66,16 @@ def test_changing_income_tolerance_changes_outcome(raw03):
 
 
 def test_changing_pass_conf_changes_field_status(raw03):
-    base = evaluate_package(raw03, load_rules(), run_date="2026-10-19")
+    # isolate pass_conf: without the exact-agreement floor (v0.2 behaviour)
+    base_rules = _variant(lambda R, d: R["FIELD_RECONCILE"]["params"].pop("agree_exact_min_conf"))
+    base = evaluate_package(raw03, base_rules, run_date="2026-10-19")
     cands = [(d["doc_id"], k) for d in base["documents"] for k, f in d["fields"].items()
              if f["outcome"] == "agree_low_conf" and 0.8 <= f["textract_conf"] < 0.9]
     assert cands, "fixture should contain agreeing fields with 0.8<=conf<0.9"
-    lower = _variant(lambda R, d: R["FIELD_RECONCILE"]["params"].__setitem__("pass_conf", 0.8))
+    def _lower(R, d):
+        R["FIELD_RECONCILE"]["params"].pop("agree_exact_min_conf")
+        R["FIELD_RECONCILE"]["params"]["pass_conf"] = 0.8
+    lower = _variant(_lower)
     res = evaluate_package(raw03, lower, run_date="2026-10-19")
     st = {(d["doc_id"], k): f["status"] for d in res["documents"] for k, f in d["fields"].items()}
     bst = {(d["doc_id"], k): f["status"] for d in base["documents"] for k, f in d["fields"].items()}
