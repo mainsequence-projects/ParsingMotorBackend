@@ -20,16 +20,6 @@ def test_amount_garbage_is_none_not_a_guess(raw):
     assert norm_amount(raw) is None
 
 
-def test_unparseable_ocr_amount_is_manual_review_not_llm_only(raw03):
-    from extractor.evaluate import evaluate_package
-    from extractor.rules_engine import load_rules
-    res = evaluate_package(raw03, load_rules(), run_date="2026-10-19")
-    f = next(d for d in res["documents"] if d["doc_type"] == "contract")["fields"]["declared_monthly_income"]
-    assert f["textract"] == "15200E.00"
-    assert f["outcome"] == "ocr_unparseable" and f["status"] == "manual_review"
-    assert f["normalized"] == 52000.0
-
-
 @pytest.mark.parametrize("raw,exp", [
     ("1. 5. 1988", "1988-05-01"), ("01.05.1988", "1988-05-01"), ("1.5.1988", "1988-05-01"),
     ("1988-05-01", "1988-05-01"), ("1. května 1988", "1988-05-01"), ("12. dubna 1988", "1988-04-12"),

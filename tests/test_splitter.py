@@ -1,5 +1,3 @@
-from extractor.evaluate import evaluate_package
-from extractor.rules_engine import load_rules
 from extractor.splitter import group_documents
 
 
@@ -34,28 +32,6 @@ def test_different_keys_are_different_documents():
     assert len(g) == 2
 
 
-def test_missing_page_detected_and_step_is_request():
-    g = group_documents([P(1, "id_card"), P(2, "bank_statement", 1, 2, "CZ1")])
-    raws = [{"doc_id": x["doc_id"], "doc_type": x["doc_type"], "source_file": x["source_file"],
-             "pages": [{k: p.get(k) for k in ("page", "page_number", "page_count")} for p in x["pages"]],
-             "raw": {"textract": {}, "bedrock": {}}} for x in g]
-    res = evaluate_package(raws, load_rules(), run_date="2026-10-19")
-    assert res["missing_pages"] == [{"doc_id": "d2", "doc_type": "bank_statement", "page_count": 2,
-                                     "missing_page_numbers": [2]}]
-    pc = next(c for c in res["checks"] if c["rule_id"] == "PAGE_CONTINUITY")
-    assert pc["outcome"] == "gap" and pc["status"] == "manual_review"
-    assert res["recommended_next_step"] == "request_missing_documents"
-    assert "page(s) 2 of 2" in res["draft_client_message"]
-
-
-def test_unexpected_document_flagged():
-    raws = [{"doc_id": "d1", "doc_type": t, "source_file": "x", "pages": [{"page": i}],
-             "raw": {"textract": {}, "bedrock": {}}} for i, t in enumerate(["id_card", "other"], 1)]
-    res = evaluate_package(raws, load_rules(), run_date="2026-10-19")
-    u = next(c for c in res["checks"] if c["rule_id"] == "UNEXPECTED_DOCUMENTS")
-    assert u["outcome"] == "present" and "other" in res["unexpected_documents"]
-
-
 def test_page_two_of_two_continues_previous_page_even_with_misread_key():
     pages = [
         {"source_file": "scan.pdf", "page": 1, "doc_type": "bank_statement", "doc_key": "CZ44 0080 0000 6562 9203 7261",
@@ -65,8 +41,6 @@ def test_page_two_of_two_continues_previous_page_even_with_misread_key():
     ]
     g = group_documents(pages)
     assert len(g) == 1 and [p["page"] for p in g[0]["pages"]] == [1, 2]   # unnumbered page fills slot 1
-    from extractor.cross_checks import page_gaps
-    assert page_gaps(g) == []
 
 
 def test_page_one_with_other_key_still_starts_new_statement():

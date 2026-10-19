@@ -1,8 +1,6 @@
 """Runtime config. Region locked to Frankfurt unless AWS_REGION overrides it."""
 import os
 import sys
-from pathlib import Path
-import yaml
 
 _DEFAULT_REGION = "eu-central-1"
 _override = os.getenv("AWS_REGION") or os.getenv("AWS_DEFAULT_REGION")
@@ -30,6 +28,3 @@ BEDROCK_CLASSIFY_FALLBACKS = [m for m in os.getenv(
 
 RENDER_DPI = int(os.getenv("RENDER_DPI", "150"))
 MAX_WORKERS = int(os.getenv("MAX_WORKERS", "8"))
-# All decision thresholds live in extractor/rules.yaml (see rules_engine.py).
-SCHEMAS = yaml.safe_load((Path(__file__).parent / "schemas.yaml").read_text())["doc_types"]
-DOC_TYPES = list(SCHEMAS)

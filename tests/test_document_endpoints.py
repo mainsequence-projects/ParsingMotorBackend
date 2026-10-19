@@ -11,7 +11,7 @@ import pytest
 from fastapi.testclient import TestClient
 from PIL import Image
 
-from extractor import api, document_service, pipeline
+from extractor import api, document_service
 from extractor.cost import BudgetExceeded
 from extractor.document_models import ExtractTypedJsonRequest
 from extractor.schema_contract import schema_hash
@@ -37,8 +37,6 @@ def client(monkeypatch):
     def forbidden(*args, **kwargs):
         pytest.fail("unexpected AWS/legacy pipeline call")
 
-    monkeypatch.setattr(pipeline, "run_package", forbidden)
-    monkeypatch.setattr(pipeline, "classify_pages", forbidden)
     monkeypatch.setattr(document_service, "converse_json", forbidden)
     monkeypatch.setattr(api, "API_KEY", "")
     return TestClient(api.app)
@@ -193,7 +191,7 @@ def test_output_must_match_full_draft_schema(client, upload, monkeypatch, attrib
     assert "secret" not in r.text and "not-a-date" not in r.text
 
 
-@pytest.mark.parametrize("path", ["/classify_json", "/extract_typed_json", "/extract_json"])
+@pytest.mark.parametrize("path", ["/classify_json", "/extract_typed_json"])
 @pytest.mark.parametrize(
     "mutation",
     [
@@ -286,14 +284,11 @@ def test_bad_schemas_rejected_before_provider(client, upload, mutation):
     assert r.status_code == 422, r.text
 
 
-def test_duplicate_types_and_legacy_string_bool_rejected(client, upload):
+def test_duplicate_types_rejected(client, upload):
     body = discovery_body(upload)
     body["document_types"] *= 2
     assert client.post("/classify_json", json=body).status_code == 422
-    assert (
-        client.post("/extract_json", json={"files": [upload], "explain": "false"}).status_code
-        == 422
-    )
+
 
 
 @pytest.mark.parametrize("path", ["/classify_json", "/extract_typed_json"])
@@ -363,10 +358,11 @@ def test_invalid_file_and_page_limit_before_provider(client, upload, path):
 
 def test_json_request_schema_is_generated_from_pydantic(client):
     spec = client.get("/openapi.json").json()
-    for path in ["/classify_json", "/extract_typed_json", "/extract_json"]:
+    for path in ["/classify_json", "/extract_typed_json"]:
         schema = spec["paths"][path]["post"]["requestBody"]["content"]["application/json"]["schema"]
-        model = spec["components"]["schemas"][schema["$ref"].rsplit("/", 1)[1]]
-        assert model["additionalProperties"] is False
+        for variant in schema.get("anyOf", [schema]):
+            model = spec["components"]["schemas"][variant["$ref"].rsplit("/", 1)[1]]
+            assert model["additionalProperties"] is False
 
 
 @pytest.mark.parametrize(

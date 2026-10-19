@@ -49,10 +49,6 @@ class UploadRequest(StrictModel):
         return [(f.filename, base64.b64decode(f.content_base64, validate=True)) for f in self.files]
 
 
-class ExtractJsonRequest(UploadRequest):
-    explain: bool = False
-
-
 class DocumentTypeCandidate(StrictModel):
     document_type: DocumentTypeId
     description: str = Field(min_length=1, max_length=2000)
