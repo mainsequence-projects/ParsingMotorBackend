@@ -24,7 +24,7 @@ sys.path.insert(0, str(ROOT))
 
 from extractor import aws, document_service, ocr_reader  # noqa: E402
 from extractor.normalize import norm_text  # noqa: E402
-from extractor.splitter import group_documents  # noqa: E402
+from extractor.splitter import group_v2_pages  # noqa: E402
 
 CONTRACTS = {c["document_type"]: c for c in json.loads(
     (ROOT / "tests/fixtures/backoffice_canonical_contracts.json").read_text())}
@@ -237,9 +237,7 @@ def run_package(client, pkg: Path, reader_mode: str, oracle: Oracle | None = Non
         pages += r.json()["pages"]
     exp_type = {(d["source_file"], n): bo_type(d["doc_type"]) for d in gt["expected_documents"] for n in d["pages"]}
     page_ok = sum(1 for p in pages if p["document_type"] == exp_type.get((p["source_file"], p["page"])))
-    groups = group_documents([{"source_file": p["source_file"], "page": p["page"], "doc_type": p["document_type"],
-                               "doc_key": p.get("group_hint"), "page_number": p.get("printed_page_number"),
-                               "confidence": p["confidence"], "reason": p.get("reason", "")} for p in pages])
+    groups = group_v2_pages(pages)
     got_groups = sorted((g["source_file"], g["doc_type"] or "none", tuple(p["page"] for p in g["pages"])) for g in groups)
     exp_groups = sorted((d["source_file"], bo_type(d["doc_type"]) or "none", tuple(d["pages"]))
                         for d in gt["expected_documents"])

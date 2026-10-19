@@ -51,3 +51,35 @@ def test_page_one_with_other_key_still_starts_new_statement():
          "page_count": 1, "confidence": 0.9, "reason": ""},
     ]
     assert len(group_documents(pages)) == 2
+
+
+def _obs(page, kind, num, count, hint):
+    return {"source_file": "package.pdf", "page": page, "document_type": kind, "confidence": 0.95,
+            "printed_page_number": num, "printed_page_count": count, "group_hint": hint}
+
+
+def test_v2_shuffled_pages_with_different_hints_are_merged_by_printed_numbers():
+    from extractor.splitter import group_v2_pages
+    pages = [  # package 18 as real Bedrock observed it
+        _obs(1, "bank_statement", 2, 3, "Account 2329-2892594/0600, IBAN CZ49 0600 0023 2900 0289 2594"),
+        _obs(2, "bank_statement", 3, 3, "Berounka banka, a.s. / Account 2329-2892594/0600"),
+        _obs(3, "employer_confirmation", 1, 1, "IČO 25134477"),
+        _obs(4, "bank_statement", 1, 3, "VÝPIS Z ÚČTU (Account Statement)"),
+        _obs(5, "national_identity_card", 1, 2, "VZOR / SPECIMEN"),
+        _obs(9, "payslip", None, None, "820128/7292"),
+        _obs(10, "national_identity_card", 2, 2, "820128/7292"),
+    ]
+    got = sorted((g["doc_type"], tuple(p["page"] for p in g["pages"])) for g in group_v2_pages(pages))
+    assert ("bank_statement", (4, 1, 2)) in got and ("national_identity_card", (5, 10)) in got
+    assert len(got) == 4
+
+
+def test_v2_two_documents_of_the_same_type_stay_apart():
+    from extractor.splitter import group_v2_pages
+    two_certs = [_obs(6, "tax_clearance_certificate", 1, 1, "č. j. 9882544/26/2273"),
+                 _obs(9, "tax_clearance_certificate", 1, 1, "č. j. 1111111/26/2273")]
+    assert len(group_v2_pages(two_certs)) == 2
+    other_account = [_obs(1, "bank_statement", 1, 2, "Account 2329-2892594/0600"),
+                     _obs(2, "payslip", None, None, None),
+                     _obs(5, "bank_statement", 2, 2, "Account 9999-1234567/0100")]
+    assert len(group_v2_pages(other_account)) == 3
