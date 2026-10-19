@@ -70,8 +70,8 @@ def test_image_without_extension_is_sniffed(monkeypatch):
 
 
 @pytest.mark.parametrize("body,code", [
-    ([1, 2], 400), ({"files": ["x"]}, 400), ({"files": [{"filename": "a.pdf"}]}, 400),
-    ({"files": [{"filename": "a.pdf", "content_base64": "@@@"}]}, 400), ({}, 400),
+    ([1, 2], 422), ({"files": ["x"]}, 422), ({"files": [{"filename": "a.pdf"}]}, 422),
+    ({"files": [{"filename": "a.pdf", "content_base64": "@@@"}]}, 422), ({}, 422),
 ])
 def test_extract_json_bad_bodies(body, code):
     r = C.post("/extract_json", json=body)
@@ -80,7 +80,7 @@ def test_extract_json_bad_bodies(body, code):
 
 def test_extract_json_not_json():
     r = C.post("/extract_json", content=b"{nope", headers={"content-type": "application/json"})
-    assert r.status_code == 400
+    assert r.status_code == 422
 
 
 def test_extract_json_bad_pdf_is_422():

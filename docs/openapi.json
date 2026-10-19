@@ -298,42 +298,13 @@
           "extraction"
         ],
         "summary": "Extract Json",
-        "description": "Same as /extract with JSON + base64 files (used by the browser demo through SigV4).",
+        "description": "Legacy loan workflow with a strictly validated JSON/base64 request.",
         "operationId": "extract_json_extract_json_post",
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "properties": {
-                  "files": {
-                    "items": {
-                      "properties": {
-                        "filename": {
-                          "type": "string",
-                          "example": "package.pdf"
-                        },
-                        "content_base64": {
-                          "type": "string",
-                          "format": "byte"
-                        }
-                      },
-                      "type": "object",
-                      "required": [
-                        "content_base64"
-                      ]
-                    },
-                    "type": "array",
-                    "minItems": 1
-                  },
-                  "explain": {
-                    "type": "boolean",
-                    "default": false
-                  }
-                },
-                "type": "object",
-                "required": [
-                  "files"
-                ]
+                "$ref": "#/components/schemas/ExtractJsonRequest"
               }
             }
           },
@@ -346,6 +317,270 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ExtractResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Content Too Large",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "Unsupported Media Type",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Content",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Bad Gateway",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/classify_json": {
+      "post": {
+        "tags": [
+          "documents"
+        ],
+        "summary": "Classify Json",
+        "description": "Discover document types per page from the supplied catalog; no attribute extraction.",
+        "operationId": "classify_json_classify_json_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ClassifyJsonRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClassifyJsonResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Content Too Large",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "Unsupported Media Type",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Content",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Bad Gateway",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/extract_typed_json": {
+      "post": {
+        "tags": [
+          "documents"
+        ],
+        "summary": "Extract Typed Json",
+        "description": "Extract one logical document using an explicit type and complete canonical/draft schemas.",
+        "operationId": "extract_typed_json_extract_typed_json_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExtractTypedJsonRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExtractTypedJsonResponse"
                 }
               }
             }
@@ -1434,6 +1669,120 @@
         ],
         "title": "Check"
       },
+      "ClassifiedPage": {
+        "properties": {
+          "document_type": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100,
+                "minLength": 1,
+                "pattern": "^[a-z][a-z0-9_]*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Document Type"
+          },
+          "confidence": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Confidence"
+          },
+          "reason": {
+            "type": "string",
+            "maxLength": 2000,
+            "title": "Reason"
+          },
+          "source_file": {
+            "type": "string",
+            "title": "Source File"
+          },
+          "page": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Page"
+          },
+          "source_sha256": {
+            "type": "string",
+            "title": "Source Sha256"
+          },
+          "page_sha256": {
+            "type": "string",
+            "title": "Page Sha256"
+          },
+          "model": {
+            "type": "string",
+            "title": "Model"
+          },
+          "cache_hit": {
+            "type": "boolean",
+            "title": "Cache Hit"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "document_type",
+          "confidence",
+          "reason",
+          "source_file",
+          "page",
+          "source_sha256",
+          "page_sha256",
+          "model",
+          "cache_hit"
+        ],
+        "title": "ClassifiedPage"
+      },
+      "ClassifyJsonRequest": {
+        "properties": {
+          "files": {
+            "items": {
+              "$ref": "#/components/schemas/FileB64"
+            },
+            "type": "array",
+            "maxItems": 12,
+            "minItems": 1,
+            "title": "Files"
+          },
+          "document_types": {
+            "items": {
+              "$ref": "#/components/schemas/DocumentTypeCandidate"
+            },
+            "type": "array",
+            "maxItems": 100,
+            "minItems": 1,
+            "title": "Document Types"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "files",
+          "document_types"
+        ],
+        "title": "ClassifyJsonRequest"
+      },
+      "ClassifyJsonResponse": {
+        "properties": {
+          "pages": {
+            "items": {
+              "$ref": "#/components/schemas/ClassifiedPage"
+            },
+            "type": "array",
+            "title": "Pages"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "pages"
+        ],
+        "title": "ClassifyJsonResponse"
+      },
       "DecisionRequest": {
         "properties": {
           "field": {
@@ -1661,6 +2010,30 @@
         ],
         "title": "Document"
       },
+      "DocumentTypeCandidate": {
+        "properties": {
+          "document_type": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1,
+            "pattern": "^[a-z][a-z0-9_]*$",
+            "title": "Document Type"
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 2000,
+            "minLength": 1,
+            "title": "Description"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "document_type",
+          "description"
+        ],
+        "title": "DocumentTypeCandidate"
+      },
       "ErrorResponse": {
         "properties": {
           "detail": {
@@ -1736,6 +2109,30 @@
         "additionalProperties": true,
         "type": "object",
         "title": "Evidence"
+      },
+      "ExtractJsonRequest": {
+        "properties": {
+          "files": {
+            "items": {
+              "$ref": "#/components/schemas/FileB64"
+            },
+            "type": "array",
+            "maxItems": 12,
+            "minItems": 1,
+            "title": "Files"
+          },
+          "explain": {
+            "type": "boolean",
+            "title": "Explain",
+            "default": false
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "files"
+        ],
+        "title": "ExtractJsonRequest"
       },
       "ExtractResponse": {
         "properties": {
@@ -1936,6 +2333,133 @@
         ],
         "title": "ExtractResponse"
       },
+      "ExtractTypedJsonRequest": {
+        "properties": {
+          "files": {
+            "items": {
+              "$ref": "#/components/schemas/FileB64"
+            },
+            "type": "array",
+            "maxItems": 12,
+            "minItems": 1,
+            "title": "Files"
+          },
+          "document_type": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1,
+            "pattern": "^[a-z][a-z0-9_]*$",
+            "title": "Document Type"
+          },
+          "schema_version": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Schema Version"
+          },
+          "schema_hash": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "title": "Schema Hash"
+          },
+          "canonical_schema": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/JsonValue"
+            },
+            "type": "object",
+            "title": "Canonical Schema"
+          },
+          "output_schema": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/JsonValue"
+            },
+            "type": "object",
+            "title": "Output Schema"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "files",
+          "document_type",
+          "schema_version",
+          "schema_hash",
+          "canonical_schema",
+          "output_schema"
+        ],
+        "title": "ExtractTypedJsonRequest"
+      },
+      "ExtractTypedJsonResponse": {
+        "properties": {
+          "document_type": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1,
+            "pattern": "^[a-z][a-z0-9_]*$",
+            "title": "Document Type"
+          },
+          "schema_version": {
+            "type": "integer",
+            "title": "Schema Version"
+          },
+          "schema_hash": {
+            "type": "string",
+            "title": "Schema Hash"
+          },
+          "status": {
+            "type": "string",
+            "const": "draft",
+            "title": "Status",
+            "default": "draft"
+          },
+          "attributes": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/JsonValue"
+            },
+            "type": "object",
+            "title": "Attributes"
+          },
+          "canonical_schema_valid": {
+            "type": "boolean",
+            "title": "Canonical Schema Valid"
+          },
+          "canonical_schema_errors": {
+            "items": {
+              "$ref": "#/components/schemas/SchemaIssue"
+            },
+            "type": "array",
+            "title": "Canonical Schema Errors"
+          },
+          "pages": {
+            "items": {
+              "$ref": "#/components/schemas/SourcePage"
+            },
+            "type": "array",
+            "title": "Pages"
+          },
+          "model": {
+            "type": "string",
+            "title": "Model"
+          },
+          "cache_hit": {
+            "type": "boolean",
+            "title": "Cache Hit"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "document_type",
+          "schema_version",
+          "schema_hash",
+          "attributes",
+          "canonical_schema_valid",
+          "canonical_schema_errors",
+          "pages",
+          "model",
+          "cache_hit"
+        ],
+        "title": "ExtractTypedJsonResponse"
+      },
       "FieldResult": {
         "properties": {
           "type": {
@@ -2115,6 +2639,29 @@
         ],
         "title": "FieldResult"
       },
+      "FileB64": {
+        "properties": {
+          "filename": {
+            "type": "string",
+            "maxLength": 300,
+            "minLength": 1,
+            "title": "Filename",
+            "default": "upload.bin"
+          },
+          "content_base64": {
+            "type": "string",
+            "maxLength": 20971520,
+            "minLength": 1,
+            "title": "Content Base64"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "content_base64"
+        ],
+        "title": "FileB64"
+      },
       "HealthResponse": {
         "properties": {
           "status": {
@@ -2223,6 +2770,7 @@
         ],
         "title": "InputRef"
       },
+      "JsonValue": {},
       "LearningResponse": {
         "properties": {
           "runs_scanned": {
@@ -2570,6 +3118,35 @@
         ],
         "title": "RunState"
       },
+      "SchemaIssue": {
+        "properties": {
+          "path": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Path"
+          },
+          "keyword": {
+            "type": "string",
+            "title": "Keyword"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "path",
+          "keyword"
+        ],
+        "title": "SchemaIssue"
+      },
       "SessionResponse": {
         "properties": {
           "accessKeyId": {
@@ -2614,6 +3191,36 @@
           "service"
         ],
         "title": "SessionResponse"
+      },
+      "SourcePage": {
+        "properties": {
+          "source_file": {
+            "type": "string",
+            "title": "Source File"
+          },
+          "page": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Page"
+          },
+          "source_sha256": {
+            "type": "string",
+            "title": "Source Sha256"
+          },
+          "page_sha256": {
+            "type": "string",
+            "title": "Page Sha256"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "source_file",
+          "page",
+          "source_sha256",
+          "page_sha256"
+        ],
+        "title": "SourcePage"
       },
       "VerifyResponse": {
         "properties": {

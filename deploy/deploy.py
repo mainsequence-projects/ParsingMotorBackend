@@ -106,7 +106,7 @@ def build_zip():
         "--platform", "manylinux2014_x86_64", "--python-version", "3.12",
         "--only-binary=:all:",
         "fastapi", "mangum>=0.17", "python-multipart", "pymupdf", "Pillow", "PyYAML",
-        "pydantic", "pydantic-core", "starlette", "anyio", "sniffio",
+        "pydantic>=2.7,<3", "jsonschema[format-nongpl]>=4.23,<5", "referencing>=0.35,<1", "pydantic-core", "starlette", "anyio", "sniffio",
         "typing-extensions", "annotated-types",
     ])
     shutil.copytree(ROOT / "extractor", BUILD / "extractor",
