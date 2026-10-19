@@ -33,7 +33,7 @@ where = ["."]
 include = ["src*", "api*", "extractor*"]
 
 [tool.setuptools.package-data]
-extractor = ["schemas.yaml"]
+extractor = ["schemas.yaml", "rules.yaml"]
 
 [tool.ruff]
 line-length = 100

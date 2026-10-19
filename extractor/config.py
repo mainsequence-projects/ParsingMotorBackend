@@ -29,8 +29,7 @@ BEDROCK_CLASSIFY_FALLBACKS = [m for m in os.getenv(
     "eu.amazon.nova-lite-v1:0,eu.anthropic.claude-sonnet-4-5-20250929-v1:0").split(",") if m]
 
 RENDER_DPI = int(os.getenv("RENDER_DPI", "150"))
-TEXTRACT_PASS_CONF = float(os.getenv("TEXTRACT_PASS_CONF", "0.9"))
-AMOUNT_TOLERANCE = float(os.getenv("AMOUNT_TOLERANCE", "0.01"))
 MAX_WORKERS = int(os.getenv("MAX_WORKERS", "8"))
+# All decision thresholds live in extractor/rules.yaml (see rules_engine.py).
 SCHEMAS = yaml.safe_load((Path(__file__).parent / "schemas.yaml").read_text())["doc_types"]
 DOC_TYPES = list(SCHEMAS)

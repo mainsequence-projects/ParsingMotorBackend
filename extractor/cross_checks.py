@@ -1,182 +1,273 @@
-"""Cross-document consistency and completeness vs the contract's required list."""
-from .config import AMOUNT_TOLERANCE
-from .normalize import norm_name, normalize
+"""Deterministic document- and package-level checks. All thresholds come from rules.yaml."""
+from __future__ import annotations
+
+from datetime import date
+
+from .normalize import norm_name, normalize, similarity
+from .rules import parse_birth_number
+from .rules_engine import Rules
+
+
+def _ev(doc, field):
+    f = doc["fields"].get(field) or {}
+    return {"doc_id": doc["doc_id"], "doc_type": doc["doc_type"], "field": field,
+            "value": f.get("value"), "page": f.get("page")}
 
 
 def _first(docs, doc_type, field):
     for d in docs:
-        if d["doc_type"] != doc_type:
-            continue
-        f = d["fields"].get(field)
-        if f and f.get("normalized") is not None:
-            return f
-    return None
+        if d["doc_type"] == doc_type:
+            f = d["fields"].get(field)
+            if f and f.get("normalized") is not None:
+                return d, f
+    return None, None
 
 
-def _any_name(docs):
-    """Collect normalised person names across the package."""
-    names = []
-    for d in docs:
-        for key in ("first_name", "last_name", "account_holder", "full_name"):
-            f = d["fields"].get(key)
-            if f and f.get("normalized"):
-                names.append((d["doc_type"], key, f["normalized"], f.get("page"), f.get("value")))
-    return names
-
-
-def cross_document_checks(docs: list[dict]) -> list[dict]:
-    checks = []
-    # Same birth number across docs that carry it
-    bns = []
-    for d in docs:
-        f = d["fields"].get("birth_number")
-        if f and f.get("normalized"):
-            bns.append((d["doc_type"], f["normalized"], f.get("page")))
-    if len(bns) >= 2:
-        vals = {b[1] for b in bns}
-        checks.append({
-            "check": "birth_number_consistent",
-            "status": "passed" if len(vals) == 1 else "discrepancy",
-            "detail": f"values={sorted(vals)}",
-            "page": bns[0][2],
-        })
-
-    # First+last name consistency (id vs contract vs payslip)
-    firsts = [(d["doc_type"], d["fields"]["first_name"]) for d in docs
-              if d["fields"].get("first_name", {}).get("normalized")]
-    lasts = [(d["doc_type"], d["fields"]["last_name"]) for d in docs
-             if d["fields"].get("last_name", {}).get("normalized")]
-    if len(firsts) >= 2:
-        vals = {f[1]["normalized"] for f in firsts}
-        checks.append({
-            "check": "first_name_consistent",
-            "status": "passed" if len(vals) == 1 else "discrepancy",
-            "detail": f"values={sorted(vals)}",
-            "page": firsts[0][1].get("page"),
-        })
-    if len(lasts) >= 2:
-        from difflib import SequenceMatcher
-        from .normalize import normalize as _norm
-        # Prefer OCR raw when engines disagreed (Bedrock often "autocorrects" typos)
-        vals = set()
-        for _, f in lasts:
-            raw = f.get("textract") if f.get("status") == "manual_review" and f.get("textract") else f.get("value")
-            n = _norm("name", raw) or f.get("normalized")
-            if n:
-                vals.add(n)
-        status = "passed" if len(vals) == 1 else "discrepancy"
-        if status != "passed":
-            vs = list(vals)
-            if len(vs) == 2 and SequenceMatcher(None, vs[0], vs[1]).ratio() >= 0.85:
-                status = "warning"
-        # Any engine disagreement on surname is at least a warning for the clerk
-        if status == "passed" and any(f.get("status") == "manual_review" for _, f in lasts):
-            status = "warning"
-            vals = {str(f.get("textract")) + "|" + str(f.get("bedrock")) for _, f in lasts
-                    if f.get("status") == "manual_review"}
-        checks.append({
-            "check": "last_name_consistent",
-            "status": status,
-            "detail": f"values={sorted(vals)}",
-            "page": lasts[0][1].get("page"),
-        })
-
-    # Income: contract declared vs payslip net vs statement salary credit
-    declared = _first(docs, "contract", "declared_monthly_income")
-    payslip = _first(docs, "payslip", "net_income")
-    salary = _first(docs, "bank_statement", "salary_credit")
-    for label, a, b in (
-        ("income_contract_vs_payslip", declared, payslip),
-        ("income_contract_vs_statement", declared, salary),
-        ("income_payslip_vs_statement", payslip, salary),
-    ):
-        if a and b and a.get("normalized") is not None and b.get("normalized") is not None:
-            base = max(abs(a["normalized"]), abs(b["normalized"]), 1.0)
-            ratio = abs(a["normalized"] - b["normalized"]) / base
-            checks.append({
-                "check": label,
-                "status": "passed" if ratio <= AMOUNT_TOLERANCE else "discrepancy",
-                "detail": f"{a['normalized']} vs {b['normalized']} (diff={ratio:.2%})",
-                "page": a.get("page") or b.get("page"),
-            })
-
-    # Loan amount present on contract (sanity)
-    loan = _first(docs, "contract", "loan_amount")
-    if loan:
-        checks.append({
-            "check": "loan_amount_present",
-            "status": "passed" if loan.get("normalized") else "missing",
-            "detail": str(loan.get("normalized")),
-            "page": loan.get("page"),
-        })
+# ---------------- per document ----------------
+def document_checks(doc: dict, rules: Rules) -> list[dict]:
+    checks, fields, dt = [], doc["fields"], doc["doc_type"]
+    bn = fields.get("birth_number") or {}
+    if bn.get("normalized"):
+        info = parse_birth_number(str(bn["normalized"]), rules.params("RC_VALID"))
+        checks.append(rules.check("RC_VALID", "valid" if info["valid"] else "invalid",
+                                  detail=info["reason"], page=bn.get("page"), doc_type=dt,
+                                  evidence=[_ev(doc, "birth_number")]))
+        bd = fields.get("birth_date") or {}
+        if info.get("valid") and bd.get("normalized"):
+            ok = bd["normalized"] == info["birth_date"]
+            checks.append(rules.check(
+                "RC_BIRTHDATE_MATCH", "match" if ok else "mismatch",
+                detail=f"field={bd['normalized']} encoded={info['birth_date']}",
+                page=bd.get("page"), doc_type=dt,
+                evidence=[_ev(doc, "birth_date"), _ev(doc, "birth_number")]))
+    loan, decl = fields.get("loan_amount") or {}, fields.get("declared_monthly_income") or {}
+    if loan.get("normalized") is not None and decl.get("normalized") is not None:
+        eq = loan["normalized"] == decl["normalized"]
+        checks.append(rules.check("CONTRACT_INCOME_NOT_LOAN", "equal" if eq else "ok",
+                                  detail=f"loan={loan['normalized']} declared={decl['normalized']}",
+                                  page=decl.get("page"), doc_type=dt,
+                                  evidence=[_ev(doc, "loan_amount"), _ev(doc, "declared_monthly_income")]))
     return checks
 
 
-def completeness(docs: list[dict]) -> tuple[list[str], list[str]]:
-    """Return (required_codes, missing_codes) based on the contract's required_documents."""
-    required = []
-    for d in docs:
-        if d["doc_type"] != "contract":
-            continue
-        f = d["fields"].get("required_documents")
-        if f and f.get("normalized"):
-            required = list(f["normalized"])
-            break
-    if not required:
-        # sensible default if contract did not list them
-        required = ["id_card", "bank_statement", "payslip", "proof_of_address"]
-    present = {d["doc_type"] for d in docs if d["doc_type"] != "other"}
-    missing = [c for c in required if c not in present]
-    return required, missing
-
-
-def draft_client_message(missing: list[str], checks: list[dict], client_name: str | None) -> str | None:
-    problems = [c for c in checks if c["status"] in ("discrepancy", "manual_review")]
-    if not missing and not problems:
+# ---------------- package ----------------
+def _name_consistency(rules, rule_id, docs, field):
+    items = [(d, d["fields"][field]) for d in docs
+             if (d["fields"].get(field) or {}).get("normalized")]
+    if len(items) < 2:
         return None
-    who = client_name or "Customer"
-    lines = [
-        f"Dear {who},",
-        "",
-        "We are reviewing your loan application and need your help to complete the file:",
-    ]
-    if missing:
-        nice = {
-            "id_card": "a copy of your national ID card",
-            "bank_statement": "a recent bank statement (last 3 months)",
-            "payslip": "your latest payslip",
-            "proof_of_address": "a proof of address (utility bill, max 3 months old)",
-        }
-        for m in missing:
-            lines.append(f"- Please send {nice.get(m, m)}.")
-    for c in problems[:5]:
-        if c["check"].startswith("income_"):
-            lines.append("- The income figures on your documents do not match. "
-                         "Please confirm your monthly net income or send an updated payslip.")
+    # When engines disagreed, compare the OCR reading too (the LLM may 'autocorrect' typos).
+    vals = set()
+    for _, f in items:
+        vals.add(f["normalized"])
+        if f.get("outcome") == "disagree" and f.get("textract"):
+            vals.add(norm_name(f["textract"]))
+    vals.discard(None)
+    evidence = [_ev(d, field) for d, _ in items]
+    if len(vals) == 1:
+        outcome = "consistent"
+        if rule_id == "XDOC_LAST_NAME" and any(f.get("outcome") == "disagree" for _, f in items):
+            outcome = "engine_disagreement"
+    else:
+        vs = sorted(vals)
+        near = rules.params(rule_id).get("near_miss_ratio")
+        if near is not None and len(vs) == 2 and similarity(vs[0], vs[1]) >= near:
+            outcome = "near_miss"
+        else:
+            outcome = "inconsistent"
+    return rules.check(rule_id, outcome, detail=f"values={sorted(vals)}",
+                       page=items[0][1].get("page"), evidence=evidence)
+
+
+def package_checks(docs: list[dict], rules: Rules, run_date: str | None = None) -> list[dict]:
+    checks = []
+
+    # birth number across docs
+    bns = [(d, d["fields"]["birth_number"]) for d in docs
+           if (d["fields"].get("birth_number") or {}).get("normalized")]
+    if len(bns) >= 2:
+        vals = {str(f["normalized"]) for _, f in bns}
+        checks.append(rules.check("XDOC_BIRTH_NUMBER",
+                                  "consistent" if len(vals) == 1 else "inconsistent",
+                                  detail=f"values={sorted(vals)}", page=bns[0][1].get("page"),
+                                  evidence=[_ev(d, "birth_number") for d, _ in bns]))
+
+    for rid, field in (("XDOC_FIRST_NAME", "first_name"), ("XDOC_LAST_NAME", "last_name")):
+        c = _name_consistency(rules, rid, docs, field)
+        if c:
+            checks.append(c)
+
+    # holder / full name vs contract first+last
+    cd, cfn = _first(docs, "contract", "first_name")
+    _, cln = _first(docs, "contract", "last_name")
+    if cd and cfn and cln:
+        ref = (cfn["normalized"] or "") + (cln["normalized"] or "")
+        near = rules.params("XDOC_FULL_NAME")["near_miss_ratio"]
+        for d in docs:
+            for fld in ("account_holder", "full_name"):
+                f = d["fields"].get(fld) or {}
+                if not f.get("normalized"):
+                    continue
+                n = f["normalized"]
+                if n == ref:
+                    outcome = "consistent"
+                elif similarity(n, ref) >= near:
+                    outcome = "near_miss"
+                else:
+                    outcome = "inconsistent"
+                checks.append(rules.check("XDOC_FULL_NAME", outcome, doc_type=d["doc_type"],
+                                          detail=f"{n} vs contract {ref}", page=f.get("page"),
+                                          evidence=[_ev(d, fld), _ev(cd, "first_name"), _ev(cd, "last_name")]))
+
+    # address
+    addrs = [(d, d["fields"]["address"]) for d in docs
+             if (d["fields"].get("address") or {}).get("normalized")]
+    if len(addrs) >= 2:
+        ref = addrs[0][1]["normalized"]
+        thr = rules.params("XDOC_ADDRESS")["similarity"]
+        worst = min(similarity(ref, f["normalized"]) for _, f in addrs[1:])
+        checks.append(rules.check("XDOC_ADDRESS", "consistent" if worst >= thr else "inconsistent",
+                                  detail=f"min_similarity={worst:.2f} (threshold {thr})",
+                                  page=addrs[0][1].get("page"),
+                                  evidence=[_ev(d, "address") for d, _ in addrs]))
+
+    # income pairs
+    ip = rules.params("XDOC_INCOME")
+    for pair in ip["pairs"]:
+        (ta, fa), (tb, fb) = pair["a"].split("."), pair["b"].split(".")
+        da, a = _first(docs, ta, fa)
+        db, b = _first(docs, tb, fb)
+        if a and b:
+            base = max(abs(a["normalized"]), abs(b["normalized"]), 1.0)
+            diff = abs(a["normalized"] - b["normalized"]) / base
+            checks.append(rules.check(
+                "XDOC_INCOME", "within_tolerance" if diff <= ip["tolerance"] else "out_of_tolerance",
+                check=pair["check"],
+                detail=f"{a['normalized']} vs {b['normalized']} (diff={diff:.2%}, tol={ip['tolerance']:.0%})",
+                page=a.get("page"), evidence=[_ev(da, fa), _ev(db, fb)]))
+
+    # loan amount present
+    for d in docs:
+        if d["doc_type"] == "contract":
+            f = d["fields"].get("loan_amount") or {}
+            checks.append(rules.check("LOAN_AMOUNT_PRESENT",
+                                      "present" if f.get("normalized") else "absent",
+                                      detail=str(f.get("normalized")), page=f.get("page"),
+                                      evidence=[_ev(d, "loan_amount")]))
             break
-        if c["check"] == "last_name_consistent":
-            lines.append("- The surname does not match across documents. "
-                         "Please confirm the correct spelling.")
-            break
-        if c["check"] == "birth_number_valid":
-            lines.append("- The birth number (rodné číslo) appears invalid. "
-                         "Please re-send a clear copy of your ID.")
-            break
+
+    # ID expiry vs contract date (or run date)
+    _, cdate = _first(docs, "contract", "contract_date")
+    ref_date = (cdate or {}).get("normalized") or run_date or date.today().isoformat()
+    for d in docs:
+        if d["doc_type"] == "id_card":
+            f = d["fields"].get("expiry_date") or {}
+            if f.get("normalized"):
+                ok = f["normalized"] >= ref_date
+                checks.append(rules.check("ID_NOT_EXPIRED", "valid" if ok else "expired",
+                                          doc_type="id_card",
+                                          detail=f"expiry={f['normalized']} ref={ref_date}",
+                                          page=f.get("page"), evidence=[_ev(d, "expiry_date")]))
+    return checks
+
+
+def completeness(docs: list[dict], rules: Rules) -> tuple[list[str], list[str], str]:
+    """(required, missing, source) — source is 'contract' or 'default'."""
+    required, source = [], "default"
+    for d in docs:
+        if d["doc_type"] == "contract":
+            f = d["fields"].get("required_documents") or {}
+            if f.get("normalized"):
+                required, source = list(f["normalized"]), "contract"
+                break
+    if not required:
+        required = list(rules.params("COMPLETENESS")["default_required"])
+    present = {d["doc_type"] for d in docs}
+    return required, [c for c in required if c not in present], source
+
+
+def page_gaps(docs: list[dict]) -> list[dict]:
+    gaps = []
+    for d in docs:
+        nums = [p.get("page_number") for p in d.get("pages", []) if p.get("page_number")]
+        totals = [p.get("page_count") for p in d.get("pages", []) if p.get("page_count")]
+        if not totals:
+            continue
+        total = max(totals)
+        missing = [n for n in range(1, total + 1) if n not in nums]
+        if missing:
+            gaps.append({"doc_id": d["doc_id"], "doc_type": d["doc_type"],
+                         "page_count": total, "missing_page_numbers": missing})
+    return gaps
+
+
+def completeness_checks(docs, rules, required, missing, source, gaps):
+    checks = [rules.check("COMPLETENESS", "incomplete" if missing else "complete",
+                          detail=f"required({source})={required} missing={missing}")]
+    has_markers = any(p.get("page_count") for d in docs for p in d.get("pages", []))
+    if not has_markers:
+        checks.append(rules.check("PAGE_CONTINUITY", "no_markers", detail="no 'page x of y' markers"))
+    else:
+        checks.append(rules.check("PAGE_CONTINUITY", "gap" if gaps else "complete",
+                                  detail=f"gaps={gaps}" if gaps else "all pages present"))
+    ignore = set(rules.params("UNEXPECTED_DOCUMENTS").get("ignore_types") or [])
+    extra = sorted({d["doc_type"] for d in docs} - set(required) - ignore)
+    checks.append(rules.check("UNEXPECTED_DOCUMENTS", "present" if extra else "none",
+                              detail=f"unrequested={extra}"))
+    return checks, extra
+
+
+def recommended_next_step(rules: Rules, checks, field_statuses, missing, gaps) -> str:
+    n_mr = sum(1 for s in field_statuses if s == "manual_review")
+    statuses = [c["status"] for c in checks] + list(field_statuses)
+    conds = {
+        "any_check_discrepancy": any(c["status"] == "discrepancy" for c in checks),
+        "missing_documents_or_pages": bool(missing) or bool(gaps),
+        "many_field_manual_review": n_mr >= rules.next_step["params"]["manual_review_extraction_min_fields"],
+        "any_warning_or_manual_review": any(s in ("warning", "manual_review") for s in statuses),
+        "always": True,
+    }
+    for item in rules.next_step["order"]:
+        if conds[item["when"]]:
+            return item["step"]
+    return "approve_ready"
+
+
+NICE = {
+    "id_card": "a copy of your national ID card",
+    "bank_statement": "a recent bank statement (last 3 months)",
+    "payslip": "your latest payslip",
+    "proof_of_address": "a proof of address (utility bill, max 3 months old)",
+}
+
+
+def draft_client_message(missing, gaps, checks, client_name) -> str | None:
+    problems = [c for c in checks if c["status"] == "discrepancy"]
+    if not missing and not gaps and not problems:
+        return None
+    lines = [f"Dear {client_name or 'Customer'},", "",
+             "We are reviewing your loan application and need your help to complete the file:"]
+    for m in missing:
+        lines.append(f"- Please send {NICE.get(m, m)}.")
+    for g in gaps:
+        pages = ", ".join(str(n) for n in g["missing_page_numbers"])
+        lines.append(f"- Your {g['doc_type'].replace('_', ' ')} is incomplete: page(s) {pages} of "
+                     f"{g['page_count']} are missing. Please send the complete document.")
+    said = set()
+    for c in problems:
+        rid = c["rule_id"]
+        if rid in said:
+            continue
+        said.add(rid)
+        if rid == "XDOC_INCOME":
+            lines.append("- The income figures on your documents do not match. Please confirm your "
+                         "monthly net income or send an updated payslip.")
+        elif rid in ("XDOC_LAST_NAME", "XDOC_FIRST_NAME", "XDOC_FULL_NAME"):
+            lines.append("- Your name does not match across documents. Please confirm the correct spelling.")
+        elif rid in ("RC_VALID", "XDOC_BIRTH_NUMBER", "RC_BIRTHDATE_MATCH"):
+            lines.append("- The birth number (rodné číslo) on your documents appears invalid or "
+                         "inconsistent. Please re-send a clear copy of your ID.")
+        elif rid == "ID_NOT_EXPIRED":
+            lines.append("- Your ID card appears to be expired. Please send a valid ID.")
     lines += ["", "Kind regards,", "Komerční banka – Credit Operations"]
     return "\n".join(lines)
-
-
-def recommended_next_step(missing, checks, fields_statuses) -> str:
-    """Priority: hard rule discrepancy > missing docs > extraction conflicts > warnings."""
-    if any(c["status"] == "discrepancy" for c in checks):
-        return "manual_review_discrepancy"
-    if missing:
-        return "request_missing_documents"
-    # Field-level engine disagreements still need a clerk glance, but do not
-    # block a clean package harder than a warning when no rule fired.
-    n_mr = sum(1 for s in fields_statuses if s == "manual_review")
-    if n_mr >= 3:
-        return "manual_review_extraction"
-    if n_mr >= 1 or any(s == "warning" for s in fields_statuses):
-        return "spot_check_warnings"
-    return "approve_ready"

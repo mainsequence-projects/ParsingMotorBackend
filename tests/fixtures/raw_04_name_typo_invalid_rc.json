@@ -1,0 +1,419 @@
+[
+ {
+  "doc_id": "d1",
+  "doc_type": "contract",
+  "source_file": "package.pdf",
+  "doc_key": null,
+  "page_start": 1,
+  "page_end": 1,
+  "pages": [
+   {
+    "source_file": "package.pdf",
+    "page": 1,
+    "page_number": null,
+    "page_count": null
+   }
+  ],
+  "classification_confidence": 0.99,
+  "classification_reason": "Document is titled 'ÚVĚROVÁ SMLOUVA / LOAN CONTRACT' and contains loan amount, contract number, and contract date.",
+  "raw": {
+   "textract": {
+    "contract_number": {
+     "value": "KB-2026-00421",
+     "confidence": 0.94,
+     "page": 1
+    },
+    "first_name": {
+     "value": "Jana",
+     "confidence": 0.99,
+     "page": 1
+    },
+    "last_name": {
+     "value": "Nováková",
+     "confidence": 0.94,
+     "page": 1
+    },
+    "birth_date": {
+     "value": "12.04.1988",
+     "confidence": 0.97,
+     "page": 1
+    },
+    "birth_number": {
+     "value": "885412/0000",
+     "confidence": 0.98,
+     "page": 1
+    },
+    "address": {
+     "value": "Vinohradská 12, 120 00 Praha 2",
+     "confidence": 0.9,
+     "page": 1
+    },
+    "loan_amount": {
+     "value": "250000.00 CZK",
+     "confidence": 0.84,
+     "page": 1
+    },
+    "declared_monthly_income": {
+     "value": "15200E.00",
+     "confidence": 0.5,
+     "page": 1
+    },
+    "contract_date": {
+     "value": "01.10.2026",
+     "confidence": 0.98,
+     "page": 1
+    }
+   },
+   "bedrock": {
+    "contract_number": {
+     "value": "KB-2026-00421",
+     "page": 1
+    },
+    "first_name": {
+     "value": "Jana",
+     "page": 1
+    },
+    "last_name": {
+     "value": "Nováková",
+     "page": 1
+    },
+    "birth_date": {
+     "value": "1988-04-12",
+     "page": 1
+    },
+    "birth_number": {
+     "value": "885412/0000",
+     "page": 1
+    },
+    "address": {
+     "value": "Vinohradská 12, 120 00 Praha 2",
+     "page": 1
+    },
+    "loan_amount": {
+     "value": 250000.0,
+     "page": 1
+    },
+    "declared_monthly_income": {
+     "value": 52000.0,
+     "page": 1
+    },
+    "contract_date": {
+     "value": "2026-10-01",
+     "page": 1
+    },
+    "required_documents": {
+     "value": [
+      "id_card",
+      "bank_statement",
+      "payslip",
+      "proof_of_address"
+     ],
+     "page": 1
+    }
+   }
+  }
+ },
+ {
+  "doc_id": "d2",
+  "doc_type": "id_card",
+  "source_file": "package.pdf",
+  "doc_key": null,
+  "page_start": 2,
+  "page_end": 2,
+  "pages": [
+   {
+    "source_file": "package.pdf",
+    "page": 2,
+    "page_number": null,
+    "page_count": null
+   }
+  ],
+  "classification_confidence": 1.0,
+  "classification_reason": "Document is clearly labeled 'OBČANSKÝ PRŮKAZ / CZECH ID CARD' and contains personal identification fields including photo placeholder, document number, birth number, and expiry date.",
+  "raw": {
+   "textract": {
+    "first_name": {
+     "value": "Jana",
+     "confidence": 0.98,
+     "page": 2
+    },
+    "last_name": {
+     "value": "Nováková",
+     "confidence": 0.98,
+     "page": 2
+    },
+    "birth_date": {
+     "value": "12.04.1988",
+     "confidence": 0.96,
+     "page": 2
+    },
+    "birth_number": {
+     "value": "885412/0001",
+     "confidence": 0.95,
+     "page": 2
+    },
+    "address": {
+     "value": "Vinohradská 12, 120 00 Praha 2",
+     "confidence": 0.81,
+     "page": 2
+    },
+    "document_number": {
+     "value": "123456789",
+     "confidence": 0.99,
+     "page": 2
+    },
+    "expiry_date": {
+     "value": "12.04.2032",
+     "confidence": 0.97,
+     "page": 2
+    }
+   },
+   "bedrock": {
+    "first_name": {
+     "value": "Jana",
+     "page": 2
+    },
+    "last_name": {
+     "value": "Nováková",
+     "page": 2
+    },
+    "birth_date": {
+     "value": "1988-04-12",
+     "page": 2
+    },
+    "birth_number": {
+     "value": "885412/0001",
+     "page": 2
+    },
+    "address": {
+     "value": "Vinohradská 12, 120 00 Praha 2",
+     "page": 2
+    },
+    "document_number": {
+     "value": "123456789",
+     "page": 2
+    },
+    "expiry_date": {
+     "value": "2032-04-12",
+     "page": 2
+    }
+   }
+  }
+ },
+ {
+  "doc_id": "d3",
+  "doc_type": "bank_statement",
+  "source_file": "package.pdf",
+  "doc_key": null,
+  "page_start": 3,
+  "page_end": 3,
+  "pages": [
+   {
+    "source_file": "package.pdf",
+    "page": 3,
+    "page_number": null,
+    "page_count": null
+   }
+  ],
+  "classification_confidence": 1.0,
+  "classification_reason": "Document clearly shows IBAN, account holder, statement period, salary credit, closing balance, and recent transactions typical of a bank statement.",
+  "raw": {
+   "textract": {
+    "account_holder": {
+     "value": "Jana Nováková",
+     "confidence": 0.92,
+     "page": 3
+    },
+    "iban": {
+     "value": "CZ65 0800 0000 0000 1234 5678",
+     "confidence": 0.88,
+     "page": 3
+    },
+    "period_from": {
+     "value": "01.09.2026",
+     "confidence": 0.99,
+     "page": 3
+    },
+    "period_to": {
+     "value": "30.09.2026",
+     "confidence": 0.99,
+     "page": 3
+    },
+    "salary_credit": {
+     "value": "52000.00 CZK",
+     "confidence": 0.75,
+     "page": 3
+    },
+    "closing_balance": {
+     "value": "87450.55 CZK",
+     "confidence": 0.92,
+     "page": 3
+    }
+   },
+   "bedrock": {
+    "account_holder": {
+     "value": "Jana Nováková",
+     "page": 3
+    },
+    "iban": {
+     "value": "CZ65 0800 0000 0000 1234 5678",
+     "page": 3
+    },
+    "period_from": {
+     "value": "2026-09-01",
+     "page": 3
+    },
+    "period_to": {
+     "value": "2026-09-30",
+     "page": 3
+    },
+    "salary_credit": {
+     "value": 52000.0,
+     "page": 3
+    },
+    "closing_balance": {
+     "value": 87450.55,
+     "page": 3
+    }
+   }
+  }
+ },
+ {
+  "doc_id": "d4",
+  "doc_type": "payslip",
+  "source_file": "package.pdf",
+  "doc_key": null,
+  "page_start": 4,
+  "page_end": 4,
+  "pages": [
+   {
+    "source_file": "package.pdf",
+    "page": 4,
+    "page_number": null,
+    "page_count": null
+   }
+  ],
+  "classification_confidence": 1.0,
+  "classification_reason": "Document is clearly labeled 'PAYSLIP / VÝPLATNÍ LÍSTEK' and contains employer name, pay period, gross pay, and net income information.",
+  "raw": {
+   "textract": {
+    "first_name": {
+     "value": "Jana",
+     "confidence": 1.0,
+     "page": 4
+    },
+    "last_name": {
+     "value": "Novakowa",
+     "confidence": 0.99,
+     "page": 4
+    },
+    "birth_number": {
+     "value": "885412/0000",
+     "confidence": 0.98,
+     "page": 4
+    },
+    "employer": {
+     "value": "ACME s.r.o.",
+     "confidence": 0.7,
+     "page": 4
+    },
+    "net_income": {
+     "value": "52000.00 CZK",
+     "confidence": 0.93,
+     "page": 4
+    },
+    "period": {
+     "value": "September 2026",
+     "confidence": 0.93,
+     "page": 4
+    }
+   },
+   "bedrock": {
+    "first_name": {
+     "value": "Jana",
+     "page": 4
+    },
+    "last_name": {
+     "value": "Novakova",
+     "page": 4
+    },
+    "birth_number": {
+     "value": "885412/0000",
+     "page": 4
+    },
+    "employer": {
+     "value": "ACME s.r.o.",
+     "page": 4
+    },
+    "net_income": {
+     "value": 52000.0,
+     "page": 4
+    },
+    "period": {
+     "value": "September 2026",
+     "page": 4
+    }
+   }
+  }
+ },
+ {
+  "doc_id": "d5",
+  "doc_type": "proof_of_address",
+  "source_file": "package.pdf",
+  "doc_key": null,
+  "page_start": 5,
+  "page_end": 5,
+  "pages": [
+   {
+    "source_file": "package.pdf",
+    "page": 5,
+    "page_number": null,
+    "page_count": null
+   }
+  ],
+  "classification_confidence": 0.99,
+  "classification_reason": "Document is explicitly titled 'PROOF OF ADDRESS / POTVRZENÍ O ADRESE' and shows a utility bill from an energy company with customer name and supply address.",
+  "raw": {
+   "textract": {
+    "full_name": {
+     "value": "Jana Nováková",
+     "confidence": 0.96,
+     "page": 5
+    },
+    "address": {
+     "value": "Vinohradská 12, 120 00 Praha 2",
+     "confidence": 0.95,
+     "page": 5
+    },
+    "issuer": {
+     "value": "Praská energetika a.s.",
+     "confidence": 0.93,
+     "page": 5
+    },
+    "issue_date": {
+     "value": "15.09.2026",
+     "confidence": 0.98,
+     "page": 5
+    }
+   },
+   "bedrock": {
+    "full_name": {
+     "value": "Jana Nováková",
+     "page": 5
+    },
+    "address": {
+     "value": "Vinohradská 12, 120 00 Praha 2",
+     "page": 5
+    },
+    "issuer": {
+     "value": "Pražská energetika a.s.",
+     "page": 5
+    },
+    "issue_date": {
+     "value": "2026-09-15",
+     "page": 5
+    }
+   }
+  }
+ }
+]

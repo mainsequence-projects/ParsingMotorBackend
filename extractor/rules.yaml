@@ -1,0 +1,215 @@
+# KB extractor — deterministic rules. The engine loads, validates and hashes this file.
+# Every check in the output cites rule_id + rules_version (sha256 of this file).
+# Allowed severities for checks: passed | discrepancy | warning | manual_review
+# (FIELD_RECONCILE may also map to "missing" because it is a field status).
+schema_version: 1
+label: "kb-rules-2026-10-19"
+
+rules:
+  - id: FIELD_RECONCILE
+    scope: field
+    description:
+      es: "Concilia Textract y Bedrock campo a campo. El código decide; el LLM nunca elige el valor."
+      en: "Reconciles Textract and Bedrock per field. Code decides; the LLM never picks the value."
+    params:
+      pass_conf: 0.9                 # Textract conf needed for 'passed' when both engines agree
+      amount_ocr_wins_min_conf: 0.9  # on amount disagreement, OCR value is kept only at >= this conf; else Bedrock
+      ocr_preferred_min_conf: 0.4    # other OCR-native types: keep OCR value on disagreement from this conf
+      ocr_preferred_types: [amount, date, birth_number, iban, id, name]
+      text_similarity: 0.92          # address/free text agreement ratio
+      amount_tolerance: 0.01         # relative tolerance for amounts to count as agreement
+    severity:
+      agree_high_conf: passed
+      agree_low_conf: warning
+      llm_only: warning
+      ocr_only_high_conf: warning
+      ocr_only_low_conf: manual_review
+      disagree: manual_review
+      both_missing: missing
+
+  - id: RC_VALID
+    scope: document
+    check: birth_number_valid
+    description:
+      es: "Rodné číslo válido: 10 dígitos divisibles por 11 (o regla legacy), o 9 dígitos antes de 1954; mes con offsets."
+      en: "Valid Czech birth number: 10 digits divisible by 11 (or legacy rule), or 9 digits before 1954; month offsets."
+    params:
+      modulus: 11
+      lengths: [9, 10]
+      nine_digit_before_year: 1954
+      century_pivot_yy: 54           # 10-digit: yy >= pivot -> 19yy, else 20yy
+      female_month_offsets: [50, 70]
+      male_month_offsets: [20]       # +20 / +70 exist since 2004 when numbers ran out
+      allow_legacy_check_digit_zero: true   # first 9 digits mod 11 == 10 and last digit 0
+    severity:
+      valid: passed
+      invalid: discrepancy
+
+  - id: RC_BIRTHDATE_MATCH
+    scope: document
+    check: birth_date_matches_birth_number
+    description:
+      es: "La fecha de nacimiento del documento coincide con la codificada en el rodné číslo."
+      en: "Document birth date matches the date encoded in the birth number."
+    params: {}
+    severity:
+      match: passed
+      mismatch: discrepancy
+
+  - id: CONTRACT_INCOME_NOT_LOAN
+    scope: document
+    check: declared_income_not_loan_amount
+    description:
+      es: "El ingreso declarado no puede ser igual al importe del préstamo (señal de extracción errónea)."
+      en: "Declared income must not equal the loan amount (sign of mis-extraction)."
+    params: {}
+    severity:
+      ok: passed
+      equal: discrepancy
+
+  - id: ID_NOT_EXPIRED
+    scope: document
+    check: id_card_not_expired
+    description:
+      es: "El documento de identidad no está caducado en la fecha del contrato."
+      en: "The ID card is not expired at the contract date."
+    params: {}
+    severity:
+      valid: passed
+      expired: discrepancy
+
+  - id: XDOC_BIRTH_NUMBER
+    scope: package
+    check: birth_number_consistent
+    description:
+      es: "El rodné číslo es el mismo en todos los documentos que lo llevan."
+      en: "Birth number is identical across all documents carrying it."
+    params: {}
+    severity:
+      consistent: passed
+      inconsistent: discrepancy
+
+  - id: XDOC_FIRST_NAME
+    scope: package
+    check: first_name_consistent
+    description:
+      es: "El nombre coincide entre documentos (sin diacríticos ni mayúsculas)."
+      en: "First name matches across documents (diacritics/case-insensitive)."
+    params: {}
+    severity:
+      consistent: passed
+      inconsistent: discrepancy
+
+  - id: XDOC_LAST_NAME
+    scope: package
+    check: last_name_consistent
+    description:
+      es: "El apellido coincide entre documentos; casi-iguales (typo) son aviso."
+      en: "Surname matches across documents; near-misses (typos) are a warning."
+    params:
+      near_miss_ratio: 0.85
+    severity:
+      consistent: passed
+      near_miss: warning
+      engine_disagreement: warning
+      inconsistent: discrepancy
+
+  - id: XDOC_FULL_NAME
+    scope: package
+    check: holder_name_consistent
+    description:
+      es: "El titular (extracto / justificante de domicilio) coincide con nombre+apellido del contrato."
+      en: "Holder name (statement / proof of address) matches the contract first+last name."
+    params:
+      near_miss_ratio: 0.85
+    severity:
+      consistent: passed
+      near_miss: warning
+      inconsistent: discrepancy
+
+  - id: XDOC_ADDRESS
+    scope: package
+    check: address_consistent
+    description:
+      es: "La dirección coincide entre contrato, DNI y justificante (similitud de texto)."
+      en: "Address matches across contract, ID and proof of address (text similarity)."
+    params:
+      similarity: 0.85
+    severity:
+      consistent: passed
+      inconsistent: warning
+
+  - id: XDOC_INCOME
+    scope: package
+    description:
+      es: "Ingreso declarado en contrato vs nómina vs abono de salario en extracto, con tolerancia relativa."
+      en: "Contract declared income vs payslip net vs salary credit on statement, relative tolerance."
+    params:
+      tolerance: 0.01
+      pairs:
+        - {check: income_contract_vs_payslip, a: contract.declared_monthly_income, b: payslip.net_income}
+        - {check: income_contract_vs_statement, a: contract.declared_monthly_income, b: bank_statement.salary_credit}
+        - {check: income_payslip_vs_statement, a: payslip.net_income, b: bank_statement.salary_credit}
+    severity:
+      within_tolerance: passed
+      out_of_tolerance: discrepancy
+
+  - id: LOAN_AMOUNT_PRESENT
+    scope: package
+    check: loan_amount_present
+    description:
+      es: "El contrato tiene importe de préstamo."
+      en: "The contract carries a loan amount."
+    params: {}
+    severity:
+      present: passed
+      absent: manual_review
+
+  - id: COMPLETENESS
+    scope: package
+    check: required_documents_present
+    description:
+      es: "Están todos los documentos que exige el contrato (o la lista por defecto si el contrato no la trae)."
+      en: "All documents required by the contract are present (or the default list if the contract has none)."
+    params:
+      default_required: [id_card, bank_statement, payslip, proof_of_address]
+    severity:
+      complete: passed
+      incomplete: manual_review
+
+  - id: PAGE_CONTINUITY
+    scope: package
+    check: pages_complete
+    description:
+      es: "Cada documento multipágina tiene todas sus páginas (según marcas 'Página x de y')."
+      en: "Each multi-page document has all its pages (per 'Page x of y' markers)."
+    params: {}
+    severity:
+      complete: passed
+      gap: manual_review
+      no_markers: passed
+
+  - id: UNEXPECTED_DOCUMENTS
+    scope: package
+    check: no_unrequested_documents
+    description:
+      es: "Documentos aportados que el contrato no pide (se avisa, no se bloquea)."
+      en: "Documents provided that the contract does not require (warn, do not block)."
+    params:
+      ignore_types: [contract]
+    severity:
+      none: passed
+      present: warning
+
+next_step:
+  description:
+    es: "Política de siguiente paso. Se evalúa en orden; gana la primera condición que se cumple."
+    en: "Next-step policy. Evaluated in order; first matching condition wins."
+  params:
+    manual_review_extraction_min_fields: 3
+  order:
+    - {when: any_check_discrepancy, step: manual_review_discrepancy}
+    - {when: missing_documents_or_pages, step: request_missing_documents}
+    - {when: many_field_manual_review, step: manual_review_extraction}
+    - {when: any_warning_or_manual_review, step: spot_check_warnings}
+    - {when: always, step: approve_ready}

@@ -113,10 +113,16 @@ def normalize(ftype, v):
     return NORMALIZERS.get(ftype, norm_text)(v)
 
 
-def values_agree(ftype, a, b):
-    """Compare two normalised values. Addresses/free text use a fixed similarity threshold."""
+def similarity(a, b) -> float:
+    if a is None or b is None:
+        return 0.0
+    return SequenceMatcher(None, str(a), str(b)).ratio()
+
+
+def values_agree(ftype, a, b, text_similarity: float = 0.92):
+    """Compare two normalised values. Threshold comes from rules.yaml (FIELD_RECONCILE)."""
     if a is None or b is None:
         return False
     if ftype in ("address", "text"):
-        return a == b or SequenceMatcher(None, a, b).ratio() >= 0.92
+        return a == b or similarity(a, b) >= text_similarity
     return a == b
