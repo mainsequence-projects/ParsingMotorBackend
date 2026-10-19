@@ -46,13 +46,51 @@ def clients():
     return session, ident["Account"]
 
 
-def ensure_token() -> str:
-    if TOKEN_FILE.exists():
-        return TOKEN_FILE.read_text().strip()
-    token = secrets.token_urlsafe(32)
-    TOKEN_FILE.write_text(token)
-    os.chmod(TOKEN_FILE, 0o600)
-    print(f"Wrote API token to {TOKEN_FILE} (gitignored)")
+# Set out of band by deploy_cloudfront.py / the demo-invoke role setup. update_function_configuration
+# REPLACES the whole Environment, so these must be carried over or /session breaks.
+PRESERVE_ENV = ("DEMO_INVOKE_ROLE_ARN", "FUNCTION_URL", "EXTRACTOR_API_KEY")
+
+
+def existing_env(lam) -> dict:
+    try:
+        return lam.get_function_configuration(FunctionName=NAME).get("Environment", {}).get("Variables", {}) or {}
+    except ClientError:
+        return {}
+
+
+def resolve_token(token_file: Path, current_env: dict) -> tuple[str, str]:
+    """Never rotate the token Jose / the judges already have. Returns (token, source)."""
+    if token_file.exists() and token_file.read_text().strip():
+        return token_file.read_text().strip(), "file"
+    if current_env.get("EXTRACTOR_API_KEY"):
+        token, src = current_env["EXTRACTOR_API_KEY"], "lambda"
+    else:
+        token, src = secrets.token_urlsafe(32), "new"
+    token_file.write_text(token)
+    os.chmod(token_file, 0o600)
+    return token, src
+
+
+def merge_env(current: dict, ours: dict) -> dict:
+    out = {k: v for k, v in current.items() if k in PRESERVE_ENV}
+    out.update(ours)
+    return out
+
+
+def git_commit() -> str:
+    try:
+        c = subprocess.run(["git", "-C", str(ROOT), "rev-parse", "--short=12", "HEAD"],
+                           capture_output=True, text=True, timeout=5).stdout.strip()
+        dirty = subprocess.run(["git", "-C", str(ROOT), "status", "--porcelain", "--untracked-files=no"],
+                               capture_output=True, text=True, timeout=5).stdout.strip()
+        return (c or "unknown") + ("-dirty" if dirty else "")
+    except Exception:
+        return "unknown"
+
+
+def ensure_token(lam=None) -> str:
+    token, src = resolve_token(TOKEN_FILE, existing_env(lam) if lam else {})
+    print(f"API token: {src} (stored in {TOKEN_FILE.name}, gitignored; not printed)")
     return token
 
 
@@ -155,13 +193,17 @@ def upload_code(lam, s3, account: str, zip_mb: float):
     except ClientError:
         exists = False
 
-    env = {
+    env = merge_env(existing_env(lam) if exists else {}, {
         "EXTRACTOR_API_KEY": TOKEN_FILE.read_text().strip(),
         "AWS_REGION_EXTRACTOR": REGION,
         "BEDROCK_MODEL": "eu.anthropic.claude-sonnet-4-5-20250929-v1:0",
         "BEDROCK_CLASSIFY_MODEL": "eu.anthropic.claude-haiku-4-5-20251001-v1:0",
         "EXTRACTOR_BUDGET_USD": "2.5",
-    }
+        "EXTRACTOR_GIT_COMMIT": git_commit(),      # audit records the exact code in Lambda
+    })
+    missing = [k for k in ("DEMO_INVOKE_ROLE_ARN", "FUNCTION_URL") if exists and k not in env]
+    if missing:
+        print(f"WARN existing function has no {missing}: /session will answer 500 until set")
     role_arn = None  # filled by caller
 
     def wait_updated():
@@ -310,10 +352,10 @@ def configure_ops(lam, logs):
 
 def main():
     session, account = clients()
-    ensure_token()
-    zip_mb = build_zip()
     iam = session.client("iam")
     lam = session.client("lambda")
+    ensure_token(lam)
+    zip_mb = build_zip()
     s3 = session.client("s3")
     logs = session.client("logs")
     role_arn = ensure_role(iam, account)
