@@ -5,6 +5,7 @@ from pathlib import Path
 
 from . import __version__
 from .aws import usage
+from . import cost as costmeter
 from .classify import classify_pages, group_documents
 from .config import BEDROCK_MODEL, REGION
 from .cross_checks import (
@@ -86,6 +87,7 @@ def run_package(pages, *, package_id: str = "package", explain: bool = False) ->
         "recommended_next_step": recommended_next_step(missing, all_checks, field_statuses),
         "draft_client_message": draft_client_message(missing, all_checks, client),
         "usage": dict(usage),
+        "cost": costmeter.snapshot(),
         "pages_classified": [
             {"source_file": c["source_file"], "page": c["page"],
              "doc_type": c["doc_type"], "confidence": c["confidence"],

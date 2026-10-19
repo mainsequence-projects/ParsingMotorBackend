@@ -2,7 +2,7 @@
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from .aws import converse_json
-from .config import DOC_TYPES, MAX_WORKERS
+from .config import DOC_TYPES, MAX_WORKERS, BEDROCK_CLASSIFY_MODEL, BEDROCK_CLASSIFY_FALLBACKS
 from .ingest import Page
 
 SYSTEM = (
@@ -22,7 +22,9 @@ def _classify_one(page: Page) -> dict:
         "bank statements show IBAN and balances; payslips show employer / net pay; "
         "utility bills are proof_of_address."
     )
-    data, model = converse_json(prompt, images=[page.png], system=SYSTEM, max_tokens=200)
+    data, model = converse_json(prompt, images=[page.png], system=SYSTEM, max_tokens=200,
+                               model_id=BEDROCK_CLASSIFY_MODEL,
+                               fallbacks=BEDROCK_CLASSIFY_FALLBACKS)
     doc_type = data.get("doc_type", "other")
     if doc_type not in DOC_TYPES:
         doc_type = "other"
