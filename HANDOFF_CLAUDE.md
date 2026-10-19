@@ -14,7 +14,7 @@
 > Gasto de esta tarea 5,74 USD; acumulado ≈ 9,10 USD (tope 20). Hallazgo clave: **Textract no lee
 > checo** (pierde ř/č/š/í…); se compensa con reglas deterministas.
 
-Last updated: 2026-10-19 16:00 Europe/Prague (v0.4.0, commit 7c604b0 deployed). Keep this file updated after every commit.
+Last updated: 2026-10-19 16:10 Europe/Prague. Deployed: v0.4.0 commit 7c604b0. Local HEAD adds only docs commits after it (handoff, spec md/docx/pdf, NOTAS §17-20); no code change since the deploy. Keep this file updated after every commit.
 
 ---
 
