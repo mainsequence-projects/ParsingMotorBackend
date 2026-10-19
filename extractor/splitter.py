@@ -53,7 +53,11 @@ def group_documents(classified: list[dict]) -> list[dict]:
 
     for i, g in enumerate(groups):
         g["doc_id"] = f"d{i + 1}"
-        g["pages"].sort(key=lambda p: (p.get("page_number") is None, p.get("page_number") or 0, p["_order"]))
+        # unnumbered pages (unreadable 'Strana x z y') take the free page slots in input order
+        taken = {p.get("page_number") for p in g["pages"] if p.get("page_number")}
+        free = iter(n for n in range(1, len(g["pages"]) + 1) if n not in taken)
+        slot = {id(p): (p.get("page_number") or next(free, 10_000)) for p in sorted(g["pages"], key=lambda p: p["_order"])}
+        g["pages"].sort(key=lambda p: (slot[id(p)], p["_order"]))
         for p in g["pages"]:
             p.pop("_order", None)
     return groups

@@ -64,7 +64,9 @@ def test_page_two_of_two_continues_previous_page_even_with_misread_key():
          "page_number": 2, "page_count": 2, "confidence": 0.9, "reason": ""},
     ]
     g = group_documents(pages)
-    assert len(g) == 1 and sorted(p["page"] for p in g[0]["pages"]) == [1, 2]
+    assert len(g) == 1 and [p["page"] for p in g[0]["pages"]] == [1, 2]   # unnumbered page fills slot 1
+    from extractor.cross_checks import page_gaps
+    assert page_gaps(g) == []
 
 
 def test_page_one_with_other_key_still_starts_new_statement():

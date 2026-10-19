@@ -317,6 +317,9 @@ def page_gaps(docs: list[dict]) -> list[dict]:
             continue
         total = max(totals)
         missing = [n for n in range(1, total + 1) if n not in nums]
+        unnumbered = sum(1 for p in d.get("pages", []) if not p.get("page_number"))
+        if missing and unnumbered >= len(missing):
+            continue            # a page whose 'Strana x z y' was unreadable (scan) fills the slot
         if missing:
             gaps.append({"doc_id": d["doc_id"], "doc_type": d["doc_type"],
                          "page_count": total, "missing_page_numbers": missing})
