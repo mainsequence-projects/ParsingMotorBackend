@@ -220,6 +220,68 @@ window.run = async function(){
 """
 
 
+# ---------------- audit trail & human decisions ----------------
+from typing import Any, Literal, Optional
+
+from pydantic import BaseModel
+
+from . import audit as _audit
+
+
+class Decision(BaseModel):
+    field: Optional[str] = None      # "payslip.last_name" or "d3.last_name"
+    check: Optional[str] = None      # check_id or rule_id
+    action: Literal["confirm", "edit", "reject", "request_documents"]
+    new_value: Optional[Any] = None
+    reviewer: str
+    comment: str = ""
+
+
+@app.post("/runs/{run_id}/decisions")
+def post_decision(run_id: str, decision: Decision, request: Request):
+    """Append a human decision (never mutates) and return the recomputed next step."""
+    _check_key(request)
+    try:
+        r = _audit.record_decision(run_id, decision.model_dump())
+    except _audit.AuditError as e:
+        raise HTTPException(409 if "broken" in str(e) else 400, str(e)) from e
+    return {"run_id": run_id, "next_step_before": r["next_step_before"], "next_step": r["next_step"],
+            "decision_event": r["decision_event"], "reevaluation_event": r["reevaluation_event"]}
+
+
+@app.get("/runs/{run_id}")
+def get_run(run_id: str, request: Request):
+    _check_key(request)
+    try:
+        return _audit.current_state(run_id)
+    except _audit.AuditError as e:
+        raise HTTPException(404, str(e)) from e
+
+
+@app.get("/runs/{run_id}/verify")
+def verify_run(run_id: str, request: Request):
+    _check_key(request)
+    try:
+        return _audit.verify(run_id)
+    except _audit.AuditError as e:
+        raise HTTPException(400, str(e)) from e
+
+
+@app.get("/learning")
+def learning(request: Request, min_support: int = 3):
+    """Aggregated human overrides per rule_id with suggestions. Never auto-applied."""
+    _check_key(request)
+    return _audit.learning_report(min_support=min_support)
+
+
+@app.get("/rules")
+def get_rules(request: Request):
+    _check_key(request)
+    from .rules_engine import load_rules
+    r = load_rules()
+    return {"rules_version": r.version, "label": r.label, "path": Path(r.path).name, "yaml": r.raw_text}
+
+
 @app.get("/", response_class=HTMLResponse)
 def demo_page():
     return HTMLResponse(DEMO_HTML)
