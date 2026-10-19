@@ -8,7 +8,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 import pymupdf as fitz
-from PIL import Image
+from PIL import Image, ImageOps
 
 from .config import RENDER_DPI
 
@@ -17,6 +17,7 @@ MAX_SIDE = 2000  # keep Bedrock/Textract payloads small
 MAX_FILES = int(os.getenv("EXTRACTOR_MAX_FILES", "12"))
 MAX_PAGES = int(os.getenv("EXTRACTOR_MAX_PAGES", "20"))        # per package: cost + Lambda time guard
 MAX_FILE_MB = float(os.getenv("EXTRACTOR_MAX_FILE_MB", "15"))
+MAX_IMAGE_PIXELS = 50_000_000   # ~ 8000x6000 photo; larger is not a document scan
 
 
 class InputError(ValueError):
@@ -94,13 +95,23 @@ def load_bytes(name: str, data: bytes) -> list[Page]:
             raise InputError(f"{name}: {doc.page_count} pages > {MAX_PAGES} per package", 413)
         pages = []
         for i, p in enumerate(doc):
-            pix = p.get_pixmap(dpi=RENDER_DPI)
+            # Cap the render so a poster-size page cannot allocate gigabytes (Lambda has 1 GB);
+            # normal A4 pages keep RENDER_DPI exactly (same image -> same hash -> same audit).
+            side_in = max(p.rect.width, p.rect.height) / 72 or 1
+            dpi = RENDER_DPI if side_in * RENDER_DPI <= MAX_SIDE * 1.5 else max(10, int(MAX_SIDE / side_in))
+            pix = p.get_pixmap(dpi=dpi)
             img = Image.frombytes("RGB", (pix.width, pix.height), pix.samples)
             pages.append(Page(name, i + 1, to_png(img), source_sha256=src))
         return pages
     try:
         img = Image.open(io.BytesIO(data))
+        if img.size[0] * img.size[1] > MAX_IMAGE_PIXELS:      # checked before decoding
+            raise InputError(f"{name}: image {img.size[0]}x{img.size[1]} too large "
+                             f"(max {MAX_IMAGE_PIXELS // 1_000_000} Mpx)", 413)
         img.load()
+        img = ImageOps.exif_transpose(img)   # phone photos: honour the EXIF orientation
+    except InputError:
+        raise
     except Image.DecompressionBombError as e:
         raise InputError(f"{name}: image too large ({e})", 413) from e
     except Exception as e:

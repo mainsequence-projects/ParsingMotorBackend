@@ -83,6 +83,21 @@ def textract_queries(png: bytes, queries: dict[str, str]):
     return out, {"cache_hit": False, "called": True, "image_sha256": sha256(png), "lines": lines}
 
 
+BEDROCK_MAX_IMAGE_BYTES = 3_500_000   # Converse rejects images > 3.75 MB
+
+
+def _image_block(png: bytes) -> dict:
+    """PNG as-is; a big photo-like PNG is re-encoded as JPEG so Bedrock accepts it."""
+    if len(png) <= BEDROCK_MAX_IMAGE_BYTES:
+        return {"image": {"format": "png", "source": {"bytes": png}}}
+    import io
+
+    from PIL import Image
+    buf = io.BytesIO()
+    Image.open(io.BytesIO(png)).convert("RGB").save(buf, "JPEG", quality=85)
+    return {"image": {"format": "jpeg", "source": {"bytes": buf.getvalue()}}}
+
+
 def _parse_json(text: str):
     text = re.sub(r"^```(?:json)?|```$", "", text.strip(), flags=re.M).strip()
     start = min([i for i in (text.find("{"), text.find("[")) if i >= 0], default=0)
@@ -107,7 +122,7 @@ def converse_json(prompt: str, images: list[bytes] | None = None, system: str | 
         meta = {"model": hit["model"], "cache_hit": True, "usage": hit.get("usage")}
         return (hit["data"], hit["model"], meta) if return_meta else (hit["data"], hit["model"])
 
-    content = [{"image": {"format": "png", "source": {"bytes": img}}} for img in images]
+    content = [_image_block(img) for img in images]
     content.append({"text": prompt})
     kwargs = dict(messages=[{"role": "user", "content": content}],
                   inferenceConfig={"temperature": 0, "maxTokens": max_tokens})
