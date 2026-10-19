@@ -321,6 +321,14 @@ def learning_report(base: Path | None = None, min_support: int = 3) -> dict:
                                     "suggestion": f"reviewers confirmed {len(lc)} low-confidence fields "
                                                   f"(min Textract conf {min(lc):.2f}); consider lowering "
                                                   f"pass_conf towards {min(lc):.2f} after a wider sample"})
+            for outcome, acts in s["by_outcome"].items():
+                n = sum(acts.values())
+                ov = acts.get("edit", 0) + acts.get("reject", 0)
+                if n >= min_support and ov / n >= 0.5:
+                    suggestions.append({"rule_id": rid, "param": f"severity.{outcome}",
+                                        "suggestion": f"humans corrected {ov}/{n} fields with outcome "
+                                                      f"'{outcome}'; consider a stricter severity for it "
+                                                      "(e.g. manual_review)"})
             if len(s["overridden_passed_conf"]) >= min_support:
                 suggestions.append({"rule_id": rid, "param": "pass_conf",
                                     "suggestion": f"{len(s['overridden_passed_conf'])} auto-passed fields "
