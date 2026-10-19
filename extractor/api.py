@@ -11,7 +11,10 @@ from fastapi import FastAPI, File, UploadFile, HTTPException, Query, Request
 from fastapi.responses import HTMLResponse, JSONResponse
 
 from . import __version__
+from .cost import BudgetExceeded
+from .ingest import InputError
 from .pipeline import run_uploads
+from .rules_engine import RulesConfigError
 
 app = FastAPI(
     title="KB Document Control Extractor",
@@ -75,8 +78,14 @@ def session(request: Request):
 async def _run_files(files_payload, explain: bool):
     try:
         return run_uploads(files_payload, explain=explain)
+    except InputError as e:          # bad upload -> 4xx, never a 500
+        raise HTTPException(e.status, str(e)) from e
+    except BudgetExceeded as e:
+        raise HTTPException(503, f"budget guard: {e}") from e
+    except RulesConfigError as e:
+        raise HTTPException(500, f"rules.yaml invalid: {e}") from e
     except Exception as e:
-        raise HTTPException(500, f"extraction failed: {e}") from e
+        raise HTTPException(502, f"extraction failed ({type(e).__name__}): {e}") from e
 
 
 @app.post("/extract")
@@ -90,12 +99,7 @@ async def extract(
         raise HTTPException(400, "upload at least one PDF/PNG/JPG")
     payload = []
     for f in files:
-        data = await f.read()
-        if not data:
-            raise HTTPException(400, f"empty file: {f.filename}")
-        if len(data) > 15 * 1024 * 1024:
-            raise HTTPException(400, f"file too large (15MB max): {f.filename}")
-        payload.append((f.filename or "upload.bin", data))
+        payload.append((f.filename or "upload.bin", await f.read()))
     return JSONResponse(await _run_files(payload, explain))
 
 
@@ -107,20 +111,18 @@ async def extract_json(request: Request):
         body = await request.json()
     except Exception as e:
         raise HTTPException(400, f"invalid JSON: {e}") from e
-    files = body.get("files") or []
-    if not files:
-        raise HTTPException(400, "files: [{filename, content_base64}, ...] required")
+    files = body.get("files") if isinstance(body, dict) else None
+    if not isinstance(files, list) or not files:
+        raise HTTPException(400, "body must be {\"files\": [{\"filename\", \"content_base64\"}, ...]}")
     payload = []
-    for item in files:
-        name = item.get("filename") or "upload.bin"
+    for i, item in enumerate(files):
+        if not isinstance(item, dict) or not isinstance(item.get("content_base64"), str):
+            raise HTTPException(400, f"files[{i}] needs filename + content_base64 (string)")
+        name = str(item.get("filename") or "upload.bin")
         try:
-            data = base64.b64decode(item["content_base64"])
+            data = base64.b64decode(item["content_base64"], validate=True)
         except Exception as e:
-            raise HTTPException(400, f"bad base64 for {name}: {e}") from e
-        if not data:
-            raise HTTPException(400, f"empty file: {name}")
-        if len(data) > 15 * 1024 * 1024:
-            raise HTTPException(400, f"file too large (15MB max): {name}")
+            raise HTTPException(400, f"bad base64 for {name}") from e
         payload.append((name, data))
     return JSONResponse(await _run_files(payload, bool(body.get("explain", False))))
 

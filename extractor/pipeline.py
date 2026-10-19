@@ -147,10 +147,12 @@ def run_path(paths, **kwargs) -> dict:
 
 
 def run_uploads(files: list[tuple[str, bytes]], **kwargs) -> dict:
-    from .ingest import safe_name, sha256
+    from .ingest import check_package, safe_name, sha256
     pages, inputs, seen = [], [], set()
     for original, data in files:
         name = safe_name(original, seen)
         inputs.append({"name": name, "original_name": original, "bytes": len(data), "sha256": sha256(data)})
         pages += load_bytes(name, data)
+        check_package(pages, len(inputs))     # stop before rendering more than the limit
+    check_package(pages, len(inputs))
     return run_package(pages, inputs=inputs, **kwargs)
