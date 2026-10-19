@@ -7,7 +7,7 @@ from extractor import audit
 from extractor.rules_engine import DEFAULT_RULES_PATH, load_rules
 
 
-def _fake_run(raws, package_id="t03"):
+def _fake_run(raws, package_id="t03", completed=True):
     """Write an audit log exactly as the pipeline would, from stored raw outputs (no AWS)."""
     r = load_rules()
     rid = audit.new_run_id()
@@ -17,13 +17,15 @@ def _fake_run(raws, package_id="t03"):
                                       "inputs": [{"name": "x.pdf", "sha256": "ab" * 32}]})
     for d in raws:
         audit.append(rid, "extraction", {"document": d})
+    if completed:
+        audit.append(rid, "run_completed", {"cost": {"usd": 0}})
     return rid
 
 
 def test_untouched_log_verifies(audit_dir, raw03):
     rid = _fake_run(raw03)
     v = audit.verify(rid)
-    assert v["ok"] and v["events"] == 1 + len(raw03)
+    assert v["ok"] and v["events"] == 2 + len(raw03)   # run_started + extractions + run_completed
 
 
 def test_tampered_copy_fails(audit_dir, raw03, tmp_path):
@@ -117,3 +119,47 @@ def test_learning_report_suggests_never_applies(audit_dir, raw03):
     rules_suggested = {s["rule_id"] for s in rep["suggestions"]}
     assert {"XDOC_INCOME", "FIELD_RECONCILE"} <= rules_suggested
     assert DEFAULT_RULES_PATH.read_bytes() == before
+
+
+def test_decision_validation(audit_dir, raw03):
+    rid = _fake_run(raw03)
+    bad = [
+        ({"field": "contract.declared_monthly_income", "action": "edit", "new_value": "", "reviewer": "x"}, "non-empty"),
+        ({"field": "contract.declared_monthly_income", "action": "edit", "new_value": "lots", "reviewer": "x"}, "not a valid amount"),
+        ({"check": "COMPLETENESS", "action": "edit", "new_value": "lol", "reviewer": "x"}, "must be one of"),
+        ({"action": "request_documents", "new_value": "passport_of_mars", "reviewer": "x"}, "unknown doc types"),
+        ({"field": "contract.first_name", "action": "confirm", "reviewer": "x", "comment": "A" * 5000}, "max"),
+        ({"field": "contract.first_name", "action": "confirm", "reviewer": "  "}, "reviewer"),
+    ]
+    n = len(audit.read_events(rid))
+    for dec, msg in bad:
+        with pytest.raises(audit.Invalid, match=msg):
+            audit.record_decision(rid, dec)
+    assert len(audit.read_events(rid)) == n            # nothing appended on invalid input
+    r = audit.record_decision(rid, {"field": "contract.declared_monthly_income", "action": "edit",
+                                    "new_value": "52 000,- Kč", "reviewer": "x"})
+    f = next(d for d in audit.current_state(rid)["documents"] if d["doc_type"] == "contract")["fields"]
+    assert f["declared_monthly_income"]["normalized"] == 52000.0 and r["decision_event"]["seq"] == n
+
+
+def test_unknown_run_and_unfinished_run(audit_dir, raw03):
+    for rid in ("20990101T000000Z-deadbeef", "index", "../../etc/passwd", "x" * 300):
+        with pytest.raises(audit.NotFound):
+            audit.record_decision(rid, {"field": "contract.first_name", "action": "confirm", "reviewer": "x"})
+        with pytest.raises(audit.NotFound):
+            audit.current_state(rid)
+    rid = _fake_run(raw03, completed=False)
+    with pytest.raises(audit.Conflict, match="did not complete"):
+        audit.record_decision(rid, {"field": "contract.first_name", "action": "confirm", "reviewer": "x"})
+
+
+def test_concurrent_decisions_keep_chain_valid(audit_dir, raw03):
+    from concurrent.futures import ThreadPoolExecutor
+    rid = _fake_run(raw03)
+    dec = {"field": "bank_statement.iban", "action": "confirm", "reviewer": "x"}
+    with ThreadPoolExecutor(8) as pool:
+        list(pool.map(lambda _: audit.record_decision(rid, dict(dec)), range(8)))
+    ev = audit.read_events(rid)
+    assert audit.verify(rid)["ok"]
+    types = [e["type"] for e in ev if e["type"] in ("decision", "reevaluation")]
+    assert types == ["decision", "reevaluation"] * 8       # never interleaved

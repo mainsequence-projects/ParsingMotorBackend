@@ -11,6 +11,7 @@ import fcntl
 import hashlib
 import json
 import os
+import re
 import subprocess
 import uuid
 from collections import defaultdict
@@ -25,6 +26,22 @@ REPO = Path(__file__).resolve().parents[1]
 
 class AuditError(RuntimeError):
     pass
+
+
+class NotFound(AuditError):
+    """Unknown run_id (HTTP 404)."""
+
+
+class Conflict(AuditError):
+    """Run exists but cannot take a decision now: broken chain / not completed (HTTP 409)."""
+
+
+class Invalid(AuditError):
+    """Decision is well-formed JSON but semantically invalid (HTTP 422)."""
+
+
+RUN_ID_RE = re.compile(r"^\d{8}T\d{6}Z-[0-9a-f]{8}$")
+MAX_REVIEWER, MAX_COMMENT, MAX_VALUE = 100, 2000, 500
 
 
 def audit_dir() -> Path:
@@ -68,8 +85,9 @@ def git_info() -> dict:
 
 
 def run_path(run_id: str, base: Path | None = None) -> Path:
-    if not run_id or "/" in run_id or ".." in run_id:
-        raise AuditError(f"bad run_id {run_id!r}")
+    # Strict format: blocks traversal and names like 'index' (the index file is not a run).
+    if not isinstance(run_id, str) or not RUN_ID_RE.match(run_id):
+        raise NotFound(f"unknown run_id {str(run_id)[:80]!r}")
     return (base or audit_dir()) / f"{run_id}.jsonl"
 
 
@@ -116,7 +134,7 @@ def index_append(entry: dict, base: Path | None = None):
 def read_events(run_id: str | None = None, path: str | Path | None = None) -> list[dict]:
     p = Path(path) if path else run_path(run_id)
     if not p.exists():
-        raise AuditError(f"no audit log for run {run_id or p}")
+        raise NotFound(f"no audit log for run {run_id or p}")
     return [json.loads(l) for l in p.read_text(encoding="utf-8").splitlines() if l.strip()]
 
 
@@ -207,45 +225,92 @@ def _snapshot_target(state, kind, target):
                         "value": f["value"], "status": f["status"], "outcome": f["outcome"],
                         "textract_conf": f["textract_conf"], "textract": f["textract"],
                         "bedrock": f["bedrock"], "rule_ids": f["rule_ids"]}
-        raise AuditError(f"field not found: {target}")
+        raise Invalid(f"field not found in this run: {target}")
     hits = [c for c in state["checks"] if target in (c["check_id"], c["rule_id"], c["check"])]
     if not hits:
-        raise AuditError(f"check not found: {target}")
+        raise Invalid(f"check not found in this run: {target}")
     return [{"check_id": c["check_id"], "rule_id": c["rule_id"], "outcome": c["outcome"],
              "status": c["status"], "detail": c["detail"]} for c in hits]
 
 
-def record_decision(run_id: str, decision: dict) -> dict:
-    v = verify(run_id)
-    if not v["ok"]:
-        raise AuditError(f"audit chain broken, refusing to append: {v['errors'][:3]}")
+def _validate_decision(decision: dict, state: dict) -> tuple[str, str, object]:
+    from .config import DOC_TYPES, SCHEMAS
+    from .normalize import normalize
+    from .rules_engine import CHECK_SEVERITIES
     action = decision.get("action")
     if action not in ACTIONS:
-        raise AuditError(f"action must be one of {ACTIONS}")
-    if not decision.get("reviewer"):
-        raise AuditError("reviewer is required")
+        raise Invalid(f"action must be one of {ACTIONS}")
+    reviewer = decision.get("reviewer")
+    if not isinstance(reviewer, str) or not reviewer.strip():
+        raise Invalid("reviewer is required")
+    if len(reviewer) > MAX_REVIEWER or len(str(decision.get("comment") or "")) > MAX_COMMENT:
+        raise Invalid(f"reviewer max {MAX_REVIEWER} chars, comment max {MAX_COMMENT} chars")
+    nv = decision.get("new_value")
+    if nv is not None and len(str(nv)) > MAX_VALUE:
+        raise Invalid(f"new_value max {MAX_VALUE} chars")
     field, check = decision.get("field"), decision.get("check")
     if action == "request_documents":
-        kind, target = "package", field or check or "package"
-        if not decision.get("new_value"):
-            raise AuditError("request_documents needs new_value (list of doc types)")
-    elif bool(field) == bool(check):
-        raise AuditError("give exactly one of 'field' (doc_type.field or doc_id.field) or 'check'")
-    else:
-        kind, target = ("field", field) if field else ("check", check)
-    if action == "edit" and decision.get("new_value") is None:
-        raise AuditError("edit needs new_value")
+        items = [x.strip() for x in (nv.split(",") if isinstance(nv, str) else (nv or []))
+                 if isinstance(x, str) and x.strip()]
+        if not items:
+            raise Invalid("request_documents needs new_value: list of doc types")
+        bad = [x for x in items if x not in DOC_TYPES or x == "other"]
+        if bad:
+            raise Invalid(f"unknown doc types {bad}; allowed {[t for t in DOC_TYPES if t != 'other']}")
+        return "package", field or check or "package", items
+    if bool(field) == bool(check):
+        raise Invalid("give exactly one of 'field' (doc_type.field or doc_id.field) or 'check'")
+    kind, target = ("field", field) if field else ("check", check)
+    snap = _snapshot_target(state, kind, target)        # Invalid if the target does not exist
+    if action == "edit":
+        if nv is None or (isinstance(nv, str) and not nv.strip()):
+            raise Invalid("edit needs a non-empty new_value")
+        if kind == "field":
+            ftype = SCHEMAS[snap["doc_type"]]["fields"][snap["field"]].get("type", "text")
+            if normalize(ftype, nv) is None:
+                raise Invalid(f"new_value {str(nv)[:60]!r} is not a valid {ftype}")
+        elif nv not in CHECK_SEVERITIES:
+            raise Invalid(f"for a check, edit new_value must be one of {sorted(CHECK_SEVERITIES)}")
+    return kind, target, nv
 
+
+@contextmanager
+def _run_lock(run_id: str):
+    """Serialise verify -> decision -> reevaluation for one run (separate lock file)."""
+    lock = run_path(run_id).with_suffix(".lock")
+    with open(lock, "a+") as f:
+        fcntl.flock(f, fcntl.LOCK_EX)
+        try:
+            yield
+        finally:
+            fcntl.flock(f, fcntl.LOCK_UN)
+
+
+def record_decision(run_id: str, decision: dict) -> dict:
+    if not run_path(run_id).exists():
+        raise NotFound(f"no audit log for run {run_id}")
+    with _run_lock(run_id):
+        return _record_decision_locked(run_id, decision)
+
+
+def _record_decision_locked(run_id: str, decision: dict) -> dict:
+    v = verify(run_id)
+    if not v["ok"]:
+        raise Conflict(f"audit chain broken, refusing to append: {v['errors'][:3]}")
+    if not any(e["type"] == "run_completed" for e in read_events(run_id)):
+        raise Conflict("run did not complete (failed or still running); nothing to decide on")
     before = current_state(run_id)
+    kind, target, nv = _validate_decision(decision, before)
+    action = decision["action"]
     engine = _snapshot_target(before, kind, target) if kind != "package" else None
     ev = append(run_id, "decision", {
-        "kind": kind, "target": target, "action": action, "new_value": decision.get("new_value"),
+        "kind": kind, "target": target, "action": action, "new_value": nv,
         "reviewer": decision["reviewer"], "comment": decision.get("comment", ""),
         "before": engine, "next_step_before": before["recommended_next_step"],
         "rules_version": before["rules_version"],
     })
     after = current_state(run_id)
-    re = append(run_id, "reevaluation", {
+    rev = append(run_id, "reevaluation", {
         "trigger_event_hash": ev["hash"],
         "next_step": after["recommended_next_step"],
         "missing_documents": after["missing_documents"],
@@ -254,7 +319,7 @@ def record_decision(run_id: str, decision: dict) -> dict:
     })
     index_append({"run_id": run_id, "event": "decision", "action": action, "target": target,
                   "reviewer": decision["reviewer"], "next_step": after["recommended_next_step"]})
-    return {"decision_event": ev, "reevaluation_event": re,
+    return {"decision_event": ev, "reevaluation_event": rev,
             "next_step_before": before["recommended_next_step"],
             "next_step": after["recommended_next_step"]}
 
