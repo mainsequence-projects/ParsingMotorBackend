@@ -1,0 +1,61 @@
+{
+  "package_id": "09_photo_id",
+  "inputs": [
+    "contract.pdf",
+    "id_photo.jpg"
+  ],
+  "expected_docs": [
+    "contract",
+    "id_card"
+  ],
+  "expected_page_types": [
+    "contract",
+    "id_card"
+  ],
+  "expected_documents": [
+    {
+      "doc_type": "contract",
+      "pages": [
+        1
+      ],
+      "source_file": "contract.pdf"
+    },
+    {
+      "doc_type": "id_card",
+      "pages": [
+        1
+      ],
+      "source_file": "id_photo.jpg"
+    }
+  ],
+  "expected_fields": {
+    "contract": {
+      "contract_number": "KB-2026-00421",
+      "first_name": "Jana",
+      "last_name": "Nováková",
+      "birth_date": "1988-04-12",
+      "birth_number": "885412/0000",
+      "address": "Vinohradská 12, 120 00 Praha 2",
+      "loan_amount": 250000,
+      "declared_monthly_income": 52000,
+      "contract_date": "2026-10-01",
+      "required_documents": [
+        "id_card"
+      ]
+    },
+    "id_card": {
+      "first_name": "Jana",
+      "last_name": "Nováková",
+      "birth_date": "1988-04-12",
+      "birth_number": "885412/0000",
+      "address": "Vinohradská 12, 120 00 Praha 2",
+      "document_number": "123456789",
+      "expiry_date": "2032-04-12"
+    }
+  },
+  "expected_missing": [],
+  "expected_missing_pages": [],
+  "expected_unexpected": [],
+  "expected_flags": [],
+  "expected_next_step": "approve_ready"
+}
