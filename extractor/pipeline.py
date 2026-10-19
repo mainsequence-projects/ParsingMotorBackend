@@ -135,7 +135,7 @@ def run_package(pages, *, inputs=None, package_id: str = "package", explain: boo
                                    "page_number", "page_count", "doc_key", "rotation", "cache_hit")}
             for c in classified],
         "cost": {"run": run_cost, "cache_hits": cache_hits, "ledger": costmeter.snapshot()},
-        "audit_file": str(audit.run_path(run_id)) if audit_enabled else None,
+        "audit_file": audit.run_path(run_id).name if audit_enabled else None,
     }
 
 
