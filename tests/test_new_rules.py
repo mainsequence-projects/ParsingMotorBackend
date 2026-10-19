@@ -145,3 +145,15 @@ def test_recency_never_decided_on_a_date_the_engines_disagree_on():
         from extractor.cross_checks import _recency
         c = _recency([doc], R, "2026-10-02")
     assert c[0]["status"] == "manual_review" and "not confirmed" in c[0]["detail"]
+
+
+def test_tax_arrears_ocr_rule_reads_the_body_not_the_title():
+    from extractor.config import SCHEMAS
+    from extractor.extract import lines_rule
+    f = SCHEMAS["tax_or_debt_certificate"]["fields"]["has_tax_arrears"]
+    L = lambda *t: [{"text": x, "confidence": 0.9, "page": 1} for x in t]
+    title = ("POTVRZEN O BEZDLUNOSTI", "Certificate of no tax arrears")
+    # Textract drops Czech letters: these are real OCR spellings
+    assert lines_rule(L(*title, "Daov subjekt nem u sprvce dan evidovny dn daov nedoplatky."), f)["value"] == "no"
+    assert lines_rule(L(*title, "Daov subjekt m u sprvce dan evidovn daov", "nedoplatek ve vi 18 450 K."), f)["value"] == "yes"
+    assert lines_rule(L(*title), f)["value"] is None

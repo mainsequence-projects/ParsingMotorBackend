@@ -80,7 +80,15 @@ doc_types:
       tax_office: {type: text, query: "Which tax office issued the certificate?"}
       certificate_number: {type: id, query: "What is the certificate reference number (cislo jednaci)?"}
       issue_date: {type: date, query: "What is the date of issue of the certificate?"}
-      has_tax_arrears: {type: yesno, query: "Ignoring the title, does the text state that the taxpayer has tax arrears (nedoplatek) with an amount?"}
+      has_tax_arrears:
+        type: yesno
+        query: "Ignoring the title, does the body text state that the taxpayer has tax arrears (nedoplatek)?"
+        # Textract QUERIES cannot read Czech prose: its side is a deterministic rule on the OCR
+        # text (accents removed). The sentence with 'nedoplat' decides; an amount means arrears.
+        textract: lines_rule
+        keyword: "nedoplat"
+        yes_pattern: "nedoplat\\w*\\s+(ve\\s+v\\w*\\s+)?\\d|\\d[\\d ]*\\s*(kc|k|czk)\\b"
+        no_pattern: "\\bnem\\w*\\b|\\bzadn|\\bneeviduje|\\bneni\\b|\\b(d|a)?dn(e|y|a)?\\s+da"
   other:
     description: Anything else
     fields: {}

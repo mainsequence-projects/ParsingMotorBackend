@@ -23,10 +23,11 @@ def _field_defs(doc_type: str) -> dict:
 
 def _textract_for_doc(doc: dict):
     fields = _field_defs(doc["doc_type"])
-    queries = {k: f["query"] for k, f in fields.items() if f.get("textract", True) and f.get("query")}
+    queries = {k: f["query"] for k, f in fields.items()
+               if f.get("textract", True) and f.get("textract") != "lines_rule" and f.get("query")}
     if not queries:
         return {}, []
-    keep_lines = any(f.get("textract") == "lines" for f in fields.values())
+    keep_lines = any(f.get("textract") in ("lines", "lines_rule") for f in fields.values())
     best, calls, lines_by_page = {}, [], {}
     with ThreadPoolExecutor(max_workers=min(MAX_WORKERS, len(doc["pages"]))) as pool:
         futs = {pool.submit(textract_queries, p["png"], queries): p["page"] for p in doc["pages"]}
@@ -43,7 +44,35 @@ def _textract_for_doc(doc: dict):
         order = [p["page"] for p in doc["pages"]]
         if all(lines_by_page.get(pg) is not None for pg in order):
             best["_lines"] = [{**ln, "page": pg} for pg in order for ln in lines_by_page[pg]]
+            for name, f in fields.items():
+                if f.get("textract") == "lines_rule":
+                    best[name] = lines_rule(best["_lines"], f)
     return best, sorted(calls, key=lambda c: c["page"])
+
+
+def lines_rule(lines: list[dict], f: dict) -> dict:
+    """Deterministic yes/no from the OCR text (schemas.yaml: yes_pattern / no_pattern).
+
+    Textract QUERIES cannot reason over Czech prose, but the OCR words survive (minus accents):
+    the sentence that mentions the keyword decides. 'yes' wins over 'no' (safer)."""
+    import re
+
+    from .normalize import strip_diacritics
+    text = " ".join(strip_diacritics(ln.get("text") or "").lower() for ln in lines)
+    sentences = re.split(r"(?<=[.!?])\s+", text)
+    key = re.compile(f["keyword"])
+    hits = [i for i, snt in enumerate(sentences) if key.search(snt)]
+    if not hits:
+        return {"value": None, "confidence": 0.0, "page": None}
+    keyed = [ln for ln in lines if key.search(strip_diacritics(ln.get("text") or "").lower())] or lines
+    conf = round(min(ln.get("confidence", 0) for ln in keyed), 3)
+    page = keyed[0].get("page")
+    found = [sentences[i] for i in hits]
+    if any(re.search(f["yes_pattern"], snt) for snt in found):
+        return {"value": "yes", "confidence": conf, "page": page, "rule": "yes_pattern"}
+    if any(re.search(f["no_pattern"], snt) for snt in found):
+        return {"value": "no", "confidence": conf, "page": page, "rule": "no_pattern"}
+    return {"value": None, "confidence": 0.0, "page": page}
 
 
 def _bedrock_for_doc(doc: dict):
@@ -62,9 +91,12 @@ def _bedrock_for_doc(doc: dict):
         else:
             v = "string or null"
         hint[name] = {"value": v, "image": 1}
+        if meta.get("query"):
+            hint[name]["question"] = meta["query"]      # same question Textract is asked
     prompt = (
         f"This document is of type '{doc['doc_type']}' and has {len(pages)} image(s), numbered 1..{len(pages)} "
         "in the order given. Extract the fields below.\n"
+        "Each key comes with the question it answers. "
         "Return ONLY a JSON object with exactly these keys; each value is an object "
         '{"value": <value or null>, "image": <1-based image number where you read it, or null>}:\n'
         f"{json.dumps(hint, indent=2)}\n"
