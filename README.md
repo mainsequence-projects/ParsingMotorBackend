@@ -57,6 +57,17 @@ python -m extractor samples/02_missing_payslip/   # folder of files
 python -m extractor samples/01_clean/package.pdf --explain  # LLM explanation of disagreements
 ```
 
+## Deployed demo URL
+
+Public (CloudFront): see `deploy/public_url.txt`  
+API token: `.deploy_token` (gitignored)  
+Deploy: `bash deploy/deploy.sh` · Teardown: `bash deploy/teardown.sh`  
+Signed CLI extract: `python deploy/signed_extract.py samples/02_missing_payslip/id_card.pdf`
+
+> Org blocks anonymous Function URLs (AuthType NONE → 403). Public GETs go through
+> CloudFront OAC; browser POSTs use short-lived STS creds from `GET /session`. Details in
+> `NOTAS_CARLOS.md` §8.
+
 ## HTTP API (for Jose / Main Sequence)
 
 ```bash

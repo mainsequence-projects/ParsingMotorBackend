@@ -248,3 +248,92 @@ Esperado: 4/4 OK, field_accuracy 1.0, check_accuracy 1.0.
 - Notas: `/workspace/hack/extractor/NOTAS_CARLOS.md` (este archivo)
 - Zip: `/workspace/hack/extractor.zip`
 - Ledger de coste: `/workspace/hack/extractor/samples/out/cost_ledger.json`
+
+---
+
+## 8. Despliegue en AWS (Lambda + Function URL + CloudFront)
+
+**Qué se creó (eu-central-1):**
+
+| Recurso | Nombre / ID |
+|---------|-------------|
+| Lambda | `fintechers-kb-extractor` (python3.12, 1024 MB, timeout 180s) |
+| Function URL | AuthType **AWS_IAM** (ver por qué abajo) |
+| IAM role ejecución | `fintechers-kb-extractor-role` (Textract + Bedrock eu.* + Logs + AssumeRole demo) |
+| IAM role demo | `fintechers-kb-extractor-demo-invoke` (solo InvokeFunctionUrl; sesiones 15 min) |
+| Log group | `/aws/lambda/fintechers-kb-extractor` (retención **7 días**) |
+| CloudFront | distribución `E13GPX9M1FZKBI` → `d31su4idgeitei.cloudfront.net` |
+| OAC | `fintechers-kb-extractor-oac` |
+| ORP custom | `fintechers-kb-extractor-orp` |
+
+Tags en todos: `project=fintechers-kb`, `owner=carlos`.
+
+**URL pública (para Jose / jurado):**
+`https://d31su4idgeitei.cloudfront.net/`
+
+**Token API:** solo en `/workspace/hack/extractor/.deploy_token` (gitignored). No va al repo ni a estas notas.
+
+### Por qué no AuthType NONE
+
+Carlos pidió Function URL con AuthType NONE + header `x-api-key`. En esta cuenta/org,
+las invocaciones anónimas a Function URL devuelven **403 Forbidden** aunque la resource
+policy permita `Principal: *` (casi seguro un SCP). Lo comprobamos: con AWS_IAM + SigV4
+responde 200; sin firma, 403.
+
+**CloudFront + OAC** da una URL pública para GET (`/`, `/health`, `/session`). Los POST
+con cuerpo firman mal a través de OAC (bug/limitación conocida SigV4 + body). Por eso la
+página demo hace:
+1. `GET /session` (CloudFront) con `x-api-key` → credenciales STS de 15 min
+2. `POST /extract_json` **directo** a la Function URL firmado SigV4 en el navegador (aws4fetch)
+
+### Coste del despliegue
+
+- Idle: **~0 USD** (Lambda/CloudFront free tier; sin NAT/VPC/provisioned).
+- Test de verificación (1 página id_card): **~0,024 USD** medidos por el cost meter.
+- Reserved concurrency=2: **no se pudo** — la cuenta solo tiene 10 ejecuciones concurrentes
+  totales y AWS exige dejar Unreserved ≥ 10. Documentado; no es opcional en este account.
+
+### Cómo probar
+
+```bash
+PUBLIC=https://d31su4idgeitei.cloudfront.net/
+TOKEN=$(cat /workspace/hack/extractor/.deploy_token)
+
+# 1) Health abierto
+curl -sS "$PUBLIC/health"
+
+# 2) HTML demo
+curl -sS "$PUBLIC" | head
+
+# 3) Sin token → 401
+curl -sS -o /dev/null -w "%{http_code}\n" "$PUBLIC/session"
+
+# 4) Extract firmado (recomendado)
+cd /workspace/hack/extractor
+source ../venv/bin/activate
+python deploy/signed_extract.py samples/02_missing_payslip/id_card.pdf | python -m json.tool | head
+```
+
+La página HTML en `$PUBLIC` pide el token, sube archivos y muestra el JSON.
+
+### Cómo tirar todo abajo
+
+```bash
+bash /workspace/hack/extractor/deploy/teardown.sh
+```
+
+Borra CloudFront (disable+delete), OAC, ORP, Lambda URL, función, log group, roles IAM
+(ejecución + demo-invoke) y cualquier bucket temporal de empaquetado.
+
+### Scripts
+
+- `deploy/deploy.sh` → `deploy.py` (Lambda) + `deploy_cloudfront.py` (público)
+- `deploy/teardown.sh` → `teardown.py`
+- `deploy/signed_extract.py` → helper de prueba sin navegador
+
+### Límites honestos
+
+- Origin read timeout CloudFront = 60s (paquetes muy grandes pueden cortarse; usar
+  `signed_extract.py` directo a Lambda evita ese tope).
+- No se usa API Gateway (límite 29s).
+- Empaquetado: zip 36 MB (bajo 50 MB; no hizo falta S3 permanente).

@@ -132,7 +132,7 @@ def ensure_role(iam, account: str) -> str:
             RoleName=ROLE_NAME,
             AssumeRolePolicyDocument=json.dumps(trust),
             Tags=TAGS,
-            Description="KB extractor Lambda — least privilege Textract/Bedrock/Logs",
+            Description="KB extractor Lambda - least privilege Textract/Bedrock/Logs",
         )["Role"]
         time.sleep(12)
     iam.put_role_policy(
@@ -160,7 +160,7 @@ def upload_code(lam, s3, account: str, zip_mb: float):
         "AWS_REGION_EXTRACTOR": REGION,
         "BEDROCK_MODEL": "eu.anthropic.claude-sonnet-4-5-20250929-v1:0",
         "BEDROCK_CLASSIFY_MODEL": "eu.anthropic.claude-haiku-4-5-20251001-v1:0",
-        "EXTRACTOR_BUDGET_USD": "5.0",
+        "EXTRACTOR_BUDGET_USD": "2.5",
     }
     role_arn = None  # filled by caller
 
@@ -249,8 +249,18 @@ def create_or_update(lam, s3, account, role_arn, zip_mb):
 
 
 def configure_ops(lam, logs):
-    print("Reserved concurrency = 2")
-    lam.put_function_concurrency(FunctionName=NAME, ReservedConcurrentExecutions=2)
+    print("Reserved concurrency (cap abuse)")
+    try:
+        lam.put_function_concurrency(FunctionName=NAME, ReservedConcurrentExecutions=2)
+        print("  set to 2")
+    except ClientError as e:
+        # Hackathon accounts often cannot drop UnreservedConcurrentExecution below 10.
+        print(f"  WARN cannot set reserved=2 ({e.response['Error']['Code']}: {e.response['Error']['Message'][:120]})")
+        try:
+            lam.put_function_concurrency(FunctionName=NAME, ReservedConcurrentExecutions=1)
+            print("  set to 1 (fallback)")
+        except ClientError as e2:
+            print(f"  WARN concurrency left unset: {e2.response['Error']['Message'][:120]}")
     lg = f"/aws/lambda/{NAME}"
     try:
         logs.create_log_group(logGroupName=lg, tags=TAG_MAP)
@@ -269,13 +279,13 @@ def configure_ops(lam, logs):
         except ClientError:
             pass
 
-    print("Function URL (AuthType NONE; app checks x-api-key)")
+    print("Function URL (AuthType AWS_IAM; public access via CloudFront OAC)")
     try:
         lam.get_function_url_config(FunctionName=NAME)
     except ClientError:
         lam.create_function_url_config(
             FunctionName=NAME,
-            AuthType="NONE",
+            AuthType="AWS_IAM",
             Cors={
                 "AllowOrigins": ["*"],
                 "AllowMethods": ["GET", "POST"],
@@ -289,7 +299,7 @@ def configure_ops(lam, logs):
                 StatementId="FunctionURLAllowPublicAccess",
                 Action="lambda:InvokeFunctionUrl",
                 Principal="*",
-                FunctionUrlAuthType="NONE",
+                FunctionUrlAuthType="AWS_IAM",
             )
         except ClientError:
             pass
