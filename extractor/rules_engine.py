@@ -102,7 +102,21 @@ class Rules:
             "page": page,
             "doc_type": doc_type,
             "evidence": evidence or [],
+            "description": self.describe(rule_id, name),
         }
+
+    def describe(self, rule_id: str, check: str | None = None) -> str:
+        """Plain-English text for a check, editable in rules.yaml without touching code.
+
+        Order: `summary` of the matching params entry (XDOC_INCOME pairs, DOC_RECENT fields),
+        then the rule `summary`, then `description.en` (always present: validated)."""
+        r = self.rule(rule_id)
+        for v in (r.get("params") or {}).values():
+            if isinstance(v, list):
+                for item in v:
+                    if isinstance(item, dict) and item.get("check") == check and item.get("summary"):
+                        return str(item["summary"])
+        return str(r.get("summary") or (r.get("description") or {}).get("en") or "")
 
 
 def _err(path, msg):
@@ -131,6 +145,8 @@ def validate(data, path="rules.yaml") -> None:
         desc = r.get("description")
         if not isinstance(desc, dict) or not desc.get("es") or not desc.get("en"):
             _err(path, f"{rid}.description needs 'es' and 'en'")
+        if "summary" in r and not (isinstance(r["summary"], str) and r["summary"].strip()):
+            _err(path, f"{rid}.summary must be a non-empty string (plain English)")
         sev = r.get("severity")
         if not isinstance(sev, dict) or not sev:
             _err(path, f"{rid}.severity must be a non-empty mapping")

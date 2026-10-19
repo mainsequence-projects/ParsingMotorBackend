@@ -62,6 +62,13 @@ def apply_check_overrides(checks, overrides):
             c["human"] = {"action": act, "reviewer": ov.get("reviewer"), "event_hash": ov.get("event_hash")}
 
 
+def _counts(items) -> dict:
+    out: dict = {}
+    for x in items:
+        out[x] = out.get(x, 0) + 1
+    return dict(sorted(out.items()))
+
+
 def evaluate_package(raw_docs: list[dict], rules: Rules, *, field_overrides=(), check_overrides=(),
                      requested_documents=(), run_date: str | None = None) -> dict:
     docs = []
@@ -103,6 +110,7 @@ def evaluate_package(raw_docs: list[dict], rules: Rules, *, field_overrides=(), 
     statuses = [f["status"] for d in docs for f in d["fields"].values()]
     n = len(statuses) or 1
     auto = sum(1 for s in statuses if s in ("passed", "warning"))
+    passed = sum(1 for s in statuses if s == "passed")
     return {
         "rules_version": rules.version,
         "rules_label": rules.label,
@@ -114,7 +122,15 @@ def evaluate_package(raw_docs: list[dict], rules: Rules, *, field_overrides=(), 
         "missing_pages": gaps,
         "unexpected_documents": extra,
         "combined_confidence": round(auto / n, 3),
+        # compat: share of fields WITHOUT manual_review/missing (passed + warning), not "passed".
         "fields_auto_validated_pct": round(100 * auto / n, 1),
+        # strict KPI the review screen shows ("39/48 fields passed"): status == passed only
+        "fields_passed": passed,
+        "fields_total": len(statuses),
+        "fields_passed_pct": round(100 * passed / n, 1),
+        "field_status_counts": _counts(statuses),
+        "check_status_counts": _counts(c["status"] for c in checks),
+        "client_name": client,
         "recommended_next_step": recommended_next_step(rules, checks, statuses, missing, gaps),
         "draft_client_message": draft_client_message(missing, gaps, checks, client),
         "draft_client_messages": draft_client_messages(missing, gaps, checks, client),

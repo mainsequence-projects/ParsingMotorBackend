@@ -1,5 +1,7 @@
 # KB extractor — deterministic rules. The engine loads, validates and hashes this file.
 # Every check in the output cites rule_id + rules_version (sha256 of this file).
+# `summary` (optional, plain English) is what UIs show as the check description; it falls back
+# to description.en. Editing it changes rules_version like any other edit.
 # Allowed severities for checks: passed | discrepancy | warning | manual_review
 # (FIELD_RECONCILE may also map to "missing" because it is a field status).
 schema_version: 1
@@ -8,6 +10,7 @@ label: "kb-rules-2026-10-19-v04"
 rules:
   - id: FIELD_RECONCILE
     scope: field
+    summary: "Textract and Bedrock read the same field independently; code compares them and keeps a value only when they agree."
     description:
       es: "Concilia Textract y Bedrock campo a campo. El código decide; el LLM nunca elige el valor."
       en: "Reconciles Textract and Bedrock per field. Code decides; the LLM never picks the value."
@@ -39,6 +42,7 @@ rules:
   - id: RC_VALID
     scope: document
     check: birth_number_valid
+    summary: "The birth number (rodné číslo) has a valid format and check digit."
     description:
       es: "Rodné číslo válido: 10 dígitos divisibles por 11 (o regla legacy), o 9 dígitos antes de 1954; mes con offsets."
       en: "Valid Czech birth number: 10 digits divisible by 11 (or legacy rule), or 9 digits before 1954; month offsets."
@@ -60,6 +64,7 @@ rules:
   - id: RC_BIRTHDATE_MATCH
     scope: document
     check: birth_date_matches_birth_number
+    summary: "The date of birth on the document matches the date encoded in the birth number."
     description:
       es: "La fecha de nacimiento del documento coincide con la codificada en el rodné číslo."
       en: "Document birth date matches the date encoded in the birth number."
@@ -71,6 +76,7 @@ rules:
   - id: CONTRACT_INCOME_NOT_LOAN
     scope: document
     check: declared_income_not_loan_amount
+    summary: "The declared monthly income is not the loan amount copied into the wrong box."
     description:
       es: "El ingreso declarado no puede ser igual al importe del préstamo (señal de extracción errónea)."
       en: "Declared income must not equal the loan amount (sign of mis-extraction)."
@@ -82,6 +88,7 @@ rules:
   - id: ID_NOT_EXPIRED
     scope: document
     check: id_card_not_expired
+    summary: "The ID card is still valid on the contract date."
     description:
       es: "El documento de identidad no está caducado en la fecha del contrato."
       en: "The ID card is not expired at the contract date."
@@ -93,6 +100,7 @@ rules:
   - id: XDOC_BIRTH_NUMBER
     scope: package
     check: birth_number_consistent
+    summary: "The birth number is the same on every document that carries it."
     description:
       es: "El rodné číslo es el mismo en todos los documentos que lo llevan."
       en: "Birth number is identical across all documents carrying it."
@@ -104,6 +112,7 @@ rules:
   - id: XDOC_FIRST_NAME
     scope: package
     check: first_name_consistent
+    summary: "The client's first name is the same on every document."
     description:
       es: "El nombre coincide entre documentos (sin diacríticos ni mayúsculas)."
       en: "First name matches across documents (diacritics/case-insensitive)."
@@ -115,6 +124,7 @@ rules:
   - id: XDOC_LAST_NAME
     scope: package
     check: last_name_consistent
+    summary: "The client's surname is the same on every document."
     description:
       es: "El apellido coincide entre documentos; casi-iguales (typo) son aviso."
       en: "Surname matches across documents; near-misses (typos) are a warning."
@@ -129,6 +139,7 @@ rules:
   - id: XDOC_FULL_NAME
     scope: package
     check: holder_name_consistent
+    summary: "The account holder / addressee name matches the client on the contract."
     description:
       es: "El titular (extracto / justificante de domicilio) coincide con nombre+apellido del contrato."
       en: "Holder name (statement / proof of address) matches the contract first+last name."
@@ -143,6 +154,7 @@ rules:
   - id: XDOC_ADDRESS
     scope: package
     check: address_consistent
+    summary: "The address on the contract, ID card and proof of address is the same."
     description:
       es: "La dirección coincide entre contrato, DNI y justificante (similitud de texto)."
       en: "Address matches across contract, ID and proof of address (text similarity)."
@@ -154,17 +166,18 @@ rules:
 
   - id: XDOC_INCOME
     scope: package
+    summary: "The income figures agree across contract, payslip, employer confirmation and bank statement."
     description:
       es: "Ingreso declarado en contrato vs nómina vs abono de salario en extracto, con tolerancia relativa."
       en: "Contract declared income vs payslip net vs salary credit on statement, relative tolerance."
     params:
       tolerance: 0.01
       pairs:
-        - {check: income_contract_vs_payslip, a: contract.declared_monthly_income, b: payslip.net_income}
-        - {check: income_contract_vs_statement, a: contract.declared_monthly_income, b: bank_statement.salary_credit}
-        - {check: income_payslip_vs_statement, a: payslip.net_income, b: bank_statement.salary_credit}
-        - {check: income_contract_vs_employer, a: contract.declared_monthly_income, b: employer_confirmation.monthly_net_income}
-        - {check: income_payslip_vs_employer, a: payslip.net_income, b: employer_confirmation.monthly_net_income}
+        - {check: income_contract_vs_payslip, a: contract.declared_monthly_income, b: payslip.net_income, summary: "Income declared on the contract matches the net income on the payslip."}
+        - {check: income_contract_vs_statement, a: contract.declared_monthly_income, b: bank_statement.salary_credit, summary: "Income declared on the contract matches the salary credit on the bank statement."}
+        - {check: income_payslip_vs_statement, a: payslip.net_income, b: bank_statement.salary_credit, summary: "Net income on the payslip matches the salary credit on the bank statement."}
+        - {check: income_contract_vs_employer, a: contract.declared_monthly_income, b: employer_confirmation.monthly_net_income, summary: "Income declared on the contract matches the employer confirmation."}
+        - {check: income_payslip_vs_employer, a: payslip.net_income, b: employer_confirmation.monthly_net_income, summary: "Net income on the payslip matches the employer confirmation."}
     severity:
       within_tolerance: passed
       out_of_tolerance: discrepancy
@@ -172,6 +185,7 @@ rules:
   - id: LOAN_AMOUNT_PRESENT
     scope: package
     check: loan_amount_present
+    summary: "The loan contract states the loan amount."
     description:
       es: "El contrato tiene importe de préstamo."
       en: "The contract carries a loan amount."
@@ -183,6 +197,7 @@ rules:
   - id: COMPLETENESS
     scope: package
     check: required_documents_present
+    summary: "Every document the contract requires is in the package."
     description:
       es: "Están el contrato y todos los documentos que exige (o la lista por defecto si el contrato no la trae)."
       en: "The contract and every document it requires are present (or the default list if the contract has none)."
@@ -210,6 +225,7 @@ rules:
   - id: CONTRACT_SINGLE
     scope: package
     check: single_contract
+    summary: "The package contains exactly one loan contract."
     description:
       es: "El paquete trae un único contrato; con varios no se sabe cuál define los requisitos."
       en: "The package carries exactly one contract; with several, the required set is ambiguous."
@@ -221,6 +237,7 @@ rules:
   - id: MODEL_PRIMARY
     scope: package
     check: primary_models_used
+    summary: "The intended AI models were used; any fallback model is shown."
     description:
       es: "Se usaron los modelos previstos; si Bedrock cayó a un modelo de respaldo, se avisa (no se oculta)."
       en: "The intended models were used; a fallback model (Bedrock error/throttling) is flagged, never hidden."
@@ -234,6 +251,7 @@ rules:
   - id: PAGE_CONTINUITY
     scope: package
     check: pages_complete
+    summary: "Multi-page documents have all their pages ('Page x of y')."
     description:
       es: "Cada documento multipágina tiene todas sus páginas (según marcas 'Página x de y')."
       en: "Each multi-page document has all its pages (per 'Page x of y' markers)."
@@ -246,6 +264,7 @@ rules:
   - id: UNEXPECTED_DOCUMENTS
     scope: package
     check: no_unrequested_documents
+    summary: "Documents the contract does not ask for are listed (informational)."
     description:
       es: "Documentos aportados que el contrato no pide (se avisa, no se bloquea)."
       en: "Documents provided that the contract does not require (warn, do not block)."
@@ -258,6 +277,7 @@ rules:
   - id: XDOC_EMPLOYER
     scope: package
     check: employer_consistent
+    summary: "The employer on the payslip matches the employer confirmation."
     description:
       es: "El empleador de la nómina coincide con el de la confirmación de empleo (texto sin diacríticos)."
       en: "Employer name on the payslip matches the employer confirmation (diacritics-insensitive)."
@@ -269,14 +289,15 @@ rules:
 
   - id: DOC_RECENT
     scope: package
+    summary: "Employer confirmation and tax certificate are recent enough."
     description:
       es: "Confirmación de empleo y certificado de sin deudas emitidos hace como máximo N días (por defecto 30)."
       en: "Employer confirmation and no-debt certificate issued within the last N days (default 30)."
     params:
       max_age_days: 30
       fields:
-        - {check: employer_confirmation_recent, doc_type: employer_confirmation, field: issue_date}
-        - {check: tax_certificate_recent, doc_type: tax_or_debt_certificate, field: issue_date}
+        - {check: employer_confirmation_recent, doc_type: employer_confirmation, field: issue_date, summary: "The employer confirmation was issued recently enough (max age in params)."}
+        - {check: tax_certificate_recent, doc_type: tax_or_debt_certificate, field: issue_date, summary: "The tax certificate was issued recently enough (max age in params)."}
     severity:
       recent: passed
       stale: discrepancy
@@ -285,6 +306,7 @@ rules:
   - id: TAX_CLEAR
     scope: document
     check: no_tax_arrears
+    summary: "The tax office certificate confirms the client has no tax arrears."
     description:
       es: "El certificado del Finanční úřad declara que no hay deudas fiscales (campo sí/no leído por los dos motores)."
       en: "The tax office certificate states there are no tax arrears (yes/no field read by both engines)."
@@ -297,6 +319,7 @@ rules:
   - id: XDOC_HOLDER_RC
     scope: package
     check: certificate_holder_matches_id
+    summary: "The tax certificate belongs to the client (name and birth number match)."
     description:
       es: "El titular del certificado de sin deudas (nombre y RČ) coincide con el DNI / contrato."
       en: "No-debt certificate holder (name and birth number) matches the ID / contract."
