@@ -56,8 +56,8 @@ def contract(path, p):
         ("Date of birth", p["birth_date"]),
         ("Birth number (rodné číslo)", p["birth_number"]),
         ("Permanent address", p["address"]),
-        ("Loan amount", f"{p['loan_amount']:,.0f} CZK".replace(",", " ")),
-        ("Declared monthly net income", f"{p['declared_income']:,.0f} CZK".replace(",", " ")),
+        ("Loan amount", f"{p['loan_amount']:.2f} CZK"),
+        ("Declared monthly net income", f"{p['declared_income']:.2f} CZK"),
         ("Contract date", p["contract_date"]),
     ])
     c.setFont("DejaVuBold", 11)
@@ -99,12 +99,12 @@ def bank_statement(path, p):
         ("IBAN", p["iban"]),
         ("Period from", p["period_from"]),
         ("Period to", p["period_to"]),
-        ("Salary credit", f"{p['salary']:,.2f} CZK".replace(",", " ")),
-        ("Closing balance", f"{p['balance']:,.2f} CZK".replace(",", " ")),
+        ("Salary credit", f"{p['salary']:.2f} CZK"),
+        ("Closing balance", f"{p['balance']:.2f} CZK"),
     ])
     c.setFont("DejaVu", 10)
     c.drawString(30 * mm, 195 * mm, "Recent transactions:")
-    c.drawString(35 * mm, 185 * mm, f"05.09.2026  SALARY ACME s.r.o.   +{p['salary']:,.2f} CZK")
+    c.drawString(35 * mm, 185 * mm, f"05.09.2026  SALARY ACME s.r.o.   +{p['salary']:.2f} CZK")
     c.drawString(35 * mm, 177 * mm, "12.09.2026  Grocery store           -1 245,00 CZK")
     c.showPage(); c.save()
 
@@ -117,8 +117,8 @@ def payslip(path, p):
         ("Birth number", p["birth_number"]),
         ("Employer", p["employer"]),
         ("Pay period", p["pay_period"]),
-        ("Net pay (net income)", f"{p['net_income']:,.2f} CZK".replace(",", " ")),
-        ("Gross pay", f"{p['net_income'] * 1.35:,.2f} CZK".replace(",", " ")),
+        ("Net pay (net income)", f"{p['net_income']:.2f} CZK"),
+        ("Gross pay", f"{p['net_income'] * 1.35:.2f} CZK"),
     ])
     c.showPage(); c.save()
 

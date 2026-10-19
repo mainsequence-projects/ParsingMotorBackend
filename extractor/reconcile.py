@@ -45,9 +45,16 @@ def reconcile_fields(doc_type: str, textract: dict, bedrock: dict) -> dict:
             status = "manual_review" if conf < TEXTRACT_PASS_CONF else "warning"
             chosen_raw, chosen_norm = t_raw, t_norm
         else:
-            # Disagreement: LLM must NOT silently win. Prefer OCR for OCR-native types.
+            # Disagreement: LLM must NOT silently win. Prefer OCR for OCR-native types
+            # when confidence is decent AND (for amounts) the OCR figure is not an
+            # obvious truncation vs Bedrock (e.g. "5250" vs 52000).
             status = "manual_review"
-            if ftype in OCR_PREFERRED and conf >= 0.4 and t_norm is not None:
+            prefer_ocr = ftype in OCR_PREFERRED and conf >= 0.4 and t_norm is not None
+            if prefer_ocr and ftype == "amount" and b_norm is not None:
+                hi, lo = max(abs(t_norm), abs(b_norm)), min(abs(t_norm), abs(b_norm)) or 1.0
+                if hi / lo >= 5:  # likely OCR dropped a digit/space
+                    prefer_ocr = conf >= 0.85
+            if prefer_ocr:
                 chosen_raw, chosen_norm = t_raw, t_norm
             else:
                 chosen_raw, chosen_norm = b_raw, b_norm

@@ -1,0 +1,734 @@
+{
+  "package_id": "package.pdf",
+  "engine_version": "0.1.0",
+  "region": "eu-central-1",
+  "bedrock_model": "eu.anthropic.claude-sonnet-4-5-20250929-v1:0",
+  "generated_at": "2026-10-19T10:53:48.205625+00:00",
+  "documents": [
+    {
+      "doc_type": "contract",
+      "source_file": "package.pdf",
+      "page_start": 1,
+      "page_end": 1,
+      "classification_confidence": 1.0,
+      "classification_reason": "Document is titled 'ÚVĚROVÁ SMLOUVA / LOAN CONTRACT' and contains contract number, loan amount, and contract terms.",
+      "fields": {
+        "contract_number": {
+          "value": "KB-2026-00421",
+          "normalized": "KB202600421",
+          "textract": "KB-2026-00421",
+          "bedrock": "KB-2026-00421",
+          "confidence": 0.94,
+          "page": 1,
+          "status": "passed",
+          "bbox": {
+            "Width": 0.1580677181482315,
+            "Height": 0.010839688591659069,
+            "Left": 0.4048239588737488,
+            "Top": 0.1312030702829361
+          }
+        },
+        "first_name": {
+          "value": "Jana",
+          "normalized": "jana",
+          "textract": "Jana",
+          "bedrock": "Jana",
+          "confidence": 0.99,
+          "page": 1,
+          "status": "passed",
+          "bbox": {
+            "Width": 0.04677518084645271,
+            "Height": 0.013120879419147968,
+            "Left": 0.40240493416786194,
+            "Top": 0.15801547467708588
+          }
+        },
+        "last_name": {
+          "value": "Nováková",
+          "normalized": "novakova",
+          "textract": "Nováková",
+          "bedrock": "Nováková",
+          "confidence": 0.95,
+          "page": 1,
+          "status": "passed",
+          "bbox": {
+            "Width": 0.10080837458372116,
+            "Height": 0.01198019739240408,
+            "Left": 0.4056311547756195,
+            "Top": 0.184256449341774
+          }
+        },
+        "birth_date": {
+          "value": "12.04.1988",
+          "normalized": "1988-04-12",
+          "textract": "12.04.1988",
+          "bedrock": "1988-04-12",
+          "confidence": 0.97,
+          "page": 1,
+          "status": "passed",
+          "bbox": {
+            "Width": 0.11532469838857651,
+            "Height": 0.011409756727516651,
+            "Left": 0.40563151240348816,
+            "Top": 0.21163856983184814
+          }
+        },
+        "birth_number": {
+          "value": "885412/0000",
+          "normalized": "8854120000",
+          "textract": "885412/0000",
+          "bedrock": "885412/0000",
+          "confidence": 0.98,
+          "page": 1,
+          "status": "passed",
+          "bbox": {
+            "Width": 0.13467982411384583,
+            "Height": 0.012550709769129753,
+            "Left": 0.4048254191875458,
+            "Top": 0.23845016956329346
+          }
+        },
+        "address": {
+          "value": "Vinohradská 12, 120 00 Praha 2",
+          "normalized": "vinohradska 12 120 00 praha 2",
+          "textract": "Vinohradská 12, 120 00 Praha 2",
+          "bedrock": "Vinohradská 12, 120 00 Praha 2",
+          "confidence": 0.9,
+          "page": 1,
+          "status": "passed",
+          "bbox": {
+            "Width": 0.33226433396339417,
+            "Height": 0.013121908530592918,
+            "Left": 0.4040193259716034,
+            "Top": 0.2652610242366791
+          }
+        },
+        "loan_amount": {
+          "value": "250 000 CZK",
+          "normalized": 250000.0,
+          "textract": "250 000 CZK",
+          "bedrock": 250000.0,
+          "confidence": 0.89,
+          "page": 1,
+          "status": "warning",
+          "bbox": {
+            "Width": 0.13064731657505035,
+            "Height": 0.01083920057862997,
+            "Left": 0.40482616424560547,
+            "Top": 0.2926439344882965
+          }
+        },
+        "declared_monthly_income": {
+          "value": 32000.0,
+          "normalized": 32000.0,
+          "textract": "5250",
+          "bedrock": 32000.0,
+          "confidence": 0.2,
+          "page": 1,
+          "status": "manual_review",
+          "bbox": {
+            "Width": 0.037702351808547974,
+            "Height": 0.011197098530828953,
+            "Left": 0.4053027033805847,
+            "Top": 0.2926939129829407
+          }
+        },
+        "contract_date": {
+          "value": "01.10.2026",
+          "normalized": "2026-10-01",
+          "textract": "01.10.2026",
+          "bedrock": "2026-10-01",
+          "confidence": 0.98,
+          "page": 1,
+          "status": "passed",
+          "bbox": {
+            "Width": 0.11613080650568008,
+            "Height": 0.011409502476453781,
+            "Left": 0.40482690930366516,
+            "Top": 0.34626713395118713
+          }
+        },
+        "required_documents": {
+          "value": [
+            "id_card",
+            "bank_statement",
+            "payslip",
+            "proof_of_address"
+          ],
+          "normalized": [
+            "bank_statement",
+            "id_card",
+            "payslip",
+            "proof_of_address"
+          ],
+          "textract": null,
+          "bedrock": [
+            "id_card",
+            "bank_statement",
+            "payslip",
+            "proof_of_address"
+          ],
+          "confidence": 0.0,
+          "page": 1,
+          "status": "warning",
+          "bbox": null
+        }
+      },
+      "checks": [
+        {
+          "check": "birth_number_valid",
+          "status": "passed",
+          "detail": "ok",
+          "page": 1
+        },
+        {
+          "check": "birth_date_matches_birth_number",
+          "status": "passed",
+          "detail": "ok",
+          "page": 1
+        }
+      ]
+    },
+    {
+      "doc_type": "id_card",
+      "source_file": "package.pdf",
+      "page_start": 2,
+      "page_end": 2,
+      "classification_confidence": 1.0,
+      "classification_reason": "Document is clearly labeled 'OBČANSKÝ PRŮKAZ / CZECH ID CARD' and contains personal identification fields including photo placeholder, document number, birth number, and expiry date.",
+      "fields": {
+        "first_name": {
+          "value": "Jana",
+          "normalized": "jana",
+          "textract": "Jana",
+          "bedrock": "Jana",
+          "confidence": 0.98,
+          "page": 2,
+          "status": "passed",
+          "bbox": {
+            "Width": 0.04596846178174019,
+            "Height": 0.012550406157970428,
+            "Left": 0.4024195075035095,
+            "Top": 0.14831693470478058
+          }
+        },
+        "last_name": {
+          "value": "Nováková",
+          "normalized": "novakova",
+          "textract": "Nováková",
+          "bedrock": "Nováková",
+          "confidence": 0.98,
+          "page": 2,
+          "status": "passed",
+          "bbox": {
+            "Width": 0.10161445289850235,
+            "Height": 0.011409778147935867,
+            "Left": 0.40483880043029785,
+            "Top": 0.17398734390735626
+          }
+        },
+        "birth_date": {
+          "value": "12.04.1988",
+          "normalized": "1988-04-12",
+          "textract": "12.04.1988",
+          "bedrock": "1988-04-12",
+          "confidence": 0.96,
+          "page": 2,
+          "status": "passed",
+          "bbox": {
+            "Width": 0.11451783031225204,
+            "Height": 0.010839346796274185,
+            "Left": 0.4056451916694641,
+            "Top": 0.20193982124328613
+          }
+        },
+        "birth_number": {
+          "value": "885412/0000",
+          "normalized": "8854120000",
+          "textract": "885412/0000",
+          "bedrock": "885412/0000",
+          "confidence": 0.96,
+          "page": 2,
+          "status": "passed",
+          "bbox": {
+            "Width": 0.13467937707901,
+            "Height": 0.011980325914919376,
+            "Left": 0.4048386514186859,
+            "Top": 0.2281808853149414
+          }
+        },
+        "address": {
+          "value": "Vinohradská 12, 120 00 Praha 2",
+          "normalized": "vinohradska 12 120 00 praha 2",
+          "textract": "Vinohradská 12, 120 00 Praha 2",
+          "bedrock": "Vinohradská 12, 120 00 Praha 2",
+          "confidence": 0.84,
+          "page": 2,
+          "status": "warning",
+          "bbox": {
+            "Width": 0.33468276262283325,
+            "Height": 0.017115382477641106,
+            "Left": 0.4040320813655853,
+            "Top": 0.2515687644481659
+          }
+        },
+        "document_number": {
+          "value": "123456789",
+          "normalized": "123456789",
+          "textract": "123456789",
+          "bedrock": "123456789",
+          "confidence": 0.99,
+          "page": 2,
+          "status": "passed",
+          "bbox": {
+            "Width": 0.11371118575334549,
+            "Height": 0.011409672908484936,
+            "Left": 0.4056449234485626,
+            "Top": 0.2823745906352997
+          }
+        },
+        "expiry_date": {
+          "value": "12.04.2032",
+          "normalized": "2032-04-12",
+          "textract": "12.04.2032",
+          "bedrock": "2032-04-12",
+          "confidence": 0.97,
+          "page": 2,
+          "status": "passed",
+          "bbox": {
+            "Width": 0.11451759189367294,
+            "Height": 0.011409633792936802,
+            "Left": 0.40564486384391785,
+            "Top": 0.3091861307621002
+          }
+        }
+      },
+      "checks": [
+        {
+          "check": "birth_number_valid",
+          "status": "passed",
+          "detail": "ok",
+          "page": 2
+        },
+        {
+          "check": "birth_date_matches_birth_number",
+          "status": "passed",
+          "detail": "ok",
+          "page": 2
+        }
+      ]
+    },
+    {
+      "doc_type": "bank_statement",
+      "source_file": "package.pdf",
+      "page_start": 3,
+      "page_end": 3,
+      "classification_confidence": 1.0,
+      "classification_reason": "Document clearly shows IBAN, account balance, statement period, and transaction history typical of a bank statement.",
+      "fields": {
+        "account_holder": {
+          "value": "Jana Nováková",
+          "normalized": "jananovakova",
+          "textract": "Jana Nováková",
+          "bedrock": "Jana Nováková",
+          "confidence": 0.93,
+          "page": 3,
+          "status": "passed",
+          "bbox": {
+            "Width": 0.15484194457530975,
+            "Height": 0.013692490756511688,
+            "Left": 0.4024100601673126,
+            "Top": 0.13063307106494904
+          }
+        },
+        "iban": {
+          "value": "CZ65 0800 0000 0000 1234 5678",
+          "normalized": "CZ6508000000000012345678",
+          "textract": "CZ65 0800 0000 0000 1234 5678",
+          "bedrock": "CZ65 0800 0000 0000 1234 5678",
+          "confidence": 0.88,
+          "page": 3,
+          "status": "warning",
+          "bbox": {
+            "Width": 0.3411363959312439,
+            "Height": 0.01084176916629076,
+            "Left": 0.4048296809196472,
+            "Top": 0.15801548957824707
+          }
+        },
+        "period_from": {
+          "value": "01.09.2026",
+          "normalized": "2026-09-01",
+          "textract": "01.09.2026",
+          "bedrock": "2026-09-01",
+          "confidence": 0.99,
+          "page": 3,
+          "status": "passed",
+          "bbox": {
+            "Width": 0.11613128334283829,
+            "Height": 0.010839862748980522,
+            "Left": 0.4048299193382263,
+            "Top": 0.18539784848690033
+          }
+        },
+        "period_to": {
+          "value": "30.09.2026",
+          "normalized": "2026-09-30",
+          "textract": "30.09.2026",
+          "bedrock": "2026-09-30",
+          "confidence": 0.99,
+          "page": 3,
+          "status": "passed",
+          "bbox": {
+            "Width": 0.11613120138645172,
+            "Height": 0.010839876718819141,
+            "Left": 0.40483012795448303,
+            "Top": 0.21220971643924713
+          }
+        },
+        "salary_credit": {
+          "value": "38 000.00 CZK",
+          "normalized": 38000.0,
+          "textract": "38 000.00 CZK",
+          "bedrock": 38000.0,
+          "confidence": 0.88,
+          "page": 3,
+          "status": "warning",
+          "bbox": {
+            "Width": 0.15080919861793518,
+            "Height": 0.011410677805542946,
+            "Left": 0.40483033657073975,
+            "Top": 0.23845107853412628
+          }
+        },
+        "closing_balance": {
+          "value": "87 450.55 CZK",
+          "normalized": 87450.55,
+          "textract": "87 450.55 CZK",
+          "bedrock": 87450.55,
+          "confidence": 0.94,
+          "page": 3,
+          "status": "passed",
+          "bbox": {
+            "Width": 0.15080910921096802,
+            "Height": 0.011410700157284737,
+            "Left": 0.40483054518699646,
+            "Top": 0.2652628719806671
+          }
+        }
+      },
+      "checks": []
+    },
+    {
+      "doc_type": "payslip",
+      "source_file": "package.pdf",
+      "page_start": 4,
+      "page_end": 4,
+      "classification_confidence": 0.99,
+      "classification_reason": "Document is clearly labeled 'PAYSLIP / VÝPLATNÍ LÍSTEK' and contains employer name (ACME s.r.o.), employee details, pay period (September 2026), net pay (38,000 CZK), and gross pay (51,300 CZK).",
+      "fields": {
+        "first_name": {
+          "value": "Jana",
+          "normalized": "jana",
+          "textract": "Jana",
+          "bedrock": "Jana",
+          "confidence": 0.99,
+          "page": 4,
+          "status": "passed",
+          "bbox": {
+            "Width": 0.045968592166900635,
+            "Height": 0.013120757415890694,
+            "Left": 0.40240681171417236,
+            "Top": 0.14831814169883728
+          }
+        },
+        "last_name": {
+          "value": "Nováková",
+          "normalized": "novakova",
+          "textract": "Nováková",
+          "bedrock": "Nováková",
+          "confidence": 0.97,
+          "page": 4,
+          "status": "passed",
+          "bbox": {
+            "Width": 0.10161459445953369,
+            "Height": 0.011979988776147366,
+            "Left": 0.40482649207115173,
+            "Top": 0.1739886999130249
+          }
+        },
+        "birth_number": {
+          "value": "885412/0000",
+          "normalized": "8854120000",
+          "textract": "885412/0000",
+          "bedrock": "885412/0000",
+          "confidence": 0.98,
+          "page": 4,
+          "status": "passed",
+          "bbox": {
+            "Width": 0.13467958569526672,
+            "Height": 0.011409580707550049,
+            "Left": 0.404826819896698,
+            "Top": 0.20194117724895477
+          }
+        },
+        "employer": {
+          "value": "ACME s.r.o.",
+          "normalized": "acme s r o",
+          "textract": "ACME s.r.o.",
+          "bedrock": "ACME s.r.o.",
+          "confidence": 0.67,
+          "page": 4,
+          "status": "warning",
+          "bbox": {
+            "Width": 0.11855021864175797,
+            "Height": 0.010839030146598816,
+            "Left": 0.40402066707611084,
+            "Top": 0.22875285148620605
+          }
+        },
+        "net_income": {
+          "value": "38 000.00 CZK",
+          "normalized": 38000.0,
+          "textract": "38 000.00 CZK",
+          "bedrock": 38000.0,
+          "confidence": 0.93,
+          "page": 4,
+          "status": "passed",
+          "bbox": {
+            "Width": 0.150808647274971,
+            "Height": 0.011409462429583073,
+            "Left": 0.4048277735710144,
+            "Top": 0.2823759615421295
+          }
+        },
+        "period": {
+          "value": "September 2026",
+          "normalized": "september 2026",
+          "textract": "September 2026",
+          "bedrock": "September 2026",
+          "confidence": 0.96,
+          "page": 4,
+          "status": "passed",
+          "bbox": {
+            "Width": 0.1709703654050827,
+            "Height": 0.01369139738380909,
+            "Left": 0.4048274755477905,
+            "Top": 0.2555643320083618
+          }
+        }
+      },
+      "checks": [
+        {
+          "check": "birth_number_valid",
+          "status": "passed",
+          "detail": "ok",
+          "page": 4
+        }
+      ]
+    },
+    {
+      "doc_type": "proof_of_address",
+      "source_file": "package.pdf",
+      "page_start": 5,
+      "page_end": 5,
+      "classification_confidence": 0.98,
+      "classification_reason": "Document is explicitly titled 'PROOF OF ADDRESS / POTVRZENÍ O ADRESE' and shows a utility bill from an energy company with customer name and supply address.",
+      "fields": {
+        "full_name": {
+          "value": "Jana Nováková",
+          "normalized": "jananovakova",
+          "textract": "Jana Nováková",
+          "bedrock": "Jana Nováková",
+          "confidence": 0.96,
+          "page": 5,
+          "status": "passed",
+          "bbox": {
+            "Width": 0.15564802289009094,
+            "Height": 0.014270312152802944,
+            "Left": 0.40241003036499023,
+            "Top": 0.14724965393543243
+          }
+        },
+        "address": {
+          "value": "Vinohradská 12, 120 00 Praha 2",
+          "normalized": "vinohradska 12 120 00 praha 2",
+          "textract": "Vinohradská 12, 120 00 Praha 2",
+          "bedrock": "Vinohradská 12, 120 00 Praha 2",
+          "confidence": 0.95,
+          "page": 5,
+          "status": "passed",
+          "bbox": {
+            "Width": 0.33387744426727295,
+            "Height": 0.01370107289403677,
+            "Left": 0.40321671962738037,
+            "Top": 0.17407362163066864
+          }
+        },
+        "issuer": {
+          "value": "Praská energetika a.s.",
+          "normalized": "praska energetika a s",
+          "textract": "Praská energetika a.s.",
+          "bedrock": "Pražská energetika a.s.",
+          "confidence": 0.93,
+          "page": 5,
+          "status": "passed",
+          "bbox": {
+            "Width": 0.2427462935447693,
+            "Height": 0.014841687865555286,
+            "Left": 0.4056363105773926,
+            "Top": 0.20089994370937347
+          }
+        },
+        "issue_date": {
+          "value": "15.09.2026",
+          "normalized": "2026-09-15",
+          "textract": "15.09.2026",
+          "bedrock": "2026-09-15",
+          "confidence": 0.98,
+          "page": 5,
+          "status": "passed",
+          "bbox": {
+            "Width": 0.115324467420578,
+            "Height": 0.011416025459766388,
+            "Left": 0.4056365191936493,
+            "Top": 0.22829727828502655
+          }
+        }
+      },
+      "checks": []
+    }
+  ],
+  "required_documents": [
+    "bank_statement",
+    "id_card",
+    "payslip",
+    "proof_of_address"
+  ],
+  "missing_documents": [],
+  "checks": [
+    {
+      "check": "birth_number_valid",
+      "status": "passed",
+      "detail": "ok",
+      "page": 1,
+      "doc_type": "contract"
+    },
+    {
+      "check": "birth_date_matches_birth_number",
+      "status": "passed",
+      "detail": "ok",
+      "page": 1,
+      "doc_type": "contract"
+    },
+    {
+      "check": "birth_number_valid",
+      "status": "passed",
+      "detail": "ok",
+      "page": 2,
+      "doc_type": "id_card"
+    },
+    {
+      "check": "birth_date_matches_birth_number",
+      "status": "passed",
+      "detail": "ok",
+      "page": 2,
+      "doc_type": "id_card"
+    },
+    {
+      "check": "birth_number_valid",
+      "status": "passed",
+      "detail": "ok",
+      "page": 4,
+      "doc_type": "payslip"
+    },
+    {
+      "check": "birth_number_consistent",
+      "status": "passed",
+      "detail": "values=['8854120000']",
+      "page": 1
+    },
+    {
+      "check": "first_name_consistent",
+      "status": "passed",
+      "detail": "values=['jana']",
+      "page": 1
+    },
+    {
+      "check": "last_name_consistent",
+      "status": "passed",
+      "detail": "values=['novakova']",
+      "page": 1
+    },
+    {
+      "check": "income_contract_vs_payslip",
+      "status": "discrepancy",
+      "detail": "32000.0 vs 38000.0 (diff=15.79%)",
+      "page": 1
+    },
+    {
+      "check": "income_contract_vs_statement",
+      "status": "discrepancy",
+      "detail": "32000.0 vs 38000.0 (diff=15.79%)",
+      "page": 1
+    },
+    {
+      "check": "income_payslip_vs_statement",
+      "status": "passed",
+      "detail": "38000.0 vs 38000.0 (diff=0.00%)",
+      "page": 4
+    },
+    {
+      "check": "loan_amount_present",
+      "status": "passed",
+      "detail": "250000.0",
+      "page": 1
+    }
+  ],
+  "combined_confidence": 0.97,
+  "fields_auto_validated_pct": 97.0,
+  "recommended_next_step": "manual_review_discrepancy",
+  "draft_client_message": "Dear Jana Nováková,\n\nWe are reviewing your loan application and need your help to complete the file:\n- The income figures on your documents do not match. Please confirm your monthly net income or send an updated payslip.\n\nKind regards,\nKomerční banka – Credit Operations",
+  "usage": {
+    "input_tokens": 18030,
+    "output_tokens": 970,
+    "calls": 10
+  },
+  "pages_classified": [
+    {
+      "source_file": "package.pdf",
+      "page": 1,
+      "doc_type": "contract",
+      "confidence": 1.0,
+      "reason": "Document is titled 'ÚVĚROVÁ SMLOUVA / LOAN CONTRACT' and contains contract number, loan amount, and contract terms."
+    },
+    {
+      "source_file": "package.pdf",
+      "page": 2,
+      "doc_type": "id_card",
+      "confidence": 1.0,
+      "reason": "Document is clearly labeled 'OBČANSKÝ PRŮKAZ / CZECH ID CARD' and contains personal identification fields including photo placeholder, document number, birth number, and expiry date."
+    },
+    {
+      "source_file": "package.pdf",
+      "page": 3,
+      "doc_type": "bank_statement",
+      "confidence": 1.0,
+      "reason": "Document clearly shows IBAN, account balance, statement period, and transaction history typical of a bank statement."
+    },
+    {
+      "source_file": "package.pdf",
+      "page": 4,
+      "doc_type": "payslip",
+      "confidence": 0.99,
+      "reason": "Document is clearly labeled 'PAYSLIP / VÝPLATNÍ LÍSTEK' and contains employer name (ACME s.r.o.), employee details, pay period (September 2026), net pay (38,000 CZK), and gross pay (51,300 CZK)."
+    },
+    {
+      "source_file": "package.pdf",
+      "page": 5,
+      "doc_type": "proof_of_address",
+      "confidence": 0.98,
+      "reason": "Document is explicitly titled 'PROOF OF ADDRESS / POTVRZENÍ O ADRESE' and shows a utility bill from an energy company with customer name and supply address."
+    }
+  ]
+}
