@@ -1,4 +1,11 @@
-"""Thin wrappers around Textract (QUERIES) and Bedrock Converse. Pay-per-call only."""
+"""Thin wrappers around Textract (sync AnalyzeDocument QUERIES) and Bedrock Converse.
+
+Pay-per-call only. Every call: budget precheck -> optional cache -> call -> cost record.
+Each wrapper returns call metadata (model/api version, cache hit) for the audit trail.
+"""
+from __future__ import annotations
+
+import hashlib
 import json
 import re
 import threading
@@ -6,36 +13,54 @@ import threading
 import boto3
 from botocore.config import Config
 
-from .config import REGION, BEDROCK_MODEL, BEDROCK_FALLBACK_MODELS
+from . import cache
 from . import cost as costmeter
+from .config import BEDROCK_FALLBACK_MODELS, BEDROCK_MODEL, REGION
 
 _cfg = Config(retries={"max_attempts": 6, "mode": "adaptive"}, read_timeout=120)
 _local = threading.local()
+usage = {"input_tokens": 0, "output_tokens": 0, "calls": 0}
+_usage_lock = threading.Lock()
 
 
 def _client(name):
-    # Always Frankfurt. config.REGION already refuses other AWS_REGION values.
     if not hasattr(_local, name):
         setattr(_local, name, boto3.client(name, region_name=REGION, config=_cfg))
     return getattr(_local, name)
 
 
-usage = {"input_tokens": 0, "output_tokens": 0, "calls": 0}
-_usage_lock = threading.Lock()
+def sha256(b: bytes) -> str:
+    return hashlib.sha256(b).hexdigest()
 
 
-def textract_queries(png: bytes, queries: dict[str, str]) -> dict:
-    """queries: alias -> question. Returns alias -> {value, confidence, bbox}."""
+def textract_api_info() -> dict:
+    try:
+        ver = _client("textract").meta.service_model.api_version
+    except Exception:
+        ver = "unknown"
+    return {"service": "textract", "operation": "AnalyzeDocument", "mode": "sync",
+            "feature_types": ["QUERIES"], "api_version": ver, "region": REGION}
+
+
+def textract_queries(png: bytes, queries: dict[str, str]):
+    """Returns (answers, meta). answers: alias -> {value, confidence, bbox}."""
     if not queries:
-        return {}
-    costmeter.record_textract_page(1, note=f"queries={len(queries)}")
-    items = list(queries.items())
+        return {}, {"cache_hit": None, "called": False}
+    items = sorted(queries.items())
+    k = cache.key("textract.analyze_document.queries", img=sha256(png), queries=items)
+    hit = cache.get(k)
+    if hit is not None:
+        costmeter.record_cache_hit("textract")
+        return hit, {"cache_hit": True, "called": False, "image_sha256": sha256(png)}
+    pages_billed = (len(items) + 14) // 15
+    costmeter.precheck(costmeter.estimate_textract(pages_billed))
     out = {}
     for i in range(0, len(items), 15):
         chunk = items[i:i + 15]
         r = _client("textract").analyze_document(
             Document={"Bytes": png}, FeatureTypes=["QUERIES"],
             QueriesConfig={"Queries": [{"Text": q, "Alias": a} for a, q in chunk]})
+        costmeter.record_textract_page(1, note=f"queries={len(chunk)}")
         blocks = {b["Id"]: b for b in r["Blocks"]}
         for b in r["Blocks"]:
             if b["BlockType"] != "QUERY":
@@ -50,7 +75,8 @@ def textract_queries(png: bytes, queries: dict[str, str]) -> dict:
                     if alias not in out or conf > out[alias]["confidence"]:
                         out[alias] = {"value": a.get("Text"), "confidence": round(conf, 3),
                                       "bbox": a.get("Geometry", {}).get("BoundingBox")}
-    return out
+    cache.put(k, out)
+    return out, {"cache_hit": False, "called": True, "image_sha256": sha256(png)}
 
 
 def _parse_json(text: str):
@@ -62,33 +88,46 @@ def _parse_json(text: str):
 
 def converse_json(prompt: str, images: list[bytes] | None = None, system: str | None = None,
                   max_tokens: int = 2000, model_id: str | None = None,
-                  fallbacks: list[str] | None = None):
-    content = [{"image": {"format": "png", "source": {"bytes": img}}} for img in (images or [])]
+                  fallbacks: list[str] | None = None, return_meta: bool = False):
+    images = images or []
+    models = []
+    for m in [model_id or BEDROCK_MODEL] + list(fallbacks if fallbacks is not None
+                                                 else BEDROCK_FALLBACK_MODELS):
+        if m and m not in models:
+            models.append(m)
+    k = cache.key("bedrock.converse", models=models, prompt=prompt, system=system,
+                  max_tokens=max_tokens, images=[sha256(i) for i in images])
+    hit = cache.get(k)
+    if hit is not None:
+        costmeter.record_cache_hit("bedrock")
+        meta = {"model": hit["model"], "cache_hit": True, "usage": hit.get("usage")}
+        return (hit["data"], hit["model"], meta) if return_meta else (hit["data"], hit["model"])
+
+    content = [{"image": {"format": "png", "source": {"bytes": img}}} for img in images]
     content.append({"text": prompt})
     kwargs = dict(messages=[{"role": "user", "content": content}],
                   inferenceConfig={"temperature": 0, "maxTokens": max_tokens})
     if system:
         kwargs["system"] = [{"text": system}]
-    models = [model_id or BEDROCK_MODEL] + list(
-        fallbacks if fallbacks is not None else BEDROCK_FALLBACK_MODELS)
-    # dedupe preserving order
-    seen, ordered = set(), []
-    for m in models:
-        if m and m not in seen:
-            seen.add(m); ordered.append(m)
+    # rough precheck: ~1.6k tokens/image + prompt, priced as primary model
+    inn_p, out_p = costmeter._price_for(models[0])
+    costmeter.precheck((1600 * len(images) + len(prompt) / 3) / 1e6 * inn_p + max_tokens / 1e6 * out_p)
     last = None
-    for model in ordered:
+    for model in models:
         for _ in range(2):
             try:
                 r = _client("bedrock-runtime").converse(modelId=model, **kwargs)
-                inn = r["usage"]["inputTokens"]
-                out = r["usage"]["outputTokens"]
+                inn, out = r["usage"]["inputTokens"], r["usage"]["outputTokens"]
                 with _usage_lock:
                     usage["calls"] += 1
                     usage["input_tokens"] += inn
                     usage["output_tokens"] += out
                 costmeter.record_bedrock(model, inn, out)
-                return _parse_json(r["output"]["message"]["content"][0]["text"]), model
+                data = _parse_json(r["output"]["message"]["content"][0]["text"])
+                u = {"input_tokens": inn, "output_tokens": out}
+                cache.put(k, {"data": data, "model": model, "usage": u})
+                meta = {"model": model, "cache_hit": False, "usage": u}
+                return (data, model, meta) if return_meta else (data, model)
             except costmeter.BudgetExceeded:
                 raise
             except (json.JSONDecodeError, ValueError) as e:

@@ -19,3 +19,8 @@ deploy/*.zip
 
 # runtime cost ledger / local eval dumps (regenerable)
 samples/out/cost_ledger.json
+
+# audit logs, AWS response cache and task cost ledger (local runtime data)
+audit/
+.cache/
+.cost/
