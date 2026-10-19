@@ -208,6 +208,17 @@ def page_gaps(docs: list[dict]) -> list[dict]:
 def completeness_checks(docs, rules, required, missing, source, gaps):
     checks = [rules.check("COMPLETENESS", "incomplete" if missing else "complete",
                           detail=f"required({source})={required} missing={missing}")]
+    contracts = [d for d in docs if d["doc_type"] == "contract"]
+    if "CONTRACT_SINGLE" in rules.rules and len(contracts) > 1:   # optional: absent in v0.2 audit rules
+        checks.append(rules.check(
+            "CONTRACT_SINGLE", "multiple",
+            detail=f"{len(contracts)} contracts: {[d['doc_id'] for d in contracts]}; using {contracts[0]['doc_id']}",
+            page=contracts[1]["pages"][0]["page"] if contracts[1].get("pages") else None,
+            evidence=[{"doc_id": d["doc_id"], "doc_type": "contract", "field": "contract_number",
+                       "value": (d["fields"].get("contract_number") or {}).get("value"),
+                       "page": (d["fields"].get("contract_number") or {}).get("page")} for d in contracts]))
+    elif "CONTRACT_SINGLE" in rules.rules and contracts:
+        checks.append(rules.check("CONTRACT_SINGLE", "single", detail=contracts[0]["doc_id"]))
     has_markers = any(p.get("page_count") for d in docs for p in d.get("pages", []))
     if not has_markers:
         checks.append(rules.check("PAGE_CONTINUITY", "no_markers", detail="no 'page x of y' markers"))

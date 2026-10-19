@@ -178,6 +178,17 @@ rules:
       complete: passed
       incomplete: manual_review
 
+  - id: CONTRACT_SINGLE
+    scope: package
+    check: single_contract
+    description:
+      es: "El paquete trae un único contrato; con varios no se sabe cuál define los requisitos."
+      en: "The package carries exactly one contract; with several, the required set is ambiguous."
+    params: {}
+    severity:
+      single: passed
+      multiple: manual_review
+
   - id: PAGE_CONTINUITY
     scope: package
     check: pages_complete

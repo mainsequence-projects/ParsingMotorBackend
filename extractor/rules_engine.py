@@ -35,6 +35,10 @@ REQUIRED_OUTCOMES = {
     "PAGE_CONTINUITY": {"complete", "gap", "no_markers"},
     "UNEXPECTED_DOCUMENTS": {"none", "present"},
 }
+# Rules added after v0.2 are optional so audit runs that embed older rules still re-evaluate.
+OPTIONAL_OUTCOMES = {
+    "CONTRACT_SINGLE": {"single", "multiple"},
+}
 REQUIRED_PARAMS = {
     "FIELD_RECONCILE": {"pass_conf", "amount_ocr_wins_min_conf", "ocr_preferred_min_conf",
                         "ocr_preferred_types", "text_similarity", "amount_tolerance"},
@@ -134,7 +138,7 @@ def validate(data, path="rules.yaml") -> None:
             params = {}
         if not isinstance(params, dict):
             _err(path, f"{rid}.params must be a mapping")
-        missing_out = REQUIRED_OUTCOMES.get(rid, set()) - set(sev)
+        missing_out = (REQUIRED_OUTCOMES.get(rid) or OPTIONAL_OUTCOMES.get(rid, set())) - set(sev)
         if missing_out:
             _err(path, f"{rid}.severity missing outcomes {sorted(missing_out)}")
         missing_par = REQUIRED_PARAMS.get(rid, set()) - set(params)
