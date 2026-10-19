@@ -54,3 +54,24 @@ def test_unexpected_document_flagged():
     res = evaluate_package(raws, load_rules(), run_date="2026-10-19")
     u = next(c for c in res["checks"] if c["rule_id"] == "UNEXPECTED_DOCUMENTS")
     assert u["outcome"] == "present" and "other" in res["unexpected_documents"]
+
+
+def test_page_two_of_two_continues_previous_page_even_with_misread_key():
+    pages = [
+        {"source_file": "scan.pdf", "page": 1, "doc_type": "bank_statement", "doc_key": "CZ44 0080 0000 6562 9203 7261",
+         "page_number": None, "page_count": None, "confidence": 0.9, "reason": ""},
+        {"source_file": "scan.pdf", "page": 2, "doc_type": "bank_statement", "doc_key": "CZ44 0800 0000 9535 2063 9216",
+         "page_number": 2, "page_count": 2, "confidence": 0.9, "reason": ""},
+    ]
+    g = group_documents(pages)
+    assert len(g) == 1 and sorted(p["page"] for p in g[0]["pages"]) == [1, 2]
+
+
+def test_page_one_with_other_key_still_starts_new_statement():
+    pages = [
+        {"source_file": "a.pdf", "page": 1, "doc_type": "bank_statement", "doc_key": "CZ11", "page_number": 1,
+         "page_count": 1, "confidence": 0.9, "reason": ""},
+        {"source_file": "a.pdf", "page": 2, "doc_type": "bank_statement", "doc_key": "CZ22", "page_number": 1,
+         "page_count": 1, "confidence": 0.9, "reason": ""},
+    ]
+    assert len(group_documents(pages)) == 2
