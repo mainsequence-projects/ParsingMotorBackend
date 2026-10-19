@@ -11,7 +11,7 @@ import re
 from collections import defaultdict
 
 from . import aws
-from .normalize import norm_amount, norm_date, norm_id, norm_text, strip_diacritics
+from .normalize import norm_amount, norm_date, norm_text, strip_diacritics
 from .schema_contract import validator
 
 READER_ID = "ocr_textract"
@@ -94,6 +94,25 @@ def kind(leaf: dict | None, pointer: str) -> str:
     return "text"
 
 
+def currency_code(v) -> str:
+    """'CZK', 'Kč' or a whole amount '52 440,00 Kc' (Textract answers the currency query with it)."""
+    s = strip_diacritics(str(v)).strip().upper()
+    if s in CURRENCY or strip_diacritics(s) in CURRENCY:
+        return CURRENCY.get(s, CURRENCY.get(strip_diacritics(s)))
+    m = re.search(r"\b([A-Z]{3})\b|(KC|K)\s*$|(€)|(\$)", s)
+    if not m:
+        return s
+    code = m.group(1) or m.group(2) or m.group(3) or m.group(4)
+    return CURRENCY.get(code, code)
+
+
+def id_form(v) -> str:
+    """Identifier without its printed label: 'IČO 25094921' = '25094921', IBAN spacing ignored."""
+    tokens = re.findall(r"[A-Za-z0-9]+", strip_diacritics(str(v)))
+    with_digits = [t for t in tokens if re.search(r"\d", t)]
+    return "".join(with_digits or tokens).upper() or str(v)
+
+
 def compare_form(leaf: dict | None, pointer: str, v):
     """Normalized candidate value: equal forms mean the readers agree."""
     if v is None or isinstance(v, (dict, list, bool)):
@@ -105,10 +124,9 @@ def compare_form(leaf: dict | None, pointer: str, v):
     if k == "date":
         return norm_date(v) or str(v)
     if k == "currency":
-        s = str(v).strip().upper()
-        return CURRENCY.get(s, CURRENCY.get(strip_diacritics(s), s))
+        return currency_code(v)
     if k == "id":
-        return norm_id(v) or str(v)
+        return id_form(v)
     return norm_text(v) if isinstance(v, str) else v
 
 
@@ -120,6 +138,8 @@ def draft_value(leaf: dict, pointer: str, raw: str):
         value = None if x is None else f"{x:.2f}" if "string" in _types(leaf) else x
     elif k == "date":
         value = norm_date(raw)
+    elif k == "currency":
+        value = currency_code(raw)
     else:
         value = str(raw).strip() or None
     return value if value is not None and validator(leaf).is_valid(value) else None
@@ -176,15 +196,6 @@ def select(leaf, pointer, vision_value, hit, agreement) -> tuple[str | None, obj
         if value is not None:
             return READER_ID, value
     return ("vision_primary" if vision_value is not None else None), None
-
-
-def scalar_leaves(attrs: dict, prefix: str = ""):
-    for k, v in attrs.items():
-        p = f"{prefix}/{k}"
-        if isinstance(v, dict):
-            yield from scalar_leaves(v, p)
-        else:
-            yield p, v
 
 
 def set_pointer(attrs: dict, pointer: str, value) -> None:
