@@ -1,8 +1,8 @@
 {
-  "run_id": "20261019T122100Z-9ad003f8",
+  "run_id": "20261019T125642Z-161958ed",
   "package_id": "03_amount_mismatch",
   "engine_version": "0.2.0",
-  "git_commit": "62e385a6776b1d44cf3649f9eacb12a67659937c",
+  "git_commit": "a0d6eb0cb315a27f1ed84721958656d9611c25cc",
   "region": "eu-central-1",
   "models": {
     "classification": "eu.anthropic.claude-haiku-4-5-20251001-v1:0",
@@ -19,8 +19,8 @@
     }
   },
   "bedrock_model": "eu.anthropic.claude-sonnet-4-5-20250929-v1:0",
-  "generated_at": "2026-10-19T12:21:07.176Z",
-  "rules_version": "e5467f7b0adf0668",
+  "generated_at": "2026-10-19T12:56:43.012Z",
+  "rules_version": "4932db49748e6d14",
   "rules_label": "kb-rules-2026-10-19",
   "documents": [
     {
@@ -39,9 +39,10 @@
           "doc_key": "KB-2026-00421",
           "rotation": 0,
           "confidence": 0.99,
-          "page_sha256": "ca2aaf6bcd62e774b7be82af317591f3625c0cdef14f880da823bc2b262b303e",
-          "sha256": "ca2aaf6bcd62e774b7be82af317591f3625c0cdef14f880da823bc2b262b303e",
-          "source_sha256": "8f2476f4aa222427552480c39e28a40a9faf9e8d51ded6c7bb45e0f627d0644c"
+          "page_sha256": "041606950f7ff05696ea291fdd5bf01fb43c58148eacd99878979aded6ce3d67",
+          "sha256": "041606950f7ff05696ea291fdd5bf01fb43c58148eacd99878979aded6ce3d67",
+          "source_sha256": "0d41cd06d58b3d2e1197fe62434dbdeacdc23af240be7f72c9cf1a99cb56f275",
+          "model": "eu.anthropic.claude-haiku-4-5-20251001-v1:0"
         }
       ],
       "classification_confidence": 0.99,
@@ -56,6 +57,7 @@
           "textract_page": 1,
           "bedrock": "KB-2026-00421",
           "bedrock_page": 1,
+          "source": "both",
           "confidence": 0.94,
           "page": 1,
           "outcome": "agree_high_conf",
@@ -63,12 +65,12 @@
           "rule_ids": [
             "FIELD_RECONCILE"
           ],
-          "rules_version": "e5467f7b0adf0668",
+          "rules_version": "4932db49748e6d14",
           "bbox": {
-            "Width": 0.15806794166564941,
-            "Height": 0.010839723981916904,
-            "Left": 0.4048232436180115,
-            "Top": 0.1312030702829361
+            "Width": 0.1588747501373291,
+            "Height": 0.010839734226465225,
+            "Left": 0.4048222005367279,
+            "Top": 0.1312035769224167
           }
         },
         "first_name": {
@@ -80,6 +82,7 @@
           "textract_page": 1,
           "bedrock": "Jana",
           "bedrock_page": 1,
+          "source": "both",
           "confidence": 0.99,
           "page": 1,
           "outcome": "agree_high_conf",
@@ -89,12 +92,12 @@
             "XDOC_FIRST_NAME",
             "XDOC_FULL_NAME"
           ],
-          "rules_version": "e5467f7b0adf0668",
+          "rules_version": "4932db49748e6d14",
           "bbox": {
-            "Width": 0.04677525535225868,
-            "Height": 0.013120898976922035,
-            "Left": 0.402404248714447,
-            "Top": 0.15801551938056946
+            "Width": 0.04677535966038704,
+            "Height": 0.013120919466018677,
+            "Left": 0.40240320563316345,
+            "Top": 0.15801607072353363
           }
         },
         "last_name": {
@@ -102,11 +105,12 @@
           "value": "Nováková",
           "normalized": "novakova",
           "textract": "Nováková",
-          "textract_conf": 0.94,
+          "textract_conf": 0.95,
           "textract_page": 1,
           "bedrock": "Nováková",
           "bedrock_page": 1,
-          "confidence": 0.94,
+          "source": "both",
+          "confidence": 0.95,
           "page": 1,
           "outcome": "agree_high_conf",
           "status": "passed",
@@ -115,12 +119,12 @@
             "XDOC_LAST_NAME",
             "XDOC_FULL_NAME"
           ],
-          "rules_version": "e5467f7b0adf0668",
+          "rules_version": "4932db49748e6d14",
           "bbox": {
-            "Width": 0.10000203549861908,
-            "Height": 0.011409755796194077,
-            "Left": 0.405630499124527,
-            "Top": 0.18482698500156403
+            "Width": 0.10080871731042862,
+            "Height": 0.01198023185133934,
+            "Left": 0.4056294858455658,
+            "Top": 0.1842571198940277
           }
         },
         "birth_date": {
@@ -132,6 +136,7 @@
           "textract_page": 1,
           "bedrock": "1988-04-12",
           "bedrock_page": 1,
+          "source": "both",
           "confidence": 0.97,
           "page": 1,
           "outcome": "agree_high_conf",
@@ -140,12 +145,12 @@
             "FIELD_RECONCILE",
             "RC_BIRTHDATE_MATCH"
           ],
-          "rules_version": "e5467f7b0adf0668",
+          "rules_version": "4932db49748e6d14",
           "bbox": {
-            "Width": 0.11532483994960785,
-            "Height": 0.010839319787919521,
-            "Left": 0.405630886554718,
-            "Top": 0.21220912039279938
+            "Width": 0.11532506346702576,
+            "Height": 0.010839322581887245,
+            "Left": 0.4056299328804016,
+            "Top": 0.2122097760438919
           }
         },
         "birth_number": {
@@ -157,6 +162,7 @@
           "textract_page": 1,
           "bedrock": "885412/0000",
           "bedrock_page": 1,
+          "source": "both",
           "confidence": 0.98,
           "page": 1,
           "outcome": "agree_high_conf",
@@ -167,12 +173,12 @@
             "RC_BIRTHDATE_MATCH",
             "XDOC_BIRTH_NUMBER"
           ],
-          "rules_version": "e5467f7b0adf0668",
+          "rules_version": "4932db49748e6d14",
           "bbox": {
-            "Width": 0.13468000292778015,
-            "Height": 0.012550737708806992,
-            "Left": 0.404824823141098,
-            "Top": 0.23845027387142181
+            "Width": 0.1338738054037094,
+            "Height": 0.012550735846161842,
+            "Left": 0.41208207607269287,
+            "Top": 0.23845094442367554
           }
         },
         "address": {
@@ -184,6 +190,7 @@
           "textract_page": 1,
           "bedrock": "Vinohradská 12, 120 00 Praha 2",
           "bedrock_page": 1,
+          "source": "both",
           "confidence": 0.9,
           "page": 1,
           "outcome": "agree_high_conf",
@@ -192,12 +199,12 @@
             "FIELD_RECONCILE",
             "XDOC_ADDRESS"
           ],
-          "rules_version": "e5467f7b0adf0668",
+          "rules_version": "4932db49748e6d14",
           "bbox": {
-            "Width": 0.3322647511959076,
-            "Height": 0.013121959753334522,
-            "Left": 0.40401872992515564,
-            "Top": 0.26526114344596863
+            "Width": 0.33226531744003296,
+            "Height": 0.013121931813657284,
+            "Left": 0.4040178060531616,
+            "Top": 0.2652619183063507
           }
         },
         "loan_amount": {
@@ -205,47 +212,54 @@
           "value": "250000.00 CZK",
           "normalized": 250000.0,
           "textract": "250000.00 CZK",
-          "textract_conf": 0.84,
+          "textract_conf": 0.86,
           "textract_page": 1,
           "bedrock": 250000.0,
           "bedrock_page": 1,
-          "confidence": 0.84,
+          "source": "both",
+          "confidence": 0.86,
           "page": 1,
-          "outcome": "agree_low_conf",
-          "status": "warning",
+          "outcome": "agree_exact",
+          "status": "passed",
           "rule_ids": [
             "FIELD_RECONCILE",
             "CONTRACT_INCOME_NOT_LOAN",
             "LOAN_AMOUNT_PRESENT"
           ],
-          "rules_version": "e5467f7b0adf0668",
+          "rules_version": "4932db49748e6d14",
           "bbox": {
-            "Width": 0.15726087987422943,
-            "Height": 0.011409785598516464,
-            "Left": 0.4048255980014801,
-            "Top": 0.292073518037796
+            "Width": 0.15726113319396973,
+            "Height": 0.010839315131306648,
+            "Left": 0.40482470393180847,
+            "Top": 0.29264476895332336
           }
         },
         "declared_monthly_income": {
           "type": "amount",
-          "value": 52000.0,
+          "value": "52000.00 CZK",
           "normalized": 52000.0,
-          "textract": "15200E.00",
-          "textract_conf": 0.5,
+          "textract": "52000.00 CZK",
+          "textract_conf": 0.79,
           "textract_page": 1,
           "bedrock": 52000.0,
           "bedrock_page": 1,
-          "confidence": 0.5,
+          "source": "both",
+          "confidence": 0.79,
           "page": 1,
-          "outcome": "disagree",
-          "status": "manual_review",
+          "outcome": "agree_exact",
+          "status": "passed",
           "rule_ids": [
             "FIELD_RECONCILE",
             "CONTRACT_INCOME_NOT_LOAN",
             "XDOC_INCOME"
           ],
-          "rules_version": "e5467f7b0adf0668",
-          "bbox": null
+          "rules_version": "4932db49748e6d14",
+          "bbox": {
+            "Width": 0.14516432583332062,
+            "Height": 0.011409678496420383,
+            "Left": 0.4983751177787781,
+            "Top": 0.3194561302661896
+          }
         },
         "contract_date": {
           "type": "date",
@@ -256,6 +270,7 @@
           "textract_page": 1,
           "bedrock": "2026-10-01",
           "bedrock_page": 1,
+          "source": "both",
           "confidence": 0.98,
           "page": 1,
           "outcome": "agree_high_conf",
@@ -263,19 +278,19 @@
           "rule_ids": [
             "FIELD_RECONCILE"
           ],
-          "rules_version": "e5467f7b0adf0668",
+          "rules_version": "4932db49748e6d14",
           "bbox": {
-            "Width": 0.11613093316555023,
-            "Height": 0.010839062742888927,
-            "Left": 0.40482640266418457,
-            "Top": 0.34683775901794434
+            "Width": 0.11613111197948456,
+            "Height": 0.010839054360985756,
+            "Left": 0.4048255681991577,
+            "Top": 0.3468385934829712
           }
         },
         "required_documents": {
           "type": "doc_list",
           "value": [
-            "id_card",
             "bank_statement",
+            "id_card",
             "payslip",
             "proof_of_address"
           ],
@@ -285,9 +300,14 @@
             "payslip",
             "proof_of_address"
           ],
-          "textract": null,
-          "textract_conf": 0.0,
-          "textract_page": null,
+          "textract": [
+            "bank_statement",
+            "id_card",
+            "payslip",
+            "proof_of_address"
+          ],
+          "textract_conf": 0.984,
+          "textract_page": 1,
           "bedrock": [
             "id_card",
             "bank_statement",
@@ -295,14 +315,15 @@
             "proof_of_address"
           ],
           "bedrock_page": 1,
-          "confidence": 0.0,
+          "source": "both",
+          "confidence": 0.984,
           "page": 1,
-          "outcome": "llm_only",
-          "status": "warning",
+          "outcome": "agree_high_conf",
+          "status": "passed",
           "rule_ids": [
             "FIELD_RECONCILE"
           ],
-          "rules_version": "e5467f7b0adf0668",
+          "rules_version": "4932db49748e6d14",
           "bbox": null
         }
       },
@@ -311,7 +332,7 @@
           "check_id": "RC_VALID:birth_number_valid:contract",
           "check": "birth_number_valid",
           "rule_id": "RC_VALID",
-          "rules_version": "e5467f7b0adf0668",
+          "rules_version": "4932db49748e6d14",
           "outcome": "valid",
           "status": "passed",
           "detail": "ok",
@@ -331,7 +352,7 @@
           "check_id": "RC_BIRTHDATE_MATCH:birth_date_matches_birth_number:contract",
           "check": "birth_date_matches_birth_number",
           "rule_id": "RC_BIRTHDATE_MATCH",
-          "rules_version": "e5467f7b0adf0668",
+          "rules_version": "4932db49748e6d14",
           "outcome": "match",
           "status": "passed",
           "detail": "field=1988-04-12 encoded=1988-04-12",
@@ -358,7 +379,7 @@
           "check_id": "CONTRACT_INCOME_NOT_LOAN:declared_income_not_loan_amount:contract",
           "check": "declared_income_not_loan_amount",
           "rule_id": "CONTRACT_INCOME_NOT_LOAN",
-          "rules_version": "e5467f7b0adf0668",
+          "rules_version": "4932db49748e6d14",
           "outcome": "ok",
           "status": "passed",
           "detail": "loan=250000.0 declared=52000.0",
@@ -376,7 +397,7 @@
               "doc_id": "d1",
               "doc_type": "contract",
               "field": "declared_monthly_income",
-              "value": 52000.0,
+              "value": "52000.00 CZK",
               "page": 1
             }
           ]
@@ -401,7 +422,8 @@
           "confidence": 0.95,
           "page_sha256": "6122a7064dc122d639e106956f895b9b668f6a8e596af1ed7c57ec0bfac293e6",
           "sha256": "6122a7064dc122d639e106956f895b9b668f6a8e596af1ed7c57ec0bfac293e6",
-          "source_sha256": "8f2476f4aa222427552480c39e28a40a9faf9e8d51ded6c7bb45e0f627d0644c"
+          "source_sha256": "0d41cd06d58b3d2e1197fe62434dbdeacdc23af240be7f72c9cf1a99cb56f275",
+          "model": "eu.anthropic.claude-haiku-4-5-20251001-v1:0"
         }
       ],
       "classification_confidence": 0.95,
@@ -416,6 +438,7 @@
           "textract_page": 2,
           "bedrock": "Jana",
           "bedrock_page": 2,
+          "source": "both",
           "confidence": 0.98,
           "page": 2,
           "outcome": "agree_high_conf",
@@ -424,7 +447,7 @@
             "FIELD_RECONCILE",
             "XDOC_FIRST_NAME"
           ],
-          "rules_version": "e5467f7b0adf0668",
+          "rules_version": "4932db49748e6d14",
           "bbox": {
             "Width": 0.04596846178174019,
             "Height": 0.012550406157970428,
@@ -441,6 +464,7 @@
           "textract_page": 2,
           "bedrock": "Nováková",
           "bedrock_page": 2,
+          "source": "both",
           "confidence": 0.98,
           "page": 2,
           "outcome": "agree_high_conf",
@@ -449,7 +473,7 @@
             "FIELD_RECONCILE",
             "XDOC_LAST_NAME"
           ],
-          "rules_version": "e5467f7b0adf0668",
+          "rules_version": "4932db49748e6d14",
           "bbox": {
             "Width": 0.10161445289850235,
             "Height": 0.011409778147935867,
@@ -466,6 +490,7 @@
           "textract_page": 2,
           "bedrock": "1988-04-12",
           "bedrock_page": 2,
+          "source": "both",
           "confidence": 0.96,
           "page": 2,
           "outcome": "agree_high_conf",
@@ -474,7 +499,7 @@
             "FIELD_RECONCILE",
             "RC_BIRTHDATE_MATCH"
           ],
-          "rules_version": "e5467f7b0adf0668",
+          "rules_version": "4932db49748e6d14",
           "bbox": {
             "Width": 0.11451783031225204,
             "Height": 0.010839346796274185,
@@ -491,6 +516,7 @@
           "textract_page": 2,
           "bedrock": "885412/0000",
           "bedrock_page": 2,
+          "source": "both",
           "confidence": 0.96,
           "page": 2,
           "outcome": "agree_high_conf",
@@ -501,7 +527,7 @@
             "RC_BIRTHDATE_MATCH",
             "XDOC_BIRTH_NUMBER"
           ],
-          "rules_version": "e5467f7b0adf0668",
+          "rules_version": "4932db49748e6d14",
           "bbox": {
             "Width": 0.13467937707901,
             "Height": 0.011980325914919376,
@@ -518,15 +544,16 @@
           "textract_page": 2,
           "bedrock": "Vinohradská 12, 120 00 Praha 2",
           "bedrock_page": 2,
+          "source": "both",
           "confidence": 0.84,
           "page": 2,
-          "outcome": "agree_low_conf",
-          "status": "warning",
+          "outcome": "agree_exact",
+          "status": "passed",
           "rule_ids": [
             "FIELD_RECONCILE",
             "XDOC_ADDRESS"
           ],
-          "rules_version": "e5467f7b0adf0668",
+          "rules_version": "4932db49748e6d14",
           "bbox": {
             "Width": 0.33468276262283325,
             "Height": 0.017115382477641106,
@@ -543,6 +570,7 @@
           "textract_page": 2,
           "bedrock": "123456789",
           "bedrock_page": 2,
+          "source": "both",
           "confidence": 0.99,
           "page": 2,
           "outcome": "agree_high_conf",
@@ -550,7 +578,7 @@
           "rule_ids": [
             "FIELD_RECONCILE"
           ],
-          "rules_version": "e5467f7b0adf0668",
+          "rules_version": "4932db49748e6d14",
           "bbox": {
             "Width": 0.11371118575334549,
             "Height": 0.011409672908484936,
@@ -567,6 +595,7 @@
           "textract_page": 2,
           "bedrock": "2032-04-12",
           "bedrock_page": 2,
+          "source": "both",
           "confidence": 0.97,
           "page": 2,
           "outcome": "agree_high_conf",
@@ -575,7 +604,7 @@
             "FIELD_RECONCILE",
             "ID_NOT_EXPIRED"
           ],
-          "rules_version": "e5467f7b0adf0668",
+          "rules_version": "4932db49748e6d14",
           "bbox": {
             "Width": 0.11451759189367294,
             "Height": 0.011409633792936802,
@@ -589,7 +618,7 @@
           "check_id": "RC_VALID:birth_number_valid:id_card",
           "check": "birth_number_valid",
           "rule_id": "RC_VALID",
-          "rules_version": "e5467f7b0adf0668",
+          "rules_version": "4932db49748e6d14",
           "outcome": "valid",
           "status": "passed",
           "detail": "ok",
@@ -609,7 +638,7 @@
           "check_id": "RC_BIRTHDATE_MATCH:birth_date_matches_birth_number:id_card",
           "check": "birth_date_matches_birth_number",
           "rule_id": "RC_BIRTHDATE_MATCH",
-          "rules_version": "e5467f7b0adf0668",
+          "rules_version": "4932db49748e6d14",
           "outcome": "match",
           "status": "passed",
           "detail": "field=1988-04-12 encoded=1988-04-12",
@@ -652,7 +681,8 @@
           "confidence": 0.99,
           "page_sha256": "64ee46e4f07f445e1b77e648fb4ae5d75fe57f1befc7ae72f3443265d5092e8e",
           "sha256": "64ee46e4f07f445e1b77e648fb4ae5d75fe57f1befc7ae72f3443265d5092e8e",
-          "source_sha256": "8f2476f4aa222427552480c39e28a40a9faf9e8d51ded6c7bb45e0f627d0644c"
+          "source_sha256": "0d41cd06d58b3d2e1197fe62434dbdeacdc23af240be7f72c9cf1a99cb56f275",
+          "model": "eu.anthropic.claude-haiku-4-5-20251001-v1:0"
         }
       ],
       "classification_confidence": 0.99,
@@ -667,6 +697,7 @@
           "textract_page": 3,
           "bedrock": "Jana Nováková",
           "bedrock_page": 3,
+          "source": "both",
           "confidence": 0.93,
           "page": 3,
           "outcome": "agree_high_conf",
@@ -675,7 +706,7 @@
             "FIELD_RECONCILE",
             "XDOC_FULL_NAME"
           ],
-          "rules_version": "e5467f7b0adf0668",
+          "rules_version": "4932db49748e6d14",
           "bbox": {
             "Width": 0.15484188497066498,
             "Height": 0.013692285865545273,
@@ -692,14 +723,15 @@
           "textract_page": 3,
           "bedrock": "CZ65 0800 0000 0000 1234 5678",
           "bedrock_page": 3,
+          "source": "both",
           "confidence": 0.88,
           "page": 3,
-          "outcome": "agree_low_conf",
-          "status": "warning",
+          "outcome": "agree_exact",
+          "status": "passed",
           "rule_ids": [
             "FIELD_RECONCILE"
           ],
-          "rules_version": "e5467f7b0adf0668",
+          "rules_version": "4932db49748e6d14",
           "bbox": {
             "Width": 0.3411363363265991,
             "Height": 0.010841360315680504,
@@ -716,6 +748,7 @@
           "textract_page": 3,
           "bedrock": "2026-09-01",
           "bedrock_page": 3,
+          "source": "both",
           "confidence": 0.99,
           "page": 3,
           "outcome": "agree_high_conf",
@@ -723,7 +756,7 @@
           "rule_ids": [
             "FIELD_RECONCILE"
           ],
-          "rules_version": "e5467f7b0adf0668",
+          "rules_version": "4932db49748e6d14",
           "bbox": {
             "Width": 0.11613123118877411,
             "Height": 0.010839715600013733,
@@ -740,6 +773,7 @@
           "textract_page": 3,
           "bedrock": "2026-09-30",
           "bedrock_page": 3,
+          "source": "both",
           "confidence": 0.99,
           "page": 3,
           "outcome": "agree_high_conf",
@@ -747,7 +781,7 @@
           "rule_ids": [
             "FIELD_RECONCILE"
           ],
-          "rules_version": "e5467f7b0adf0668",
+          "rules_version": "4932db49748e6d14",
           "bbox": {
             "Width": 0.11613116413354874,
             "Height": 0.010839734226465225,
@@ -764,15 +798,16 @@
           "textract_page": 3,
           "bedrock": 38000.0,
           "bedrock_page": 3,
+          "source": "both",
           "confidence": 0.87,
           "page": 3,
-          "outcome": "agree_low_conf",
-          "status": "warning",
+          "outcome": "agree_exact",
+          "status": "passed",
           "rule_ids": [
             "FIELD_RECONCILE",
             "XDOC_INCOME"
           ],
-          "rules_version": "e5467f7b0adf0668",
+          "rules_version": "4932db49748e6d14",
           "bbox": {
             "Width": 0.14435741305351257,
             "Height": 0.010839984752237797,
@@ -789,6 +824,7 @@
           "textract_page": 3,
           "bedrock": 87450.55,
           "bedrock_page": 3,
+          "source": "both",
           "confidence": 0.93,
           "page": 3,
           "outcome": "agree_high_conf",
@@ -796,7 +832,7 @@
           "rule_ids": [
             "FIELD_RECONCILE"
           ],
-          "rules_version": "e5467f7b0adf0668",
+          "rules_version": "4932db49748e6d14",
           "bbox": {
             "Width": 0.1443573236465454,
             "Height": 0.010840010829269886,
@@ -825,7 +861,8 @@
           "confidence": 0.99,
           "page_sha256": "22b54232e70861302cf8b784da12521195d795fe5135dc4c319cedea71149ae6",
           "sha256": "22b54232e70861302cf8b784da12521195d795fe5135dc4c319cedea71149ae6",
-          "source_sha256": "8f2476f4aa222427552480c39e28a40a9faf9e8d51ded6c7bb45e0f627d0644c"
+          "source_sha256": "0d41cd06d58b3d2e1197fe62434dbdeacdc23af240be7f72c9cf1a99cb56f275",
+          "model": "eu.anthropic.claude-haiku-4-5-20251001-v1:0"
         }
       ],
       "classification_confidence": 0.99,
@@ -840,6 +877,7 @@
           "textract_page": 4,
           "bedrock": "Jana",
           "bedrock_page": 4,
+          "source": "both",
           "confidence": 0.99,
           "page": 4,
           "outcome": "agree_high_conf",
@@ -848,7 +886,7 @@
             "FIELD_RECONCILE",
             "XDOC_FIRST_NAME"
           ],
-          "rules_version": "e5467f7b0adf0668",
+          "rules_version": "4932db49748e6d14",
           "bbox": {
             "Width": 0.046775054186582565,
             "Height": 0.013120762072503567,
@@ -865,6 +903,7 @@
           "textract_page": 4,
           "bedrock": "Nováková",
           "bedrock_page": 4,
+          "source": "both",
           "confidence": 0.97,
           "page": 4,
           "outcome": "agree_high_conf",
@@ -873,7 +912,7 @@
             "FIELD_RECONCILE",
             "XDOC_LAST_NAME"
           ],
-          "rules_version": "e5467f7b0adf0668",
+          "rules_version": "4932db49748e6d14",
           "bbox": {
             "Width": 0.10161459445953369,
             "Height": 0.011979986913502216,
@@ -890,6 +929,7 @@
           "textract_page": 4,
           "bedrock": "885412/0000",
           "bedrock_page": 4,
+          "source": "both",
           "confidence": 0.98,
           "page": 4,
           "outcome": "agree_high_conf",
@@ -899,7 +939,7 @@
             "RC_VALID",
             "XDOC_BIRTH_NUMBER"
           ],
-          "rules_version": "e5467f7b0adf0668",
+          "rules_version": "4932db49748e6d14",
           "bbox": {
             "Width": 0.13467958569526672,
             "Height": 0.01140957698225975,
@@ -916,14 +956,15 @@
           "textract_page": 4,
           "bedrock": "ACME s.r.o.",
           "bedrock_page": 4,
+          "source": "both",
           "confidence": 0.7,
           "page": 4,
-          "outcome": "agree_low_conf",
-          "status": "warning",
+          "outcome": "agree_exact",
+          "status": "passed",
           "rule_ids": [
             "FIELD_RECONCILE"
           ],
-          "rules_version": "e5467f7b0adf0668",
+          "rules_version": "4932db49748e6d14",
           "bbox": {
             "Width": 0.11855021864175797,
             "Height": 0.010839026421308517,
@@ -940,6 +981,7 @@
           "textract_page": 4,
           "bedrock": 38000.0,
           "bedrock_page": 4,
+          "source": "both",
           "confidence": 0.94,
           "page": 4,
           "outcome": "agree_high_conf",
@@ -948,7 +990,7 @@
             "FIELD_RECONCILE",
             "XDOC_INCOME"
           ],
-          "rules_version": "e5467f7b0adf0668",
+          "rules_version": "4932db49748e6d14",
           "bbox": {
             "Width": 0.14435692131519318,
             "Height": 0.010838985443115234,
@@ -965,6 +1007,7 @@
           "textract_page": 4,
           "bedrock": "September 2026",
           "bedrock_page": 4,
+          "source": "both",
           "confidence": 0.94,
           "page": 4,
           "outcome": "agree_high_conf",
@@ -972,7 +1015,7 @@
           "rule_ids": [
             "FIELD_RECONCILE"
           ],
-          "rules_version": "e5467f7b0adf0668",
+          "rules_version": "4932db49748e6d14",
           "bbox": {
             "Width": 0.17177681624889374,
             "Height": 0.013691393658518791,
@@ -986,7 +1029,7 @@
           "check_id": "RC_VALID:birth_number_valid:payslip",
           "check": "birth_number_valid",
           "rule_id": "RC_VALID",
-          "rules_version": "e5467f7b0adf0668",
+          "rules_version": "4932db49748e6d14",
           "outcome": "valid",
           "status": "passed",
           "detail": "ok",
@@ -1022,7 +1065,8 @@
           "confidence": 0.95,
           "page_sha256": "91d3f75197b67e4f3e3b164d533a2c204094bb3409d256a3279f747c2b7a2883",
           "sha256": "91d3f75197b67e4f3e3b164d533a2c204094bb3409d256a3279f747c2b7a2883",
-          "source_sha256": "8f2476f4aa222427552480c39e28a40a9faf9e8d51ded6c7bb45e0f627d0644c"
+          "source_sha256": "0d41cd06d58b3d2e1197fe62434dbdeacdc23af240be7f72c9cf1a99cb56f275",
+          "model": "eu.anthropic.claude-haiku-4-5-20251001-v1:0"
         }
       ],
       "classification_confidence": 0.95,
@@ -1037,6 +1081,7 @@
           "textract_page": 5,
           "bedrock": "Jana Nováková",
           "bedrock_page": 5,
+          "source": "both",
           "confidence": 0.96,
           "page": 5,
           "outcome": "agree_high_conf",
@@ -1045,7 +1090,7 @@
             "FIELD_RECONCILE",
             "XDOC_FULL_NAME"
           ],
-          "rules_version": "e5467f7b0adf0668",
+          "rules_version": "4932db49748e6d14",
           "bbox": {
             "Width": 0.15564802289009094,
             "Height": 0.014270312152802944,
@@ -1062,6 +1107,7 @@
           "textract_page": 5,
           "bedrock": "Vinohradská 12, 120 00 Praha 2",
           "bedrock_page": 5,
+          "source": "both",
           "confidence": 0.95,
           "page": 5,
           "outcome": "agree_high_conf",
@@ -1070,7 +1116,7 @@
             "FIELD_RECONCILE",
             "XDOC_ADDRESS"
           ],
-          "rules_version": "e5467f7b0adf0668",
+          "rules_version": "4932db49748e6d14",
           "bbox": {
             "Width": 0.33387744426727295,
             "Height": 0.01370107289403677,
@@ -1087,6 +1133,7 @@
           "textract_page": 5,
           "bedrock": "Pražská energetika a.s.",
           "bedrock_page": 5,
+          "source": "both",
           "confidence": 0.93,
           "page": 5,
           "outcome": "agree_high_conf",
@@ -1094,7 +1141,7 @@
           "rule_ids": [
             "FIELD_RECONCILE"
           ],
-          "rules_version": "e5467f7b0adf0668",
+          "rules_version": "4932db49748e6d14",
           "bbox": {
             "Width": 0.2427462935447693,
             "Height": 0.014841687865555286,
@@ -1111,6 +1158,7 @@
           "textract_page": 5,
           "bedrock": "2026-09-15",
           "bedrock_page": 5,
+          "source": "both",
           "confidence": 0.98,
           "page": 5,
           "outcome": "agree_high_conf",
@@ -1118,7 +1166,7 @@
           "rule_ids": [
             "FIELD_RECONCILE"
           ],
-          "rules_version": "e5467f7b0adf0668",
+          "rules_version": "4932db49748e6d14",
           "bbox": {
             "Width": 0.115324467420578,
             "Height": 0.011416025459766388,
@@ -1135,7 +1183,7 @@
       "check_id": "RC_VALID:birth_number_valid:contract",
       "check": "birth_number_valid",
       "rule_id": "RC_VALID",
-      "rules_version": "e5467f7b0adf0668",
+      "rules_version": "4932db49748e6d14",
       "outcome": "valid",
       "status": "passed",
       "detail": "ok",
@@ -1155,7 +1203,7 @@
       "check_id": "RC_BIRTHDATE_MATCH:birth_date_matches_birth_number:contract",
       "check": "birth_date_matches_birth_number",
       "rule_id": "RC_BIRTHDATE_MATCH",
-      "rules_version": "e5467f7b0adf0668",
+      "rules_version": "4932db49748e6d14",
       "outcome": "match",
       "status": "passed",
       "detail": "field=1988-04-12 encoded=1988-04-12",
@@ -1182,7 +1230,7 @@
       "check_id": "CONTRACT_INCOME_NOT_LOAN:declared_income_not_loan_amount:contract",
       "check": "declared_income_not_loan_amount",
       "rule_id": "CONTRACT_INCOME_NOT_LOAN",
-      "rules_version": "e5467f7b0adf0668",
+      "rules_version": "4932db49748e6d14",
       "outcome": "ok",
       "status": "passed",
       "detail": "loan=250000.0 declared=52000.0",
@@ -1200,7 +1248,7 @@
           "doc_id": "d1",
           "doc_type": "contract",
           "field": "declared_monthly_income",
-          "value": 52000.0,
+          "value": "52000.00 CZK",
           "page": 1
         }
       ]
@@ -1209,7 +1257,7 @@
       "check_id": "RC_VALID:birth_number_valid:id_card",
       "check": "birth_number_valid",
       "rule_id": "RC_VALID",
-      "rules_version": "e5467f7b0adf0668",
+      "rules_version": "4932db49748e6d14",
       "outcome": "valid",
       "status": "passed",
       "detail": "ok",
@@ -1229,7 +1277,7 @@
       "check_id": "RC_BIRTHDATE_MATCH:birth_date_matches_birth_number:id_card",
       "check": "birth_date_matches_birth_number",
       "rule_id": "RC_BIRTHDATE_MATCH",
-      "rules_version": "e5467f7b0adf0668",
+      "rules_version": "4932db49748e6d14",
       "outcome": "match",
       "status": "passed",
       "detail": "field=1988-04-12 encoded=1988-04-12",
@@ -1256,7 +1304,7 @@
       "check_id": "RC_VALID:birth_number_valid:payslip",
       "check": "birth_number_valid",
       "rule_id": "RC_VALID",
-      "rules_version": "e5467f7b0adf0668",
+      "rules_version": "4932db49748e6d14",
       "outcome": "valid",
       "status": "passed",
       "detail": "ok",
@@ -1276,7 +1324,7 @@
       "check_id": "XDOC_BIRTH_NUMBER:birth_number_consistent:package",
       "check": "birth_number_consistent",
       "rule_id": "XDOC_BIRTH_NUMBER",
-      "rules_version": "e5467f7b0adf0668",
+      "rules_version": "4932db49748e6d14",
       "outcome": "consistent",
       "status": "passed",
       "detail": "values=['8854120000']",
@@ -1310,7 +1358,7 @@
       "check_id": "XDOC_FIRST_NAME:first_name_consistent:package",
       "check": "first_name_consistent",
       "rule_id": "XDOC_FIRST_NAME",
-      "rules_version": "e5467f7b0adf0668",
+      "rules_version": "4932db49748e6d14",
       "outcome": "consistent",
       "status": "passed",
       "detail": "values=['jana']",
@@ -1344,7 +1392,7 @@
       "check_id": "XDOC_LAST_NAME:last_name_consistent:package",
       "check": "last_name_consistent",
       "rule_id": "XDOC_LAST_NAME",
-      "rules_version": "e5467f7b0adf0668",
+      "rules_version": "4932db49748e6d14",
       "outcome": "consistent",
       "status": "passed",
       "detail": "values=['novakova']",
@@ -1378,7 +1426,7 @@
       "check_id": "XDOC_FULL_NAME:holder_name_consistent:bank_statement",
       "check": "holder_name_consistent",
       "rule_id": "XDOC_FULL_NAME",
-      "rules_version": "e5467f7b0adf0668",
+      "rules_version": "4932db49748e6d14",
       "outcome": "consistent",
       "status": "passed",
       "detail": "jananovakova vs contract jananovakova",
@@ -1412,7 +1460,7 @@
       "check_id": "XDOC_FULL_NAME:holder_name_consistent:proof_of_address",
       "check": "holder_name_consistent",
       "rule_id": "XDOC_FULL_NAME",
-      "rules_version": "e5467f7b0adf0668",
+      "rules_version": "4932db49748e6d14",
       "outcome": "consistent",
       "status": "passed",
       "detail": "jananovakova vs contract jananovakova",
@@ -1446,7 +1494,7 @@
       "check_id": "XDOC_ADDRESS:address_consistent:package",
       "check": "address_consistent",
       "rule_id": "XDOC_ADDRESS",
-      "rules_version": "e5467f7b0adf0668",
+      "rules_version": "4932db49748e6d14",
       "outcome": "consistent",
       "status": "passed",
       "detail": "min_similarity=1.00 (threshold 0.85)",
@@ -1480,7 +1528,7 @@
       "check_id": "XDOC_INCOME:income_contract_vs_payslip:package",
       "check": "income_contract_vs_payslip",
       "rule_id": "XDOC_INCOME",
-      "rules_version": "e5467f7b0adf0668",
+      "rules_version": "4932db49748e6d14",
       "outcome": "out_of_tolerance",
       "status": "discrepancy",
       "detail": "52000.0 vs 38000.0 (diff=26.92%, tol=1%)",
@@ -1491,7 +1539,7 @@
           "doc_id": "d1",
           "doc_type": "contract",
           "field": "declared_monthly_income",
-          "value": 52000.0,
+          "value": "52000.00 CZK",
           "page": 1
         },
         {
@@ -1507,7 +1555,7 @@
       "check_id": "XDOC_INCOME:income_contract_vs_statement:package",
       "check": "income_contract_vs_statement",
       "rule_id": "XDOC_INCOME",
-      "rules_version": "e5467f7b0adf0668",
+      "rules_version": "4932db49748e6d14",
       "outcome": "out_of_tolerance",
       "status": "discrepancy",
       "detail": "52000.0 vs 38000.0 (diff=26.92%, tol=1%)",
@@ -1518,7 +1566,7 @@
           "doc_id": "d1",
           "doc_type": "contract",
           "field": "declared_monthly_income",
-          "value": 52000.0,
+          "value": "52000.00 CZK",
           "page": 1
         },
         {
@@ -1534,7 +1582,7 @@
       "check_id": "XDOC_INCOME:income_payslip_vs_statement:package",
       "check": "income_payslip_vs_statement",
       "rule_id": "XDOC_INCOME",
-      "rules_version": "e5467f7b0adf0668",
+      "rules_version": "4932db49748e6d14",
       "outcome": "within_tolerance",
       "status": "passed",
       "detail": "38000.0 vs 38000.0 (diff=0.00%, tol=1%)",
@@ -1561,7 +1609,7 @@
       "check_id": "LOAN_AMOUNT_PRESENT:loan_amount_present:package",
       "check": "loan_amount_present",
       "rule_id": "LOAN_AMOUNT_PRESENT",
-      "rules_version": "e5467f7b0adf0668",
+      "rules_version": "4932db49748e6d14",
       "outcome": "present",
       "status": "passed",
       "detail": "250000.0",
@@ -1581,7 +1629,7 @@
       "check_id": "ID_NOT_EXPIRED:id_card_not_expired:id_card",
       "check": "id_card_not_expired",
       "rule_id": "ID_NOT_EXPIRED",
-      "rules_version": "e5467f7b0adf0668",
+      "rules_version": "4932db49748e6d14",
       "outcome": "valid",
       "status": "passed",
       "detail": "expiry=2032-04-12 ref=2026-10-01",
@@ -1601,10 +1649,22 @@
       "check_id": "COMPLETENESS:required_documents_present:package",
       "check": "required_documents_present",
       "rule_id": "COMPLETENESS",
-      "rules_version": "e5467f7b0adf0668",
+      "rules_version": "4932db49748e6d14",
       "outcome": "complete",
       "status": "passed",
-      "detail": "required(contract)=['bank_statement', 'id_card', 'payslip', 'proof_of_address'] missing=[]",
+      "detail": "required(contract)=['contract', 'bank_statement', 'id_card', 'payslip', 'proof_of_address'] missing=[]",
+      "page": null,
+      "doc_type": null,
+      "evidence": []
+    },
+    {
+      "check_id": "CONTRACT_SINGLE:single_contract:package",
+      "check": "single_contract",
+      "rule_id": "CONTRACT_SINGLE",
+      "rules_version": "4932db49748e6d14",
+      "outcome": "single",
+      "status": "passed",
+      "detail": "d1",
       "page": null,
       "doc_type": null,
       "evidence": []
@@ -1613,7 +1673,7 @@
       "check_id": "PAGE_CONTINUITY:pages_complete:package",
       "check": "pages_complete",
       "rule_id": "PAGE_CONTINUITY",
-      "rules_version": "e5467f7b0adf0668",
+      "rules_version": "4932db49748e6d14",
       "outcome": "no_markers",
       "status": "passed",
       "detail": "no 'page x of y' markers",
@@ -1625,16 +1685,29 @@
       "check_id": "UNEXPECTED_DOCUMENTS:no_unrequested_documents:package",
       "check": "no_unrequested_documents",
       "rule_id": "UNEXPECTED_DOCUMENTS",
-      "rules_version": "e5467f7b0adf0668",
+      "rules_version": "4932db49748e6d14",
       "outcome": "none",
       "status": "passed",
       "detail": "unrequested=[]",
       "page": null,
       "doc_type": null,
       "evidence": []
+    },
+    {
+      "check_id": "MODEL_PRIMARY:primary_models_used:package",
+      "check": "primary_models_used",
+      "rule_id": "MODEL_PRIMARY",
+      "rules_version": "4932db49748e6d14",
+      "outcome": "primary",
+      "status": "passed",
+      "detail": "primary models only",
+      "page": null,
+      "doc_type": null,
+      "evidence": []
     }
   ],
   "required_documents": [
+    "contract",
     "bank_statement",
     "id_card",
     "payslip",
@@ -1644,15 +1717,16 @@
   "missing_documents": [],
   "missing_pages": [],
   "unexpected_documents": [],
-  "combined_confidence": 0.97,
-  "fields_auto_validated_pct": 97.0,
+  "combined_confidence": 1.0,
+  "fields_auto_validated_pct": 100.0,
   "recommended_next_step": "manual_review_discrepancy",
   "draft_client_message": "Dear Jana Nováková,\n\nWe are reviewing your loan application and need your help to complete the file:\n- The income figures on your documents do not match. Please confirm your monthly net income or send an updated payslip.\n\nKind regards,\nKomerční banka – Credit Operations",
   "inputs": [
     {
       "name": "package.pdf",
-      "bytes": 217289,
-      "sha256": "8f2476f4aa222427552480c39e28a40a9faf9e8d51ded6c7bb45e0f627d0644c"
+      "original_name": "package.pdf",
+      "bytes": 217300,
+      "sha256": "0d41cd06d58b3d2e1197fe62434dbdeacdc23af240be7f72c9cf1a99cb56f275"
     }
   ],
   "pages_classified": [
@@ -1690,7 +1764,7 @@
       "page_count": null,
       "doc_key": "CZ65 0800 0000 0000 1234 5678",
       "rotation": 0,
-      "cache_hit": false
+      "cache_hit": true
     },
     {
       "source_file": "package.pdf",
@@ -1702,7 +1776,7 @@
       "page_count": null,
       "doc_key": "885412/0000",
       "rotation": 0,
-      "cache_hit": false
+      "cache_hit": true
     },
     {
       "source_file": "package.pdf",
@@ -1719,33 +1793,33 @@
   ],
   "cost": {
     "run": {
-      "textract_pages": 2,
-      "bedrock_calls": 4,
-      "bedrock_input_tokens": 7831,
-      "bedrock_output_tokens": 618,
-      "cache_hits_textract": 3,
-      "cache_hits_bedrock": 6,
-      "usd": 0.0518
+      "textract_pages": 0,
+      "bedrock_calls": 0,
+      "bedrock_input_tokens": 0,
+      "bedrock_output_tokens": 0,
+      "cache_hits_textract": 5,
+      "cache_hits_bedrock": 10,
+      "usd": 0.0
     },
     "cache_hits": {
-      "textract": 3,
+      "textract": 5,
       "textract_calls": 5,
-      "bedrock_extraction": 3,
-      "classification": 3
+      "bedrock_extraction": 5,
+      "classification": 5
     },
     "ledger": {
-      "budget_usd": 1.0,
-      "total_usd": 0.1837,
-      "remaining_usd": 0.8163,
-      "textract_pages": 7,
-      "bedrock_calls": 14,
-      "bedrock_input_tokens": 27525,
-      "bedrock_output_tokens": 2299,
-      "cache_hits_textract": 12,
-      "cache_hits_bedrock": 24,
+      "budget_usd": 1.5,
+      "total_usd": 0.0449,
+      "remaining_usd": 1.4551,
+      "textract_pages": 1,
+      "bedrock_calls": 3,
+      "bedrock_input_tokens": 7757,
+      "bedrock_output_tokens": 817,
+      "cache_hits_textract": 35,
+      "cache_hits_bedrock": 68,
       "aborted": false,
-      "ledger": "/workspace/hack/ParsingMotorBackend/.cost/task_2026-10-19.json"
+      "ledger": "review_2026-10-19.json"
     }
   },
-  "audit_file": "/workspace/hack/ParsingMotorBackend/audit/20261019T122100Z-9ad003f8.jsonl"
+  "audit_file": "20261019T125642Z-161958ed.jsonl"
 }

@@ -2,29 +2,29 @@
   "packages": 9,
   "page_classification_accuracy": 1.0,
   "grouping_ok": "9/9",
-  "field_accuracy": 0.996,
-  "fields": "254/255",
+  "field_accuracy": 1.0,
+  "fields": "255/255",
   "expected_flags_hit": "8/8",
-  "false_alarms": 2,
-  "packages_without_false_alarm": "8/9",
-  "next_step_accuracy": "5/9",
+  "false_alarms": 0,
+  "packages_without_false_alarm": "9/9",
+  "next_step_accuracy": "7/9",
   "next_step_safe": "9/9",
   "missing_docs_ok": "9/9",
   "missing_pages_ok": "9/9",
   "unexpected_ok": "9/9",
-  "eval_usd": 0.4346,
+  "eval_usd": 0.1706,
   "ledger": {
-    "budget_usd": 1.0,
-    "total_usd": 0.5665,
-    "remaining_usd": 0.4335,
-    "textract_pages": 21,
-    "bedrock_calls": 43,
-    "bedrock_input_tokens": 86628,
-    "bedrock_output_tokens": 7446,
-    "cache_hits_textract": 22,
-    "cache_hits_bedrock": 43,
+    "budget_usd": 1.5,
+    "total_usd": 0.1869,
+    "remaining_usd": 1.3131,
+    "textract_pages": 6,
+    "bedrock_calls": 13,
+    "bedrock_input_tokens": 28042,
+    "bedrock_output_tokens": 3036,
+    "cache_hits_textract": 54,
+    "cache_hits_bedrock": 106,
     "aborted": false,
-    "ledger": "/workspace/hack/ParsingMotorBackend/.cost/task_2026-10-19.json"
+    "ledger": "/workspace/hack/ParsingMotorBackend/.cost/review_2026-10-19.json"
   },
   "rows": [
     {
@@ -39,22 +39,22 @@
       "flags_hit": 0,
       "flags_missed": [],
       "false_alarms": [],
-      "checks_total": 20,
-      "next_step": "spot_check_warnings",
+      "checks_total": 22,
+      "next_step": "approve_ready",
       "next_step_expected": "approve_ready",
-      "next_step_ok": false,
+      "next_step_ok": true,
       "next_step_safe": true,
       "missing_ok": true,
       "missing_pages_ok": true,
       "unexpected_ok": true,
-      "usd": 0.0,
+      "usd": 0.0286,
       "cache_hits": {
-        "textract": 5,
+        "textract": 4,
         "textract_calls": 5,
-        "bedrock_extraction": 5,
-        "classification": 5
+        "bedrock_extraction": 4,
+        "classification": 4
       },
-      "run_id": "20261019T122058Z-a4135021"
+      "run_id": "20261019T125633Z-77898bbb"
     },
     {
       "package": "02_missing_payslip",
@@ -68,7 +68,7 @@
       "flags_hit": 1,
       "flags_missed": [],
       "false_alarms": [],
-      "checks_total": 17,
+      "checks_total": 19,
       "next_step": "request_missing_documents",
       "next_step_expected": "request_missing_documents",
       "next_step_ok": true,
@@ -83,7 +83,7 @@
         "bedrock_extraction": 4,
         "classification": 4
       },
-      "run_id": "20261019T122059Z-afaf7393"
+      "run_id": "20261019T125642Z-c02e06fd"
     },
     {
       "package": "03_amount_mismatch",
@@ -97,7 +97,7 @@
       "flags_hit": 2,
       "flags_missed": [],
       "false_alarms": [],
-      "checks_total": 20,
+      "checks_total": 22,
       "next_step": "manual_review_discrepancy",
       "next_step_expected": "manual_review_discrepancy",
       "next_step_ok": true,
@@ -105,14 +105,14 @@
       "missing_ok": true,
       "missing_pages_ok": true,
       "unexpected_ok": true,
-      "usd": 0.0518,
+      "usd": 0.0,
       "cache_hits": {
-        "textract": 3,
+        "textract": 5,
         "textract_calls": 5,
-        "bedrock_extraction": 3,
-        "classification": 3
+        "bedrock_extraction": 5,
+        "classification": 5
       },
-      "run_id": "20261019T122100Z-9ad003f8"
+      "run_id": "20261019T125642Z-161958ed"
     },
     {
       "package": "04_name_typo_invalid_rc",
@@ -126,7 +126,7 @@
       "flags_hit": 3,
       "flags_missed": [],
       "false_alarms": [],
-      "checks_total": 19,
+      "checks_total": 21,
       "next_step": "manual_review_discrepancy",
       "next_step_expected": "manual_review_discrepancy",
       "next_step_ok": true,
@@ -134,48 +134,43 @@
       "missing_ok": true,
       "missing_pages_ok": true,
       "unexpected_ok": true,
-      "usd": 0.0522,
+      "usd": 0.0,
       "cache_hits": {
-        "textract": 3,
+        "textract": 5,
         "textract_calls": 5,
-        "bedrock_extraction": 3,
-        "classification": 3
+        "bedrock_extraction": 5,
+        "classification": 5
       },
-      "run_id": "20261019T122107Z-8032ed9b"
+      "run_id": "20261019T125643Z-486db365"
     },
     {
       "package": "05_scanned_noisy",
       "pages_correct": 5,
       "pages_total": 5,
       "grouping_ok": true,
-      "fields_correct": 32,
+      "fields_correct": 33,
       "fields_total": 33,
-      "field_errors": [
-        "contract.declared_monthly_income: exp=52000 got=182000.0"
-      ],
+      "field_errors": [],
       "flags_expected": 0,
       "flags_hit": 0,
       "flags_missed": [],
-      "false_alarms": [
-        "income_contract_vs_payslip",
-        "income_contract_vs_statement"
-      ],
-      "checks_total": 20,
-      "next_step": "manual_review_discrepancy",
+      "false_alarms": [],
+      "checks_total": 22,
+      "next_step": "spot_check_warnings",
       "next_step_expected": "approve_ready",
       "next_step_ok": false,
       "next_step_safe": true,
       "missing_ok": true,
       "missing_pages_ok": true,
       "unexpected_ok": true,
-      "usd": 0.132,
+      "usd": 0.0287,
       "cache_hits": {
-        "textract": 0,
+        "textract": 4,
         "textract_calls": 5,
-        "bedrock_extraction": 0,
-        "classification": 0
+        "bedrock_extraction": 4,
+        "classification": 4
       },
-      "run_id": "20261019T122132Z-358a63ec"
+      "run_id": "20261019T125702Z-47a3163f"
     },
     {
       "package": "06_shuffled",
@@ -189,22 +184,22 @@
       "flags_hit": 0,
       "flags_missed": [],
       "false_alarms": [],
-      "checks_total": 19,
-      "next_step": "spot_check_warnings",
+      "checks_total": 21,
+      "next_step": "approve_ready",
       "next_step_expected": "approve_ready",
-      "next_step_ok": false,
+      "next_step_ok": true,
       "next_step_safe": true,
       "missing_ok": true,
       "missing_pages_ok": true,
       "unexpected_ok": true,
-      "usd": 0.0762,
+      "usd": 0.0285,
       "cache_hits": {
-        "textract": 2,
+        "textract": 4,
         "textract_calls": 5,
-        "bedrock_extraction": 2,
-        "classification": 2
+        "bedrock_extraction": 3,
+        "classification": 4
       },
-      "run_id": "20261019T122149Z-0ffc3ea2"
+      "run_id": "20261019T125713Z-db29a5f2"
     },
     {
       "package": "07_missing_page",
@@ -218,7 +213,7 @@
       "flags_hit": 1,
       "flags_missed": [],
       "false_alarms": [],
-      "checks_total": 16,
+      "checks_total": 18,
       "next_step": "request_missing_documents",
       "next_step_expected": "request_missing_documents",
       "next_step_ok": true,
@@ -226,14 +221,14 @@
       "missing_ok": true,
       "missing_pages_ok": true,
       "unexpected_ok": true,
-      "usd": 0.0373,
+      "usd": 0.0283,
       "cache_hits": {
         "textract": 2,
         "textract_calls": 3,
-        "bedrock_extraction": 1,
+        "bedrock_extraction": 2,
         "classification": 2
       },
-      "run_id": "20261019T122158Z-c362e5b8"
+      "run_id": "20261019T125722Z-c8810995"
     },
     {
       "package": "08_extra_document",
@@ -247,7 +242,7 @@
       "flags_hit": 1,
       "flags_missed": [],
       "false_alarms": [],
-      "checks_total": 17,
+      "checks_total": 19,
       "next_step": "spot_check_warnings",
       "next_step_expected": "spot_check_warnings",
       "next_step_ok": true,
@@ -255,14 +250,14 @@
       "missing_ok": true,
       "missing_pages_ok": true,
       "unexpected_ok": true,
-      "usd": 0.0304,
+      "usd": 0.0284,
       "cache_hits": {
         "textract": 3,
         "textract_calls": 4,
         "bedrock_extraction": 3,
-        "classification": 3
+        "classification": 4
       },
-      "run_id": "20261019T122206Z-8b8731cb"
+      "run_id": "20261019T125731Z-76f5ffce"
     },
     {
       "package": "09_photo_id",
@@ -276,7 +271,7 @@
       "flags_hit": 0,
       "flags_missed": [],
       "false_alarms": [],
-      "checks_total": 14,
+      "checks_total": 16,
       "next_step": "spot_check_warnings",
       "next_step_expected": "approve_ready",
       "next_step_ok": false,
@@ -284,14 +279,14 @@
       "missing_ok": true,
       "missing_pages_ok": true,
       "unexpected_ok": true,
-      "usd": 0.0547,
+      "usd": 0.0281,
       "cache_hits": {
-        "textract": 0,
+        "textract": 1,
         "textract_calls": 2,
-        "bedrock_extraction": 0,
-        "classification": 0
+        "bedrock_extraction": 1,
+        "classification": 1
       },
-      "run_id": "20261019T122215Z-69c2eafd"
+      "run_id": "20261019T125740Z-356cc242"
     }
   ]
 }
