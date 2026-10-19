@@ -1,0 +1,250 @@
+{
+  "$defs": {
+    "ComparisonCitation": {
+      "additionalProperties": false,
+      "properties": {
+        "source_id": {
+          "maxLength": 120,
+          "minLength": 1,
+          "title": "Source Id",
+          "type": "string"
+        },
+        "source_sha256": {
+          "pattern": "^[a-f0-9]{64}$",
+          "title": "Source Sha256",
+          "type": "string"
+        },
+        "page": {
+          "maximum": 20,
+          "minimum": 1,
+          "title": "Page",
+          "type": "integer"
+        },
+        "page_sha256": {
+          "pattern": "^[a-f0-9]{64}$",
+          "title": "Page Sha256",
+          "type": "string"
+        },
+        "bounding_box": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "number"
+              },
+              "maxItems": 4,
+              "minItems": 4,
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Bounding Box"
+        },
+        "rotation_degrees": {
+          "default": 0,
+          "enum": [
+            0,
+            90,
+            180,
+            270
+          ],
+          "title": "Rotation Degrees",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "source_id",
+        "source_sha256",
+        "page",
+        "page_sha256"
+      ],
+      "title": "ComparisonCitation",
+      "type": "object"
+    },
+    "ComparisonDocument": {
+      "additionalProperties": false,
+      "properties": {
+        "document_id": {
+          "maxLength": 120,
+          "minLength": 1,
+          "title": "Document Id",
+          "type": "string"
+        },
+        "revision": {
+          "minimum": 1,
+          "title": "Revision",
+          "type": "integer"
+        },
+        "document_type": {
+          "maxLength": 120,
+          "minLength": 1,
+          "title": "Document Type",
+          "type": "string"
+        },
+        "schema_version": {
+          "minimum": 1,
+          "title": "Schema Version",
+          "type": "integer"
+        },
+        "schema_hash": {
+          "pattern": "^[a-f0-9]{64}$",
+          "title": "Schema Hash",
+          "type": "string"
+        },
+        "evidence_sha256": {
+          "pattern": "^[a-f0-9]{64}$",
+          "title": "Evidence Sha256",
+          "type": "string"
+        },
+        "facts": {
+          "items": {
+            "$ref": "#/$defs/ComparisonFact"
+          },
+          "maxItems": 100,
+          "minItems": 1,
+          "title": "Facts",
+          "type": "array"
+        }
+      },
+      "required": [
+        "document_id",
+        "revision",
+        "document_type",
+        "schema_version",
+        "schema_hash",
+        "evidence_sha256",
+        "facts"
+      ],
+      "title": "ComparisonDocument",
+      "type": "object"
+    },
+    "ComparisonFact": {
+      "additionalProperties": false,
+      "properties": {
+        "pointer": {
+          "maxLength": 500,
+          "minLength": 1,
+          "title": "Pointer",
+          "type": "string"
+        },
+        "value": {
+          "$ref": "#/$defs/JsonValue"
+        },
+        "citations": {
+          "items": {
+            "$ref": "#/$defs/ComparisonCitation"
+          },
+          "maxItems": 20,
+          "minItems": 1,
+          "title": "Citations",
+          "type": "array"
+        }
+      },
+      "required": [
+        "pointer",
+        "value",
+        "citations"
+      ],
+      "title": "ComparisonFact",
+      "type": "object"
+    },
+    "ComparisonQuestion": {
+      "additionalProperties": false,
+      "properties": {
+        "key": {
+          "maxLength": 120,
+          "minLength": 1,
+          "title": "Key",
+          "type": "string"
+        },
+        "topic": {
+          "maxLength": 500,
+          "minLength": 1,
+          "title": "Topic",
+          "type": "string"
+        },
+        "left": {
+          "$ref": "#/$defs/FactReference"
+        },
+        "right": {
+          "$ref": "#/$defs/FactReference"
+        },
+        "context": {
+          "items": {
+            "$ref": "#/$defs/FactReference"
+          },
+          "maxItems": 20,
+          "title": "Context",
+          "type": "array"
+        }
+      },
+      "required": [
+        "key",
+        "topic",
+        "left",
+        "right"
+      ],
+      "title": "ComparisonQuestion",
+      "type": "object"
+    },
+    "FactReference": {
+      "additionalProperties": false,
+      "properties": {
+        "document_id": {
+          "maxLength": 120,
+          "minLength": 1,
+          "title": "Document Id",
+          "type": "string"
+        },
+        "pointer": {
+          "maxLength": 500,
+          "minLength": 1,
+          "title": "Pointer",
+          "type": "string"
+        }
+      },
+      "required": [
+        "document_id",
+        "pointer"
+      ],
+      "title": "FactReference",
+      "type": "object"
+    },
+    "JsonValue": {}
+  },
+  "additionalProperties": false,
+  "properties": {
+    "contract_version": {
+      "const": 1,
+      "title": "Contract Version",
+      "type": "integer"
+    },
+    "documents": {
+      "items": {
+        "$ref": "#/$defs/ComparisonDocument"
+      },
+      "maxItems": 20,
+      "minItems": 2,
+      "title": "Documents",
+      "type": "array"
+    },
+    "comparisons": {
+      "items": {
+        "$ref": "#/$defs/ComparisonQuestion"
+      },
+      "maxItems": 50,
+      "minItems": 1,
+      "title": "Comparisons",
+      "type": "array"
+    }
+  },
+  "required": [
+    "contract_version",
+    "documents",
+    "comparisons"
+  ],
+  "title": "CompareDocumentsRequest",
+  "type": "object"
+}

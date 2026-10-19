@@ -1,7 +1,7 @@
 # Document Extraction API
 
-The parser classifies pages and extracts document attributes against caller-supplied
-schemas. Back Office owns document sets, completeness requirements, cross-document
+The parser classifies pages, extracts document attributes against caller-supplied
+schemas, and compares supplied cited facts. Back Office owns document sets, completeness requirements, cross-document
 checks, reviewer decisions, recommended next steps, client requests, audit history,
 and signed HTML/PDF protocols. Loans and new accounts use that same Back Office engine.
 
@@ -13,6 +13,7 @@ and signed HTML/PDF protocols. Loans and new accounts use that same Back Office 
 | GET | `/session` | Existing short-lived Lambda invocation credentials |
 | POST | `/classify_json` | Caller-catalog page classification |
 | POST | `/extract_typed_json` | Explicit-type extraction with canonical/draft schemas |
+| POST | `/compare_documents_json` | Cited observations over supplied extracted facts |
 
 The root redirects to `/docs`. Protected routes require `x-api-key` when configured;
 Lambda invocation also retains its existing SigV4 authentication. Tokens in query
@@ -109,11 +110,26 @@ Missing/unreadable values can be omitted or null only where `output_schema` allo
 An upstream result violating that schema, or changing/omitting `document_type`, returns
 502. No invalid result is returned as a successful extraction. `canonical_schema_valid`
 only covers JSON Schema checks: Back Office must still apply canonical Pydantic Python
-validators and business checks before final submission. The response lists source pages without field-level citations or Textract corroboration.
+validators and business checks before final submission. The v1 response lists source pages without field-level citations. The v2 contract adds
+field evidence as described below; neither version claims Textract corroboration unless
+that reader actually supplied the evidence.
 
 These two endpoints do not create legacy `/runs` audit records or persist uploads. The
 calling Back Office workflow owns storage, associating the result to the person/document
 set, and review. The legacy loan endpoints have been removed.
+
+## Version 2 evidence
+
+Include `contract_version: 2` in the same operations to use the richer wire contracts.
+Classification adds printed pagination and grouping observations. Typed extraction adds
+reader candidates, JSON Pointer field references, source locations, normalization version,
+evidence coverage and provider usage. The default reader produces page-level citations;
+unmeasured field confidence and bounding boxes remain null. Candidate agreement describes
+readings of the same document; it is not a business check or acceptance decision.
+
+Back Office persists and authorizes access to this evidence. The parser does not own
+business persons, assignments, reviews or lending state. See the generated
+[OpenAPI contract](openapi.json) for exact v1/v2 request and response schemas.
 
 ## Validation and limits
 
@@ -121,7 +137,8 @@ Requests use strict Pydantic contracts. Validation errors omit submitted inputs.
 Provider responses must satisfy the supplied draft schema; `canonical_schema_valid`
 reports structural completeness only. It never means approved or accepted.
 
-Default ingestion limits are 12 files, 20 total pages and 15 MiB per decoded file. Pages are never silently truncated. Invalid
+Default ingestion limits are 12 files, 20 total pages and 15 MiB per decoded file;
+v2 requests accept one original file. Pages are never silently truncated. Invalid
 request contracts return 422, unsupported input content 415, page limits 413, provider
 failures or invalid provider output 502, and budget exhaustion 503. Lambda's request-body
 limit may be lower and includes base64 overhead and the supplied schemas.
@@ -137,3 +154,81 @@ python deploy/signed_extract.py extract_typed_json extract-request.json --public
 
 The JSON file is the full HTTP request, including the catalog for classification or
 canonical/draft schema pair for extraction. No implicit loan configuration is loaded.
+
+## Version 2 evidence contracts
+
+Both document endpoints additionally accept `contract_version: 2`. Omitting it keeps
+the existing v1 contract. V2 permits exactly one source file (up to 20 pages); invalid
+versions fail validation rather than selecting another contract. Request schemas and
+hashes undergo the same validation as v1 before any provider call.
+
+Classification additionally returns observed printed pagination, boundary and group
+hints, the actual applied rotation, and usage. These hints do not decide document
+membership. Source and rendered-page hashes come from ingestion, never model output.
+
+Typed extraction additionally accepts `reader_mode: "single" | "independent_readers"`
+and optional `page_selection: [3, 1]`. Selection retains the original physical numbers
+and requested order; missing or duplicate pages are rejected. The response contains
+`normalization_version`, `field_evidence`, `evidence_complete`, and usage. Each field
+uses an RFC 6901 pointer into attributes, with actual reader/model identities, values,
+source transcription when available, and citations to supplied pages. Every non-null
+leaf except `document_type` must be cited. Invalid or omitted citations cause a
+sanitized 502; they are never invented to satisfy the contract.
+
+The current reader uses schema-guided vision and page-level citations. Field confidence
+and boxes are null because this reader does not measure them. `independent_readers`
+performs two separate vision reads using the extraction model and classification model;
+the second sees the source and schema, never the first reader's result. The actual models
+must differ. This is not independent OCR, and correlated model errors remain possible.
+Different field/array structures fail closed pending explicit alignment support.
+
+The primary reading supplies draft attributes. Exact candidate agreement is reported
+without tolerances, review statuses or automatic resolution. Back Office decides what
+disagreement means. Classification scores, citation coverage and structural schema
+validity are not field accuracy or acceptance decisions. No v2 output adds a loan,
+account or other business workflow.
+
+The checked-in `tests/fixtures/processing_v2` schemas mirror Back Office's exported wire
+contracts. Parity tests cover both requests and responses; update the snapshots when
+coordinating a contract change. The runtime does not import Back Office code.
+
+## `POST /compare_documents_json` — cited observations across documents
+
+Send `contract_version: 1`, `documents`, and `comparisons`. This is the comparison
+operation's first contract; classification/extraction v1/v2 are unchanged. Each document
+has an opaque `document_id`, exact `revision`, type, schema version/hash, evidence hash
+and `facts`. A fact has a JSON Pointer, value and source citations (source ID/checksum,
+physical page/page checksum, optional box and recorded rotation). Each comparison has
+a unique key, factual topic, left/right fact references and optional context references.
+The operation accepts arbitrary document types; it contains no loan/account taxonomy.
+
+```json
+{
+  "key": "income-pair-1",
+  "topic": "Monthly net income, reporting period and basis",
+  "left": {"document_id": "document-a", "pointer": "/monthly_income/amount"},
+  "right": {"document_id": "document-b", "pointer": "/net_pay/amount"},
+  "context": [
+    {"document_id": "document-a", "pointer": "/monthly_income/currency"},
+    {"document_id": "document-b", "pointer": "/net_pay/currency"}
+  ]
+}
+```
+
+This example is one entry in `comparisons`; all references must resolve to supplied
+cited facts. The complete models and examples are covered by the OpenAPI contract and
+`tests/test_document_comparison.py`. Bounds are 2–20 documents, up to 100 facts each,
+1–50 comparison pairs, and 512 KiB normalized request JSON. Duplicate IDs/keys,
+unknown references, inconsistent source hashes, invalid boxes and policy fields are
+rejected before the provider call. The existing `x-api-key` dependency applies.
+
+The model returns only comparability (`comparable`, `not_comparable`, `uncertain`),
+relationship (`equivalent`, `different`, `uncertain`) and a factual explanation for
+each key. Code attaches the exact values, document revisions, source citations and
+context from the request and computes `request_sha256`. No original-file fetch occurs.
+An incomplete or invalid model response produces a sanitized 502.
+
+Amounts with different currencies or unclear periods/bases must not be assumed
+comparable. There is no tolerance, conversion, severity, requirement status, approval,
+preferred value or recommended next step. Back Office owns all such rules and results,
+using these observations in its shared engine for every document-set policy.

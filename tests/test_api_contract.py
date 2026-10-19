@@ -20,7 +20,7 @@ def test_health_reports_extraction_limits_without_business_policy():
 
 def test_openapi_documents_only_supported_operations():
     spec = TestClient(api.app).get("/openapi.json").json()
-    assert set(spec["paths"]) == {"/health", "/session", "/classify_json", "/extract_typed_json"}
+    assert set(spec["paths"]) == {"/health", "/session", "/classify_json", "/extract_typed_json", "/compare_documents_json"}
     assert json.loads((Path(__file__).parents[1] / "docs/openapi.json").read_text()) == spec
     for name in ("ExtractResponse", "DecisionRequest", "Evaluation", "Check", "RunState"):
         assert name not in spec["components"]["schemas"]

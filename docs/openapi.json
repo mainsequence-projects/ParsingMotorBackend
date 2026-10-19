@@ -161,7 +161,15 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/ClassifyJsonRequest"
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/ClassifyRequestV2"
+                  },
+                  {
+                    "$ref": "#/components/schemas/ClassifyJsonRequest"
+                  }
+                ],
+                "title": "Body"
               }
             }
           },
@@ -173,7 +181,15 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ClassifyJsonResponse"
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/ClassificationResponseV2"
+                    },
+                    {
+                      "$ref": "#/components/schemas/ClassifyJsonResponse"
+                    }
+                  ],
+                  "title": "Response Classify Json Classify Json Post"
                 }
               }
             }
@@ -293,7 +309,15 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/ExtractTypedJsonRequest"
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/ExtractRequestV2"
+                  },
+                  {
+                    "$ref": "#/components/schemas/ExtractTypedJsonRequest"
+                  }
+                ],
+                "title": "Body"
               }
             }
           },
@@ -305,7 +329,147 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ExtractTypedJsonResponse"
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/ExtractionResponseV2"
+                    },
+                    {
+                      "$ref": "#/components/schemas/ExtractTypedJsonResponse"
+                    }
+                  ],
+                  "title": "Response Extract Typed Json Extract Typed Json Post"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Content Too Large",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "Unsupported Media Type",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Content",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Bad Gateway",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/compare_documents_json": {
+      "post": {
+        "tags": [
+          "documents"
+        ],
+        "summary": "Compare Documents Json",
+        "description": "Compare cited extracted facts; no business rules, tolerances or decisions.",
+        "operationId": "compare_documents_json_compare_documents_json_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CompareDocumentsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CompareDocumentsResponse"
                 }
               }
             }
@@ -416,6 +580,103 @@
   },
   "components": {
     "schemas": {
+      "Candidate": {
+        "properties": {
+          "document_type": {
+            "type": "string",
+            "title": "Document Type"
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 2000,
+            "minLength": 1,
+            "title": "Description"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "document_type",
+          "description"
+        ],
+        "title": "Candidate"
+      },
+      "CitedFact": {
+        "properties": {
+          "pointer": {
+            "type": "string",
+            "maxLength": 500,
+            "minLength": 1,
+            "title": "Pointer"
+          },
+          "value": {
+            "$ref": "#/components/schemas/JsonValue"
+          },
+          "citations": {
+            "items": {
+              "$ref": "#/components/schemas/ComparisonCitation"
+            },
+            "type": "array",
+            "maxItems": 20,
+            "minItems": 1,
+            "title": "Citations"
+          },
+          "document_id": {
+            "type": "string",
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Document Id"
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Revision"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "pointer",
+          "value",
+          "citations",
+          "document_id",
+          "revision"
+        ],
+        "title": "CitedFact"
+      },
+      "ClassificationResponseV2": {
+        "properties": {
+          "contract_version": {
+            "type": "integer",
+            "const": 2,
+            "title": "Contract Version"
+          },
+          "pages": {
+            "items": {
+              "$ref": "#/components/schemas/PageObservation"
+            },
+            "type": "array",
+            "maxItems": 20,
+            "minItems": 1,
+            "title": "Pages"
+          },
+          "usage": {
+            "items": {
+              "$ref": "#/components/schemas/ProviderUsage"
+            },
+            "type": "array",
+            "maxItems": 100,
+            "title": "Usage"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "contract_version",
+          "pages"
+        ],
+        "title": "ClassificationResponseV2"
+      },
       "ClassifiedPage": {
         "properties": {
           "document_type": {
@@ -530,6 +791,375 @@
         ],
         "title": "ClassifyJsonResponse"
       },
+      "ClassifyRequestV2": {
+        "properties": {
+          "files": {
+            "items": {
+              "$ref": "#/components/schemas/ParserFile"
+            },
+            "type": "array",
+            "maxItems": 1,
+            "minItems": 1,
+            "title": "Files"
+          },
+          "document_types": {
+            "items": {
+              "$ref": "#/components/schemas/Candidate"
+            },
+            "type": "array",
+            "maxItems": 100,
+            "minItems": 1,
+            "title": "Document Types"
+          },
+          "contract_version": {
+            "type": "integer",
+            "const": 2,
+            "title": "Contract Version",
+            "description": "Explicit opt-in to the evidence contract; never inferred by the provider."
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "files",
+          "document_types",
+          "contract_version"
+        ],
+        "title": "ClassifyRequestV2"
+      },
+      "CompareDocumentsRequest": {
+        "properties": {
+          "contract_version": {
+            "type": "integer",
+            "const": 1,
+            "title": "Contract Version"
+          },
+          "documents": {
+            "items": {
+              "$ref": "#/components/schemas/ComparisonDocument"
+            },
+            "type": "array",
+            "maxItems": 20,
+            "minItems": 2,
+            "title": "Documents"
+          },
+          "comparisons": {
+            "items": {
+              "$ref": "#/components/schemas/ComparisonQuestion"
+            },
+            "type": "array",
+            "maxItems": 50,
+            "minItems": 1,
+            "title": "Comparisons"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "contract_version",
+          "documents",
+          "comparisons"
+        ],
+        "title": "CompareDocumentsRequest"
+      },
+      "CompareDocumentsResponse": {
+        "properties": {
+          "contract_version": {
+            "type": "integer",
+            "const": 1,
+            "title": "Contract Version"
+          },
+          "request_sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "title": "Request Sha256"
+          },
+          "observations": {
+            "items": {
+              "$ref": "#/components/schemas/ComparisonObservation"
+            },
+            "type": "array",
+            "maxItems": 50,
+            "minItems": 1,
+            "title": "Observations"
+          },
+          "model": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Model"
+          },
+          "cache_hit": {
+            "type": "boolean",
+            "title": "Cache Hit"
+          },
+          "usage": {
+            "items": {
+              "$ref": "#/components/schemas/ProviderUsage"
+            },
+            "type": "array",
+            "maxItems": 10,
+            "title": "Usage"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "contract_version",
+          "request_sha256",
+          "observations",
+          "model",
+          "cache_hit"
+        ],
+        "title": "CompareDocumentsResponse"
+      },
+      "ComparisonCitation": {
+        "properties": {
+          "source_id": {
+            "type": "string",
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Source Id"
+          },
+          "source_sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "title": "Source Sha256"
+          },
+          "page": {
+            "type": "integer",
+            "maximum": 20.0,
+            "minimum": 1.0,
+            "title": "Page"
+          },
+          "page_sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "title": "Page Sha256"
+          },
+          "bounding_box": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "number"
+                },
+                "type": "array",
+                "maxItems": 4,
+                "minItems": 4
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Bounding Box"
+          },
+          "rotation_degrees": {
+            "type": "integer",
+            "enum": [
+              0,
+              90,
+              180,
+              270
+            ],
+            "title": "Rotation Degrees",
+            "default": 0
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "source_id",
+          "source_sha256",
+          "page",
+          "page_sha256"
+        ],
+        "title": "ComparisonCitation"
+      },
+      "ComparisonDocument": {
+        "properties": {
+          "document_id": {
+            "type": "string",
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Document Id"
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Revision"
+          },
+          "document_type": {
+            "type": "string",
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Document Type"
+          },
+          "schema_version": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Schema Version"
+          },
+          "schema_hash": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "title": "Schema Hash"
+          },
+          "evidence_sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "title": "Evidence Sha256"
+          },
+          "facts": {
+            "items": {
+              "$ref": "#/components/schemas/ComparisonFact"
+            },
+            "type": "array",
+            "maxItems": 100,
+            "minItems": 1,
+            "title": "Facts"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "document_id",
+          "revision",
+          "document_type",
+          "schema_version",
+          "schema_hash",
+          "evidence_sha256",
+          "facts"
+        ],
+        "title": "ComparisonDocument"
+      },
+      "ComparisonFact": {
+        "properties": {
+          "pointer": {
+            "type": "string",
+            "maxLength": 500,
+            "minLength": 1,
+            "title": "Pointer"
+          },
+          "value": {
+            "$ref": "#/components/schemas/JsonValue"
+          },
+          "citations": {
+            "items": {
+              "$ref": "#/components/schemas/ComparisonCitation"
+            },
+            "type": "array",
+            "maxItems": 20,
+            "minItems": 1,
+            "title": "Citations"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "pointer",
+          "value",
+          "citations"
+        ],
+        "title": "ComparisonFact"
+      },
+      "ComparisonObservation": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Key"
+          },
+          "comparability": {
+            "type": "string",
+            "enum": [
+              "comparable",
+              "not_comparable",
+              "uncertain"
+            ],
+            "title": "Comparability"
+          },
+          "relationship": {
+            "type": "string",
+            "enum": [
+              "equivalent",
+              "different",
+              "uncertain"
+            ],
+            "title": "Relationship"
+          },
+          "explanation": {
+            "type": "string",
+            "maxLength": 2000,
+            "minLength": 1,
+            "title": "Explanation"
+          },
+          "left": {
+            "$ref": "#/components/schemas/CitedFact"
+          },
+          "right": {
+            "$ref": "#/components/schemas/CitedFact"
+          },
+          "context": {
+            "items": {
+              "$ref": "#/components/schemas/CitedFact"
+            },
+            "type": "array",
+            "maxItems": 20,
+            "title": "Context"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "key",
+          "comparability",
+          "relationship",
+          "explanation",
+          "left",
+          "right"
+        ],
+        "title": "ComparisonObservation"
+      },
+      "ComparisonQuestion": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Key"
+          },
+          "topic": {
+            "type": "string",
+            "maxLength": 500,
+            "minLength": 1,
+            "title": "Topic"
+          },
+          "left": {
+            "$ref": "#/components/schemas/FactReference"
+          },
+          "right": {
+            "$ref": "#/components/schemas/FactReference"
+          },
+          "context": {
+            "items": {
+              "$ref": "#/components/schemas/FactReference"
+            },
+            "type": "array",
+            "maxItems": 20,
+            "title": "Context"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "key",
+          "topic",
+          "left",
+          "right"
+        ],
+        "title": "ComparisonQuestion"
+      },
       "DocumentTypeCandidate": {
         "properties": {
           "document_type": {
@@ -575,6 +1205,137 @@
           "detail"
         ],
         "title": "ErrorResponse"
+      },
+      "EvidenceLocation": {
+        "properties": {
+          "source_file": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Source File",
+            "description": "Filename in this response's immutable source-page manifest."
+          },
+          "page": {
+            "type": "integer",
+            "maximum": 20.0,
+            "minimum": 1.0,
+            "title": "Page",
+            "description": "Physical page number in the original source, never a printed or regrouped page number."
+          },
+          "bounding_box": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "number",
+                  "maximum": 1.0,
+                  "minimum": 0.0
+                },
+                "type": "array",
+                "maxItems": 4,
+                "minItems": 4
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Bounding Box",
+            "description": "Normalized [left, top, right, bottom] on the rendered page after the recorded rotation; null means page-level evidence only."
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "source_file",
+          "page"
+        ],
+        "title": "EvidenceLocation"
+      },
+      "ExtractRequestV2": {
+        "properties": {
+          "files": {
+            "items": {
+              "$ref": "#/components/schemas/ParserFile"
+            },
+            "type": "array",
+            "maxItems": 1,
+            "minItems": 1,
+            "title": "Files"
+          },
+          "document_type": {
+            "type": "string",
+            "title": "Document Type"
+          },
+          "schema_version": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Schema Version"
+          },
+          "schema_hash": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "title": "Schema Hash"
+          },
+          "canonical_schema": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/JsonValue"
+            },
+            "type": "object",
+            "title": "Canonical Schema"
+          },
+          "output_schema": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/JsonValue"
+            },
+            "type": "object",
+            "title": "Output Schema"
+          },
+          "contract_version": {
+            "type": "integer",
+            "const": 2,
+            "title": "Contract Version",
+            "description": "Explicit evidence contract version; never inferred or silently downgraded."
+          },
+          "reader_mode": {
+            "type": "string",
+            "enum": [
+              "single",
+              "independent_readers"
+            ],
+            "title": "Reader Mode",
+            "description": "Requested reading strategy, not a business acceptance policy.",
+            "default": "single"
+          },
+          "page_selection": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "integer",
+                  "maximum": 20.0,
+                  "minimum": 1.0
+                },
+                "type": "array",
+                "maxItems": 20,
+                "minItems": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Page Selection",
+            "description": "Ordered physical pages forming one logical document in the supplied original file; null selects all pages. Original page numbers must survive extraction."
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "files",
+          "document_type",
+          "schema_version",
+          "schema_hash",
+          "canonical_schema",
+          "output_schema",
+          "contract_version"
+        ],
+        "title": "ExtractRequestV2"
       },
       "ExtractTypedJsonRequest": {
         "properties": {
@@ -703,6 +1464,235 @@
         ],
         "title": "ExtractTypedJsonResponse"
       },
+      "ExtractionPage": {
+        "properties": {
+          "source_file": {
+            "type": "string",
+            "title": "Source File"
+          },
+          "page": {
+            "type": "integer",
+            "maximum": 20.0,
+            "minimum": 1.0,
+            "title": "Page"
+          },
+          "source_sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "title": "Source Sha256"
+          },
+          "page_sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "title": "Page Sha256"
+          },
+          "rotation_degrees": {
+            "type": "integer",
+            "enum": [
+              0,
+              90,
+              180,
+              270
+            ],
+            "title": "Rotation Degrees",
+            "description": "Clockwise rotation used for the upright evidence coordinates.",
+            "default": 0
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "source_file",
+          "page",
+          "source_sha256",
+          "page_sha256"
+        ],
+        "title": "ExtractionPage"
+      },
+      "ExtractionResponseV2": {
+        "properties": {
+          "document_type": {
+            "type": "string",
+            "title": "Document Type"
+          },
+          "schema_version": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Schema Version"
+          },
+          "schema_hash": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "title": "Schema Hash"
+          },
+          "status": {
+            "type": "string",
+            "const": "draft",
+            "title": "Status"
+          },
+          "attributes": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/JsonValue"
+            },
+            "type": "object",
+            "title": "Attributes"
+          },
+          "canonical_schema_valid": {
+            "type": "boolean",
+            "title": "Canonical Schema Valid"
+          },
+          "canonical_schema_errors": {
+            "items": {
+              "$ref": "#/components/schemas/SchemaIssue"
+            },
+            "type": "array",
+            "title": "Canonical Schema Errors"
+          },
+          "pages": {
+            "items": {
+              "$ref": "#/components/schemas/ExtractionPage"
+            },
+            "type": "array",
+            "maxItems": 20,
+            "minItems": 1,
+            "title": "Pages"
+          },
+          "model": {
+            "type": "string",
+            "title": "Model"
+          },
+          "cache_hit": {
+            "type": "boolean",
+            "title": "Cache Hit"
+          },
+          "contract_version": {
+            "type": "integer",
+            "const": 2,
+            "title": "Contract Version"
+          },
+          "normalization_version": {
+            "type": "string",
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Normalization Version",
+            "description": "Version of extraction normalization, independent of any Back Office business policy."
+          },
+          "field_evidence": {
+            "items": {
+              "$ref": "#/components/schemas/FieldEvidence"
+            },
+            "type": "array",
+            "maxItems": 5000,
+            "title": "Field Evidence"
+          },
+          "evidence_complete": {
+            "type": "boolean",
+            "title": "Evidence Complete",
+            "description": "True only when every non-null attribute leaf except document_type has field evidence; not extraction accuracy or document completeness."
+          },
+          "usage": {
+            "items": {
+              "$ref": "#/components/schemas/ProviderUsage"
+            },
+            "type": "array",
+            "maxItems": 100,
+            "title": "Usage"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "document_type",
+          "schema_version",
+          "schema_hash",
+          "status",
+          "attributes",
+          "canonical_schema_valid",
+          "canonical_schema_errors",
+          "pages",
+          "model",
+          "cache_hit",
+          "contract_version",
+          "normalization_version",
+          "field_evidence",
+          "evidence_complete"
+        ],
+        "title": "ExtractionResponseV2"
+      },
+      "FactReference": {
+        "properties": {
+          "document_id": {
+            "type": "string",
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Document Id"
+          },
+          "pointer": {
+            "type": "string",
+            "maxLength": 500,
+            "minLength": 1,
+            "title": "Pointer"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "document_id",
+          "pointer"
+        ],
+        "title": "FactReference"
+      },
+      "FieldEvidence": {
+        "properties": {
+          "pointer": {
+            "type": "string",
+            "maxLength": 500,
+            "minLength": 1,
+            "title": "Pointer",
+            "description": "RFC 6901 JSON Pointer into attributes, including array indices; bound to this extraction revision."
+          },
+          "candidates": {
+            "items": {
+              "$ref": "#/components/schemas/ReaderCandidate"
+            },
+            "type": "array",
+            "maxItems": 8,
+            "minItems": 1,
+            "title": "Candidates"
+          },
+          "selected_reader_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Selected Reader Id",
+            "description": "Reader supplying the draft attribute; null when unresolved. Selection is not acceptance."
+          },
+          "agreement": {
+            "type": "string",
+            "enum": [
+              "single_reader",
+              "agree",
+              "disagree",
+              "missing"
+            ],
+            "title": "Agreement",
+            "description": "Exact agreement of normalized candidates within this document; no business tolerance or review status."
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "pointer",
+          "candidates",
+          "agreement"
+        ],
+        "title": "FieldEvidence"
+      },
       "FileB64": {
         "properties": {
           "filename": {
@@ -790,6 +1780,282 @@
           "max_file_mb"
         ],
         "title": "Limits"
+      },
+      "PageObservation": {
+        "properties": {
+          "source_file": {
+            "type": "string",
+            "title": "Source File"
+          },
+          "page": {
+            "type": "integer",
+            "maximum": 20.0,
+            "minimum": 1.0,
+            "title": "Page"
+          },
+          "source_sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "title": "Source Sha256"
+          },
+          "page_sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "title": "Page Sha256"
+          },
+          "document_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Document Type"
+          },
+          "confidence": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Confidence"
+          },
+          "reason": {
+            "type": "string",
+            "maxLength": 2000,
+            "title": "Reason"
+          },
+          "model": {
+            "type": "string",
+            "title": "Model"
+          },
+          "cache_hit": {
+            "type": "boolean",
+            "title": "Cache Hit"
+          },
+          "printed_page_number": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Printed Page Number",
+            "description": "Page number printed on the document; distinct from physical source page."
+          },
+          "printed_page_count": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Printed Page Count",
+            "description": "Total page count printed on the source, not an assertion that all pages were received."
+          },
+          "rotation_degrees": {
+            "type": "integer",
+            "enum": [
+              0,
+              90,
+              180,
+              270
+            ],
+            "title": "Rotation Degrees",
+            "description": "Clockwise rotation applied to the source page to obtain the upright evidence coordinate space.",
+            "default": 0
+          },
+          "group_hint": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 200,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Group Hint",
+            "description": "Source-local grouping observation; Back Office decides document membership and ownership."
+          },
+          "boundary": {
+            "type": "string",
+            "enum": [
+              "starts_document",
+              "continues_document",
+              "unknown"
+            ],
+            "title": "Boundary",
+            "description": "Observed document boundary; unknown requires grouping resolution by Back Office.",
+            "default": "unknown"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "source_file",
+          "page",
+          "source_sha256",
+          "page_sha256",
+          "document_type",
+          "confidence",
+          "reason",
+          "model",
+          "cache_hit"
+        ],
+        "title": "PageObservation"
+      },
+      "ParserFile": {
+        "properties": {
+          "filename": {
+            "type": "string",
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Filename"
+          },
+          "content_base64": {
+            "type": "string",
+            "maxLength": 20971520,
+            "minLength": 1,
+            "title": "Content Base64"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "filename",
+          "content_base64"
+        ],
+        "title": "ParserFile"
+      },
+      "ProviderUsage": {
+        "properties": {
+          "model": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Model",
+            "description": "Actual provider/model version used for this operation."
+          },
+          "input_tokens": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Input Tokens",
+            "description": "Provider-reported input tokens; null when unavailable."
+          },
+          "output_tokens": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Output Tokens",
+            "description": "Provider-reported output tokens; null when unavailable."
+          },
+          "duration_ms": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Duration Ms",
+            "description": "Measured provider duration in milliseconds; null when unavailable."
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "model"
+        ],
+        "title": "ProviderUsage"
+      },
+      "ReaderCandidate": {
+        "properties": {
+          "reader_id": {
+            "type": "string",
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Reader Id",
+            "description": "Unique reader identifier within this field, such as textract or vision."
+          },
+          "model": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Model",
+            "description": "Actual reader model/version; not a reviewer identity."
+          },
+          "value": {
+            "$ref": "#/components/schemas/JsonValue",
+            "description": "Reader's normalized extraction candidate; null means unreadable or absent."
+          },
+          "raw_text": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 10000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Raw Text",
+            "description": "Reader's source transcription when available; no business interpretation."
+          },
+          "confidence": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 1.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Confidence",
+            "description": "Provider-reported extraction confidence for this reading; null if unavailable, never a classification score."
+          },
+          "locations": {
+            "items": {
+              "$ref": "#/components/schemas/EvidenceLocation"
+            },
+            "type": "array",
+            "maxItems": 100,
+            "title": "Locations",
+            "description": "Source locations supporting this reader's candidate."
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "reader_id",
+          "model",
+          "value"
+        ],
+        "title": "ReaderCandidate"
       },
       "SchemaIssue": {
         "properties": {

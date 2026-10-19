@@ -4715,5 +4715,1599 @@
       "type": "object"
     },
     "content_sha256": "b6f63c6e50d3c3a09c2a5966aebff6beae735910e57390df42008c16252fd5e1"
+  },
+  {
+    "document_type": "loan_contract",
+    "version": 1,
+    "canonical_schema": {
+      "$defs": {
+        "Money": {
+          "additionalProperties": false,
+          "description": "Exact monetary value; JSON serializes the amount as a decimal string.",
+          "properties": {
+            "amount": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "string"
+                }
+              ],
+              "description": "Monetary amount in the associated currency, preserving source precision and sign.",
+              "title": "Amount"
+            },
+            "currency": {
+              "description": "ISO three-letter currency code for the monetary amount.",
+              "pattern": "^[A-Z]{3}$",
+              "title": "Currency",
+              "type": "string"
+            }
+          },
+          "required": [
+            "amount",
+            "currency"
+          ],
+          "title": "Money",
+          "type": "object"
+        },
+        "PostalAddress": {
+          "additionalProperties": false,
+          "description": "An address as printed; policy decides which local components are necessary.",
+          "properties": {
+            "address_line_1": {
+              "description": "Primary street, building, or locality line exactly as stated by the source.",
+              "minLength": 1,
+              "pattern": "\\S",
+              "title": "Address line 1",
+              "type": "string"
+            },
+            "address_line_2": {
+              "anyOf": [
+                {
+                  "minLength": 1,
+                  "pattern": "\\S",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Additional unit, floor, building, or locality information; null when absent.",
+              "title": "Address line 2"
+            },
+            "city": {
+              "anyOf": [
+                {
+                  "minLength": 1,
+                  "pattern": "\\S",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "City or locality named in the address; null when absent.",
+              "title": "City"
+            },
+            "region": {
+              "anyOf": [
+                {
+                  "minLength": 1,
+                  "pattern": "\\S",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "State, province, or administrative region named in the address; null when absent.",
+              "title": "Region"
+            },
+            "postal_code": {
+              "anyOf": [
+                {
+                  "minLength": 1,
+                  "pattern": "\\S",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Postal code as printed, preserving letters, spaces, and leading zeros; null when absent.",
+              "title": "Postal code"
+            },
+            "country_code": {
+              "anyOf": [
+                {
+                  "pattern": "^[A-Z]{2}$",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "ISO two-letter country code established by the source or verified reference; null when unknown.",
+              "title": "Country code"
+            }
+          },
+          "required": [
+            "address_line_1"
+          ],
+          "title": "PostalAddress",
+          "type": "object"
+        }
+      },
+      "additionalProperties": false,
+      "description": "Transcribed loan terms; no credit decision or requirement policy.",
+      "properties": {
+        "document_type": {
+          "const": "loan_contract",
+          "default": "loan_contract",
+          "description": "Identifies this payload as a loan contract, not an employment contract.",
+          "title": "Document type",
+          "type": "string"
+        },
+        "full_name": {
+          "description": "Borrower's complete name exactly as printed in the contract.",
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Borrower name",
+          "type": "string"
+        },
+        "borrower_identifier": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "pattern": "\\S",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Borrower identifier as printed, preserving leading zeros and formatting; no validity claim.",
+          "title": "Borrower identifier"
+        },
+        "contract_number": {
+          "description": "Contract reference exactly as printed, preserving leading zeros.",
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Contract number",
+          "type": "string"
+        },
+        "issue_date": {
+          "description": "Date stated for the contract, as YYYY-MM-DD; not the upload date.",
+          "format": "date",
+          "title": "Contract date",
+          "type": "string"
+        },
+        "lender_name": {
+          "description": "Name of the lender explicitly identified in the contract.",
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Lender name",
+          "type": "string"
+        },
+        "loan_amount": {
+          "$ref": "#/$defs/Money",
+          "description": "Principal amount and currency stated in the contract; not declared income.",
+          "title": "Loan amount"
+        },
+        "declared_monthly_net_income": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Money"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Monthly income after deductions explicitly declared in the contract; null if only gross or unspecified income is given.",
+          "title": "Declared monthly net income"
+        },
+        "borrower_address": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PostalAddress"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Borrower address as stated in the contract; null when absent.",
+          "title": "Borrower address"
+        },
+        "required_documents_as_printed": {
+          "anyOf": [
+            {
+              "items": {
+                "minLength": 1,
+                "pattern": "\\S",
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Document requirements transcribed from the contract as source text; never an executable policy or authority to waive assigned requirements.",
+          "title": "Document list as printed"
+        }
+      },
+      "required": [
+        "full_name",
+        "contract_number",
+        "issue_date",
+        "lender_name",
+        "loan_amount"
+      ],
+      "title": "LoanContract",
+      "type": "object"
+    },
+    "draft_schema": {
+      "$defs": {
+        "MoneyDraft": {
+          "additionalProperties": false,
+          "properties": {
+            "amount": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Monetary amount in the associated currency, preserving source precision and sign.",
+              "title": "Amount"
+            },
+            "currency": {
+              "anyOf": [
+                {
+                  "pattern": "^[A-Z]{3}$",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "ISO three-letter currency code for the monetary amount.",
+              "title": "Currency"
+            }
+          },
+          "title": "MoneyDraft",
+          "type": "object"
+        },
+        "PostalAddressDraft": {
+          "additionalProperties": false,
+          "properties": {
+            "address_line_1": {
+              "anyOf": [
+                {
+                  "minLength": 1,
+                  "pattern": "\\S",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Primary street, building, or locality line exactly as stated by the source.",
+              "title": "Address line 1"
+            },
+            "address_line_2": {
+              "anyOf": [
+                {
+                  "minLength": 1,
+                  "pattern": "\\S",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Additional unit, floor, building, or locality information; null when absent.",
+              "title": "Address line 2"
+            },
+            "city": {
+              "anyOf": [
+                {
+                  "minLength": 1,
+                  "pattern": "\\S",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "City or locality named in the address; null when absent.",
+              "title": "City"
+            },
+            "region": {
+              "anyOf": [
+                {
+                  "minLength": 1,
+                  "pattern": "\\S",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "State, province, or administrative region named in the address; null when absent.",
+              "title": "Region"
+            },
+            "postal_code": {
+              "anyOf": [
+                {
+                  "minLength": 1,
+                  "pattern": "\\S",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Postal code as printed, preserving letters, spaces, and leading zeros; null when absent.",
+              "title": "Postal code"
+            },
+            "country_code": {
+              "anyOf": [
+                {
+                  "pattern": "^[A-Z]{2}$",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "ISO two-letter country code established by the source or verified reference; null when unknown.",
+              "title": "Country code"
+            }
+          },
+          "title": "PostalAddressDraft",
+          "type": "object"
+        }
+      },
+      "additionalProperties": false,
+      "properties": {
+        "document_type": {
+          "const": "loan_contract",
+          "default": "loan_contract",
+          "description": "Identifies this payload as a loan contract, not an employment contract.",
+          "title": "Document type",
+          "type": "string"
+        },
+        "full_name": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "pattern": "\\S",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Borrower's complete name exactly as printed in the contract.",
+          "title": "Borrower name"
+        },
+        "borrower_identifier": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "pattern": "\\S",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Borrower identifier as printed, preserving leading zeros and formatting; no validity claim.",
+          "title": "Borrower identifier"
+        },
+        "contract_number": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "pattern": "\\S",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Contract reference exactly as printed, preserving leading zeros.",
+          "title": "Contract number"
+        },
+        "issue_date": {
+          "anyOf": [
+            {
+              "format": "date",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Date stated for the contract, as YYYY-MM-DD; not the upload date.",
+          "title": "Contract date"
+        },
+        "lender_name": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "pattern": "\\S",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Name of the lender explicitly identified in the contract.",
+          "title": "Lender name"
+        },
+        "loan_amount": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/MoneyDraft"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Principal amount and currency stated in the contract; not declared income.",
+          "title": "Loan amount"
+        },
+        "declared_monthly_net_income": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/MoneyDraft"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Monthly income after deductions explicitly declared in the contract; null if only gross or unspecified income is given.",
+          "title": "Declared monthly net income"
+        },
+        "borrower_address": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PostalAddressDraft"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Borrower address as stated in the contract; null when absent.",
+          "title": "Borrower address"
+        },
+        "required_documents_as_printed": {
+          "anyOf": [
+            {
+              "items": {
+                "minLength": 1,
+                "pattern": "\\S",
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Document requirements transcribed from the contract as source text; never an executable policy or authority to waive assigned requirements.",
+          "title": "Document list as printed"
+        }
+      },
+      "title": "LoanContractDraft",
+      "type": "object"
+    },
+    "content_sha256": "b0540e0469337e27e1e512618748433355950bece2960c1de8f1cb3254bc477c"
+  },
+  {
+    "document_type": "employer_confirmation",
+    "version": 1,
+    "canonical_schema": {
+      "$defs": {
+        "DatePeriod": {
+          "additionalProperties": false,
+          "description": "Inclusive calendar interval.",
+          "properties": {
+            "start_date": {
+              "description": "First calendar date included in the reporting or payment period, as YYYY-MM-DD.",
+              "format": "date",
+              "title": "Start date",
+              "type": "string"
+            },
+            "end_date": {
+              "description": "Last calendar date included in the period, as YYYY-MM-DD; must not precede the start date.",
+              "format": "date",
+              "title": "End date",
+              "type": "string"
+            }
+          },
+          "required": [
+            "start_date",
+            "end_date"
+          ],
+          "title": "DatePeriod",
+          "type": "object"
+        },
+        "Employer": {
+          "additionalProperties": false,
+          "description": "Employer identity stated in a document.",
+          "properties": {
+            "name": {
+              "description": "Employer's legal or trading name exactly as printed.",
+              "minLength": 1,
+              "pattern": "\\S",
+              "title": "Employer name",
+              "type": "string"
+            },
+            "registration_number": {
+              "anyOf": [
+                {
+                  "minLength": 1,
+                  "pattern": "\\S",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Employer registration identifier as printed, preserving formatting and leading zeros; null when absent.",
+              "title": "Registration number"
+            },
+            "address": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/PostalAddress"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Employer address stated in the document; null when absent.",
+              "title": "Employer address"
+            }
+          },
+          "required": [
+            "name"
+          ],
+          "title": "Employer",
+          "type": "object"
+        },
+        "Money": {
+          "additionalProperties": false,
+          "description": "Exact monetary value; JSON serializes the amount as a decimal string.",
+          "properties": {
+            "amount": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "string"
+                }
+              ],
+              "description": "Monetary amount in the associated currency, preserving source precision and sign.",
+              "title": "Amount"
+            },
+            "currency": {
+              "description": "ISO three-letter currency code for the monetary amount.",
+              "pattern": "^[A-Z]{3}$",
+              "title": "Currency",
+              "type": "string"
+            }
+          },
+          "required": [
+            "amount",
+            "currency"
+          ],
+          "title": "Money",
+          "type": "object"
+        },
+        "PostalAddress": {
+          "additionalProperties": false,
+          "description": "An address as printed; policy decides which local components are necessary.",
+          "properties": {
+            "address_line_1": {
+              "description": "Primary street, building, or locality line exactly as stated by the source.",
+              "minLength": 1,
+              "pattern": "\\S",
+              "title": "Address line 1",
+              "type": "string"
+            },
+            "address_line_2": {
+              "anyOf": [
+                {
+                  "minLength": 1,
+                  "pattern": "\\S",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Additional unit, floor, building, or locality information; null when absent.",
+              "title": "Address line 2"
+            },
+            "city": {
+              "anyOf": [
+                {
+                  "minLength": 1,
+                  "pattern": "\\S",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "City or locality named in the address; null when absent.",
+              "title": "City"
+            },
+            "region": {
+              "anyOf": [
+                {
+                  "minLength": 1,
+                  "pattern": "\\S",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "State, province, or administrative region named in the address; null when absent.",
+              "title": "Region"
+            },
+            "postal_code": {
+              "anyOf": [
+                {
+                  "minLength": 1,
+                  "pattern": "\\S",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Postal code as printed, preserving letters, spaces, and leading zeros; null when absent.",
+              "title": "Postal code"
+            },
+            "country_code": {
+              "anyOf": [
+                {
+                  "pattern": "^[A-Z]{2}$",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "ISO two-letter country code established by the source or verified reference; null when unknown.",
+              "title": "Country code"
+            }
+          },
+          "required": [
+            "address_line_1"
+          ],
+          "title": "PostalAddress",
+          "type": "object"
+        }
+      },
+      "additionalProperties": false,
+      "description": "Employment and income stated by an employer, distinct from an employment contract.",
+      "properties": {
+        "document_type": {
+          "const": "employer_confirmation",
+          "default": "employer_confirmation",
+          "description": "Identifies this payload as an employer's employment and income confirmation.",
+          "title": "Document type",
+          "type": "string"
+        },
+        "employee_name": {
+          "description": "Employee's complete name exactly as printed in the confirmation.",
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Employee name",
+          "type": "string"
+        },
+        "employee_identifier": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "pattern": "\\S",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Employee identifier as printed, preserving leading zeros and formatting.",
+          "title": "Employee identifier"
+        },
+        "employer": {
+          "$ref": "#/$defs/Employer",
+          "description": "Employer identity explicitly stated in the confirmation."
+        },
+        "issue_date": {
+          "description": "Date the employer issued the confirmation, as YYYY-MM-DD.",
+          "format": "date",
+          "title": "Issue date",
+          "type": "string"
+        },
+        "employment_start_date": {
+          "anyOf": [
+            {
+              "format": "date",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Employment start date explicitly stated by the employer.",
+          "title": "Employment start date"
+        },
+        "employment_end_date": {
+          "anyOf": [
+            {
+              "format": "date",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Employment end date if stated; absence does not imply indefinite employment.",
+          "title": "Employment end date"
+        },
+        "contract_term_as_printed": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "pattern": "\\S",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Employment term wording exactly as printed; null when not stated.",
+          "title": "Contract term"
+        },
+        "position": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "pattern": "\\S",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Employee's position or occupation exactly as stated by the employer.",
+          "title": "Position"
+        },
+        "monthly_net_income": {
+          "$ref": "#/$defs/Money",
+          "description": "Monthly income after deductions explicitly stated by the employer, in its printed currency.",
+          "title": "Monthly net income"
+        },
+        "income_basis": {
+          "description": "Whether the source describes one month or an average monthly amount; use not_stated when it does not establish the basis.",
+          "enum": [
+            "single_month",
+            "monthly_average",
+            "not_stated"
+          ],
+          "title": "Income basis",
+          "type": "string"
+        },
+        "income_period": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/DatePeriod"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Period to which the reported income or monthly average relates, only when explicitly stated.",
+          "title": "Income reference period"
+        }
+      },
+      "required": [
+        "employee_name",
+        "employer",
+        "issue_date",
+        "monthly_net_income",
+        "income_basis"
+      ],
+      "title": "EmployerConfirmation",
+      "type": "object"
+    },
+    "draft_schema": {
+      "$defs": {
+        "DatePeriodDraft": {
+          "additionalProperties": false,
+          "properties": {
+            "start_date": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "First calendar date included in the reporting or payment period, as YYYY-MM-DD.",
+              "title": "Start date"
+            },
+            "end_date": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Last calendar date included in the period, as YYYY-MM-DD; must not precede the start date.",
+              "title": "End date"
+            }
+          },
+          "title": "DatePeriodDraft",
+          "type": "object"
+        },
+        "EmployerDraft": {
+          "additionalProperties": false,
+          "properties": {
+            "name": {
+              "anyOf": [
+                {
+                  "minLength": 1,
+                  "pattern": "\\S",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Employer's legal or trading name exactly as printed.",
+              "title": "Employer name"
+            },
+            "registration_number": {
+              "anyOf": [
+                {
+                  "minLength": 1,
+                  "pattern": "\\S",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Employer registration identifier as printed, preserving formatting and leading zeros; null when absent.",
+              "title": "Registration number"
+            },
+            "address": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/PostalAddressDraft"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Employer address stated in the document; null when absent.",
+              "title": "Employer address"
+            }
+          },
+          "title": "EmployerDraft",
+          "type": "object"
+        },
+        "MoneyDraft": {
+          "additionalProperties": false,
+          "properties": {
+            "amount": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Monetary amount in the associated currency, preserving source precision and sign.",
+              "title": "Amount"
+            },
+            "currency": {
+              "anyOf": [
+                {
+                  "pattern": "^[A-Z]{3}$",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "ISO three-letter currency code for the monetary amount.",
+              "title": "Currency"
+            }
+          },
+          "title": "MoneyDraft",
+          "type": "object"
+        },
+        "PostalAddressDraft": {
+          "additionalProperties": false,
+          "properties": {
+            "address_line_1": {
+              "anyOf": [
+                {
+                  "minLength": 1,
+                  "pattern": "\\S",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Primary street, building, or locality line exactly as stated by the source.",
+              "title": "Address line 1"
+            },
+            "address_line_2": {
+              "anyOf": [
+                {
+                  "minLength": 1,
+                  "pattern": "\\S",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Additional unit, floor, building, or locality information; null when absent.",
+              "title": "Address line 2"
+            },
+            "city": {
+              "anyOf": [
+                {
+                  "minLength": 1,
+                  "pattern": "\\S",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "City or locality named in the address; null when absent.",
+              "title": "City"
+            },
+            "region": {
+              "anyOf": [
+                {
+                  "minLength": 1,
+                  "pattern": "\\S",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "State, province, or administrative region named in the address; null when absent.",
+              "title": "Region"
+            },
+            "postal_code": {
+              "anyOf": [
+                {
+                  "minLength": 1,
+                  "pattern": "\\S",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Postal code as printed, preserving letters, spaces, and leading zeros; null when absent.",
+              "title": "Postal code"
+            },
+            "country_code": {
+              "anyOf": [
+                {
+                  "pattern": "^[A-Z]{2}$",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "ISO two-letter country code established by the source or verified reference; null when unknown.",
+              "title": "Country code"
+            }
+          },
+          "title": "PostalAddressDraft",
+          "type": "object"
+        }
+      },
+      "additionalProperties": false,
+      "properties": {
+        "document_type": {
+          "const": "employer_confirmation",
+          "default": "employer_confirmation",
+          "description": "Identifies this payload as an employer's employment and income confirmation.",
+          "title": "Document type",
+          "type": "string"
+        },
+        "employee_name": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "pattern": "\\S",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Employee's complete name exactly as printed in the confirmation.",
+          "title": "Employee name"
+        },
+        "employee_identifier": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "pattern": "\\S",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Employee identifier as printed, preserving leading zeros and formatting.",
+          "title": "Employee identifier"
+        },
+        "employer": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/EmployerDraft"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Employer identity explicitly stated in the confirmation.",
+          "title": "Employer"
+        },
+        "issue_date": {
+          "anyOf": [
+            {
+              "format": "date",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Date the employer issued the confirmation, as YYYY-MM-DD.",
+          "title": "Issue date"
+        },
+        "employment_start_date": {
+          "anyOf": [
+            {
+              "format": "date",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Employment start date explicitly stated by the employer.",
+          "title": "Employment start date"
+        },
+        "employment_end_date": {
+          "anyOf": [
+            {
+              "format": "date",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Employment end date if stated; absence does not imply indefinite employment.",
+          "title": "Employment end date"
+        },
+        "contract_term_as_printed": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "pattern": "\\S",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Employment term wording exactly as printed; null when not stated.",
+          "title": "Contract term"
+        },
+        "position": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "pattern": "\\S",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Employee's position or occupation exactly as stated by the employer.",
+          "title": "Position"
+        },
+        "monthly_net_income": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/MoneyDraft"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Monthly income after deductions explicitly stated by the employer, in its printed currency.",
+          "title": "Monthly net income"
+        },
+        "income_basis": {
+          "anyOf": [
+            {
+              "enum": [
+                "single_month",
+                "monthly_average",
+                "not_stated"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Whether the source describes one month or an average monthly amount; use not_stated when it does not establish the basis.",
+          "title": "Income basis"
+        },
+        "income_period": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/DatePeriodDraft"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Period to which the reported income or monthly average relates, only when explicitly stated.",
+          "title": "Income reference period"
+        }
+      },
+      "title": "EmployerConfirmationDraft",
+      "type": "object"
+    },
+    "content_sha256": "4c32e7f17263968e24912f51e2c43422792d78bc48efa5d664bc40f01bc9e576"
+  },
+  {
+    "document_type": "tax_clearance_certificate",
+    "version": 1,
+    "canonical_schema": {
+      "$defs": {
+        "Money": {
+          "additionalProperties": false,
+          "description": "Exact monetary value; JSON serializes the amount as a decimal string.",
+          "properties": {
+            "amount": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "string"
+                }
+              ],
+              "description": "Monetary amount in the associated currency, preserving source precision and sign.",
+              "title": "Amount"
+            },
+            "currency": {
+              "description": "ISO three-letter currency code for the monetary amount.",
+              "pattern": "^[A-Z]{3}$",
+              "title": "Currency",
+              "type": "string"
+            }
+          },
+          "required": [
+            "amount",
+            "currency"
+          ],
+          "title": "Money",
+          "type": "object"
+        }
+      },
+      "additionalProperties": false,
+      "description": "Preserve the authority's statement, including reported arrears or uncertainty.",
+      "properties": {
+        "document_type": {
+          "const": "tax_clearance_certificate",
+          "default": "tax_clearance_certificate",
+          "description": "Identifies a tax-authority arrears or clearance certificate, distinct from a tax return.",
+          "title": "Document type",
+          "type": "string"
+        },
+        "taxpayer_name": {
+          "description": "Taxpayer's complete name exactly as printed on the certificate.",
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Taxpayer name",
+          "type": "string"
+        },
+        "tax_identifier": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "pattern": "\\S",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Taxpayer identifier as printed, preserving leading zeros and formatting.",
+          "title": "Tax identifier"
+        },
+        "issuing_authority": {
+          "description": "Tax authority explicitly identified as issuing the certificate.",
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Issuing authority",
+          "type": "string"
+        },
+        "certificate_number": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "pattern": "\\S",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Authority-issued certificate reference exactly as printed, if present.",
+          "title": "Certificate number"
+        },
+        "issue_date": {
+          "description": "Date the tax authority issued the certificate, as YYYY-MM-DD.",
+          "format": "date",
+          "title": "Issue date",
+          "type": "string"
+        },
+        "as_of_date": {
+          "anyOf": [
+            {
+              "format": "date",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Date to which the arrears statement applies, if separately printed.",
+          "title": "Statement date"
+        },
+        "arrears_statement": {
+          "description": "Meaning explicitly stated by the authority; not_stated means no interpretable claim, not zero debt or clearance.",
+          "enum": [
+            "no_arrears",
+            "arrears_reported",
+            "not_stated"
+          ],
+          "title": "Authority's arrears statement",
+          "type": "string"
+        },
+        "statement_as_printed": {
+          "description": "Source wording supporting the authority's statement, without a Back Office decision.",
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Statement as printed",
+          "type": "string"
+        },
+        "arrears_amount": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Money"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Amount and currency explicitly printed; null is unknown, never inferred as zero from a clearance statement.",
+          "title": "Reported arrears amount"
+        }
+      },
+      "required": [
+        "taxpayer_name",
+        "issuing_authority",
+        "issue_date",
+        "arrears_statement",
+        "statement_as_printed"
+      ],
+      "title": "TaxClearanceCertificate",
+      "type": "object"
+    },
+    "draft_schema": {
+      "$defs": {
+        "MoneyDraft": {
+          "additionalProperties": false,
+          "properties": {
+            "amount": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Monetary amount in the associated currency, preserving source precision and sign.",
+              "title": "Amount"
+            },
+            "currency": {
+              "anyOf": [
+                {
+                  "pattern": "^[A-Z]{3}$",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "ISO three-letter currency code for the monetary amount.",
+              "title": "Currency"
+            }
+          },
+          "title": "MoneyDraft",
+          "type": "object"
+        }
+      },
+      "additionalProperties": false,
+      "properties": {
+        "document_type": {
+          "const": "tax_clearance_certificate",
+          "default": "tax_clearance_certificate",
+          "description": "Identifies a tax-authority arrears or clearance certificate, distinct from a tax return.",
+          "title": "Document type",
+          "type": "string"
+        },
+        "taxpayer_name": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "pattern": "\\S",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Taxpayer's complete name exactly as printed on the certificate.",
+          "title": "Taxpayer name"
+        },
+        "tax_identifier": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "pattern": "\\S",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Taxpayer identifier as printed, preserving leading zeros and formatting.",
+          "title": "Tax identifier"
+        },
+        "issuing_authority": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "pattern": "\\S",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Tax authority explicitly identified as issuing the certificate.",
+          "title": "Issuing authority"
+        },
+        "certificate_number": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "pattern": "\\S",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Authority-issued certificate reference exactly as printed, if present.",
+          "title": "Certificate number"
+        },
+        "issue_date": {
+          "anyOf": [
+            {
+              "format": "date",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Date the tax authority issued the certificate, as YYYY-MM-DD.",
+          "title": "Issue date"
+        },
+        "as_of_date": {
+          "anyOf": [
+            {
+              "format": "date",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Date to which the arrears statement applies, if separately printed.",
+          "title": "Statement date"
+        },
+        "arrears_statement": {
+          "anyOf": [
+            {
+              "enum": [
+                "no_arrears",
+                "arrears_reported",
+                "not_stated"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Meaning explicitly stated by the authority; not_stated means no interpretable claim, not zero debt or clearance.",
+          "title": "Authority's arrears statement"
+        },
+        "statement_as_printed": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "pattern": "\\S",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Source wording supporting the authority's statement, without a Back Office decision.",
+          "title": "Statement as printed"
+        },
+        "arrears_amount": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/MoneyDraft"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Amount and currency explicitly printed; null is unknown, never inferred as zero from a clearance statement.",
+          "title": "Reported arrears amount"
+        }
+      },
+      "title": "TaxClearanceCertificateDraft",
+      "type": "object"
+    },
+    "content_sha256": "8a1cb91d97ed73259b328d733e0738157b3fcc32656fa89de2f6c61059f601f2"
   }
 ]

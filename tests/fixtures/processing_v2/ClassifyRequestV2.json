@@ -1,0 +1,82 @@
+{
+  "$defs": {
+    "Candidate": {
+      "additionalProperties": false,
+      "properties": {
+        "document_type": {
+          "title": "Document Type",
+          "type": "string"
+        },
+        "description": {
+          "maxLength": 2000,
+          "minLength": 1,
+          "title": "Description",
+          "type": "string"
+        }
+      },
+      "required": [
+        "document_type",
+        "description"
+      ],
+      "title": "Candidate",
+      "type": "object"
+    },
+    "ParserFile": {
+      "additionalProperties": false,
+      "properties": {
+        "filename": {
+          "maxLength": 120,
+          "minLength": 1,
+          "title": "Filename",
+          "type": "string"
+        },
+        "content_base64": {
+          "maxLength": 20971520,
+          "minLength": 1,
+          "title": "Content Base64",
+          "type": "string"
+        }
+      },
+      "required": [
+        "filename",
+        "content_base64"
+      ],
+      "title": "ParserFile",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "files": {
+      "items": {
+        "$ref": "#/$defs/ParserFile"
+      },
+      "maxItems": 1,
+      "minItems": 1,
+      "title": "Files",
+      "type": "array"
+    },
+    "document_types": {
+      "items": {
+        "$ref": "#/$defs/Candidate"
+      },
+      "maxItems": 100,
+      "minItems": 1,
+      "title": "Document Types",
+      "type": "array"
+    },
+    "contract_version": {
+      "const": 2,
+      "description": "Explicit opt-in to the evidence contract; never inferred by the provider.",
+      "title": "Contract Version",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "files",
+    "document_types",
+    "contract_version"
+  ],
+  "title": "ClassifyRequestV2",
+  "type": "object"
+}

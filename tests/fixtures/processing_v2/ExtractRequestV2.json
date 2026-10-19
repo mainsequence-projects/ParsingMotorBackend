@@ -1,0 +1,115 @@
+{
+  "$defs": {
+    "JsonValue": {},
+    "ParserFile": {
+      "additionalProperties": false,
+      "properties": {
+        "filename": {
+          "maxLength": 120,
+          "minLength": 1,
+          "title": "Filename",
+          "type": "string"
+        },
+        "content_base64": {
+          "maxLength": 20971520,
+          "minLength": 1,
+          "title": "Content Base64",
+          "type": "string"
+        }
+      },
+      "required": [
+        "filename",
+        "content_base64"
+      ],
+      "title": "ParserFile",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "files": {
+      "items": {
+        "$ref": "#/$defs/ParserFile"
+      },
+      "maxItems": 1,
+      "minItems": 1,
+      "title": "Files",
+      "type": "array"
+    },
+    "document_type": {
+      "title": "Document Type",
+      "type": "string"
+    },
+    "schema_version": {
+      "minimum": 1,
+      "title": "Schema Version",
+      "type": "integer"
+    },
+    "schema_hash": {
+      "pattern": "^[a-f0-9]{64}$",
+      "title": "Schema Hash",
+      "type": "string"
+    },
+    "canonical_schema": {
+      "additionalProperties": {
+        "$ref": "#/$defs/JsonValue"
+      },
+      "title": "Canonical Schema",
+      "type": "object"
+    },
+    "output_schema": {
+      "additionalProperties": {
+        "$ref": "#/$defs/JsonValue"
+      },
+      "title": "Output Schema",
+      "type": "object"
+    },
+    "contract_version": {
+      "const": 2,
+      "description": "Explicit evidence contract version; never inferred or silently downgraded.",
+      "title": "Contract Version",
+      "type": "integer"
+    },
+    "reader_mode": {
+      "default": "single",
+      "description": "Requested reading strategy, not a business acceptance policy.",
+      "enum": [
+        "single",
+        "independent_readers"
+      ],
+      "title": "Reader Mode",
+      "type": "string"
+    },
+    "page_selection": {
+      "anyOf": [
+        {
+          "items": {
+            "maximum": 20,
+            "minimum": 1,
+            "type": "integer"
+          },
+          "maxItems": 20,
+          "minItems": 1,
+          "type": "array"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Ordered physical pages forming one logical document in the supplied original file; null selects all pages. Original page numbers must survive extraction.",
+      "title": "Page Selection"
+    }
+  },
+  "required": [
+    "files",
+    "document_type",
+    "schema_version",
+    "schema_hash",
+    "canonical_schema",
+    "output_schema",
+    "contract_version"
+  ],
+  "title": "ExtractRequestV2",
+  "type": "object"
+}

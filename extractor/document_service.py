@@ -41,6 +41,10 @@ def _source(page: Page) -> dict:
 
 
 def discover(request: ClassifyJsonRequest) -> dict:
+    if getattr(request, "contract_version", None) == 2:
+        from .document_evidence import classify
+
+        return classify(request)
     pages = _pages(request)
     catalog = [candidate.model_dump() for candidate in request.document_types]
     allowed = {candidate.document_type for candidate in request.document_types}
@@ -77,6 +81,10 @@ def discover(request: ClassifyJsonRequest) -> dict:
 
 
 def extract_typed(request: ExtractTypedJsonRequest) -> dict:
+    if getattr(request, "contract_version", None) == 2:
+        from .document_evidence import extract
+
+        return extract(request)
     pages = _pages(request)
     # Converse supports at most 20 images. Never silently discard pages if server limits increase.
     if len(pages) > 20:

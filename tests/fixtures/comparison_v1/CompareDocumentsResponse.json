@@ -1,0 +1,278 @@
+{
+  "$defs": {
+    "CitedFact": {
+      "additionalProperties": false,
+      "properties": {
+        "pointer": {
+          "maxLength": 500,
+          "minLength": 1,
+          "title": "Pointer",
+          "type": "string"
+        },
+        "value": {
+          "$ref": "#/$defs/JsonValue"
+        },
+        "citations": {
+          "items": {
+            "$ref": "#/$defs/ComparisonCitation"
+          },
+          "maxItems": 20,
+          "minItems": 1,
+          "title": "Citations",
+          "type": "array"
+        },
+        "document_id": {
+          "maxLength": 120,
+          "minLength": 1,
+          "title": "Document Id",
+          "type": "string"
+        },
+        "revision": {
+          "minimum": 1,
+          "title": "Revision",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "pointer",
+        "value",
+        "citations",
+        "document_id",
+        "revision"
+      ],
+      "title": "CitedFact",
+      "type": "object"
+    },
+    "ComparisonCitation": {
+      "additionalProperties": false,
+      "properties": {
+        "source_id": {
+          "maxLength": 120,
+          "minLength": 1,
+          "title": "Source Id",
+          "type": "string"
+        },
+        "source_sha256": {
+          "pattern": "^[a-f0-9]{64}$",
+          "title": "Source Sha256",
+          "type": "string"
+        },
+        "page": {
+          "maximum": 20,
+          "minimum": 1,
+          "title": "Page",
+          "type": "integer"
+        },
+        "page_sha256": {
+          "pattern": "^[a-f0-9]{64}$",
+          "title": "Page Sha256",
+          "type": "string"
+        },
+        "bounding_box": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "number"
+              },
+              "maxItems": 4,
+              "minItems": 4,
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Bounding Box"
+        },
+        "rotation_degrees": {
+          "default": 0,
+          "enum": [
+            0,
+            90,
+            180,
+            270
+          ],
+          "title": "Rotation Degrees",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "source_id",
+        "source_sha256",
+        "page",
+        "page_sha256"
+      ],
+      "title": "ComparisonCitation",
+      "type": "object"
+    },
+    "ComparisonObservation": {
+      "additionalProperties": false,
+      "properties": {
+        "key": {
+          "maxLength": 120,
+          "minLength": 1,
+          "title": "Key",
+          "type": "string"
+        },
+        "comparability": {
+          "enum": [
+            "comparable",
+            "not_comparable",
+            "uncertain"
+          ],
+          "title": "Comparability",
+          "type": "string"
+        },
+        "relationship": {
+          "enum": [
+            "equivalent",
+            "different",
+            "uncertain"
+          ],
+          "title": "Relationship",
+          "type": "string"
+        },
+        "explanation": {
+          "maxLength": 2000,
+          "minLength": 1,
+          "title": "Explanation",
+          "type": "string"
+        },
+        "left": {
+          "$ref": "#/$defs/CitedFact"
+        },
+        "right": {
+          "$ref": "#/$defs/CitedFact"
+        },
+        "context": {
+          "items": {
+            "$ref": "#/$defs/CitedFact"
+          },
+          "maxItems": 20,
+          "title": "Context",
+          "type": "array"
+        }
+      },
+      "required": [
+        "key",
+        "comparability",
+        "relationship",
+        "explanation",
+        "left",
+        "right"
+      ],
+      "title": "ComparisonObservation",
+      "type": "object"
+    },
+    "JsonValue": {},
+    "ProviderUsage": {
+      "additionalProperties": false,
+      "properties": {
+        "model": {
+          "description": "Actual provider/model version used for this operation.",
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Model",
+          "type": "string"
+        },
+        "input_tokens": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Provider-reported input tokens; null when unavailable.",
+          "title": "Input Tokens"
+        },
+        "output_tokens": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Provider-reported output tokens; null when unavailable.",
+          "title": "Output Tokens"
+        },
+        "duration_ms": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Measured provider duration in milliseconds; null when unavailable.",
+          "title": "Duration Ms"
+        }
+      },
+      "required": [
+        "model"
+      ],
+      "title": "ProviderUsage",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "contract_version": {
+      "const": 1,
+      "title": "Contract Version",
+      "type": "integer"
+    },
+    "request_sha256": {
+      "pattern": "^[a-f0-9]{64}$",
+      "title": "Request Sha256",
+      "type": "string"
+    },
+    "observations": {
+      "items": {
+        "$ref": "#/$defs/ComparisonObservation"
+      },
+      "maxItems": 50,
+      "minItems": 1,
+      "title": "Observations",
+      "type": "array"
+    },
+    "model": {
+      "maxLength": 200,
+      "minLength": 1,
+      "title": "Model",
+      "type": "string"
+    },
+    "cache_hit": {
+      "title": "Cache Hit",
+      "type": "boolean"
+    },
+    "usage": {
+      "items": {
+        "$ref": "#/$defs/ProviderUsage"
+      },
+      "maxItems": 10,
+      "title": "Usage",
+      "type": "array"
+    }
+  },
+  "required": [
+    "contract_version",
+    "request_sha256",
+    "observations",
+    "model",
+    "cache_hit"
+  ],
+  "title": "CompareDocumentsResponse",
+  "type": "object"
+}

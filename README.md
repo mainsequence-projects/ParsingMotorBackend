@@ -42,7 +42,8 @@ python -m extractor extract-typed extract-request.json -o extraction.json
 ```
 
 `POST /classify_json` uses a caller-supplied type catalog. `POST /extract_typed_json` uses
-an explicit type and complete canonical/draft JSON Schemas. See [API documentation](docs/API.md) and [OpenAPI](docs/openapi.json).
+an explicit type and complete canonical/draft JSON Schemas. Both support the versioned
+evidence contract. See [API documentation](docs/API.md) and [OpenAPI](docs/openapi.json).
 
 The old loan pipeline, policy files, review/audit/protocol routes and loan demo have been
 removed. `/extract` and `/extract_json` are also removed: callers must use the two explicit
@@ -54,3 +55,8 @@ Their loan workflow and evaluation claims do not describe the current extraction
 Run offline checks with `python -m pytest -q`. Regenerate the API contract after API changes
 with `python scripts/export_openapi.py`. Provider calls require the configured AWS runtime;
 offline tests do not establish live provider availability.
+
+`POST /compare_documents_json` adds generic cited comparison observations over extracted
+facts. The parser receives no business tolerances or decision rules. Back Office applies
+versioned policies using the same engine for loans and new accounts; see
+[comparison API](docs/API.md#post-compare_documents_json--cited-observations-across-documents).

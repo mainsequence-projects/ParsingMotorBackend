@@ -1,0 +1,228 @@
+{
+  "$defs": {
+    "PageObservation": {
+      "additionalProperties": false,
+      "properties": {
+        "source_file": {
+          "title": "Source File",
+          "type": "string"
+        },
+        "page": {
+          "maximum": 20,
+          "minimum": 1,
+          "title": "Page",
+          "type": "integer"
+        },
+        "source_sha256": {
+          "pattern": "^[a-f0-9]{64}$",
+          "title": "Source Sha256",
+          "type": "string"
+        },
+        "page_sha256": {
+          "pattern": "^[a-f0-9]{64}$",
+          "title": "Page Sha256",
+          "type": "string"
+        },
+        "document_type": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Document Type"
+        },
+        "confidence": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Confidence",
+          "type": "number"
+        },
+        "reason": {
+          "maxLength": 2000,
+          "title": "Reason",
+          "type": "string"
+        },
+        "model": {
+          "title": "Model",
+          "type": "string"
+        },
+        "cache_hit": {
+          "title": "Cache Hit",
+          "type": "boolean"
+        },
+        "printed_page_number": {
+          "anyOf": [
+            {
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Page number printed on the document; distinct from physical source page.",
+          "title": "Printed Page Number"
+        },
+        "printed_page_count": {
+          "anyOf": [
+            {
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Total page count printed on the source, not an assertion that all pages were received.",
+          "title": "Printed Page Count"
+        },
+        "rotation_degrees": {
+          "default": 0,
+          "description": "Clockwise rotation applied to the source page to obtain the upright evidence coordinate space.",
+          "enum": [
+            0,
+            90,
+            180,
+            270
+          ],
+          "title": "Rotation Degrees",
+          "type": "integer"
+        },
+        "group_hint": {
+          "anyOf": [
+            {
+              "maxLength": 200,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Source-local grouping observation; Back Office decides document membership and ownership.",
+          "title": "Group Hint"
+        },
+        "boundary": {
+          "default": "unknown",
+          "description": "Observed document boundary; unknown requires grouping resolution by Back Office.",
+          "enum": [
+            "starts_document",
+            "continues_document",
+            "unknown"
+          ],
+          "title": "Boundary",
+          "type": "string"
+        }
+      },
+      "required": [
+        "source_file",
+        "page",
+        "source_sha256",
+        "page_sha256",
+        "document_type",
+        "confidence",
+        "reason",
+        "model",
+        "cache_hit"
+      ],
+      "title": "PageObservation",
+      "type": "object"
+    },
+    "ProviderUsage": {
+      "additionalProperties": false,
+      "properties": {
+        "model": {
+          "description": "Actual provider/model version used for this operation.",
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Model",
+          "type": "string"
+        },
+        "input_tokens": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Provider-reported input tokens; null when unavailable.",
+          "title": "Input Tokens"
+        },
+        "output_tokens": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Provider-reported output tokens; null when unavailable.",
+          "title": "Output Tokens"
+        },
+        "duration_ms": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Measured provider duration in milliseconds; null when unavailable.",
+          "title": "Duration Ms"
+        }
+      },
+      "required": [
+        "model"
+      ],
+      "title": "ProviderUsage",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "contract_version": {
+      "const": 2,
+      "title": "Contract Version",
+      "type": "integer"
+    },
+    "pages": {
+      "items": {
+        "$ref": "#/$defs/PageObservation"
+      },
+      "maxItems": 20,
+      "minItems": 1,
+      "title": "Pages",
+      "type": "array"
+    },
+    "usage": {
+      "items": {
+        "$ref": "#/$defs/ProviderUsage"
+      },
+      "maxItems": 100,
+      "title": "Usage",
+      "type": "array"
+    }
+  },
+  "required": [
+    "contract_version",
+    "pages"
+  ],
+  "title": "ClassificationResponseV2",
+  "type": "object"
+}

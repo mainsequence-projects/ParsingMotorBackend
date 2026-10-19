@@ -11,9 +11,11 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse, RedirectResponse
 from starlette.concurrency import run_in_threadpool
 
-from . import __version__, document_service
+from . import __version__, document_comparison, document_service
 from . import api_models as M
 from . import document_models as D
+from . import evidence_contracts as E
+from .comparison_contracts import CompareDocumentsRequest, CompareDocumentsResponse
 from .cost import BudgetExceeded
 from .ingest import InputError
 
@@ -117,18 +119,25 @@ async def _run_document_operation(operation, body):
         raise HTTPException(502, "document processing failed; invalid or unavailable upstream result") from exc
 
 
-@app.post("/classify_json", response_model=D.ClassifyJsonResponse, responses=ERR,
+@app.post("/classify_json", response_model=E.ClassificationResponseV2 | D.ClassifyJsonResponse, responses=ERR,
           tags=["documents"], dependencies=[Depends(_check_key)])
-async def classify_json(body: D.ClassifyJsonRequest):
+async def classify_json(body: E.ClassifyRequestV2 | D.ClassifyJsonRequest):
     """Discover document types per page from the supplied catalog; no attribute extraction."""
     return await _run_document_operation(document_service.discover, body)
 
 
-@app.post("/extract_typed_json", response_model=D.ExtractTypedJsonResponse, responses=ERR,
+@app.post("/extract_typed_json", response_model=E.ExtractionResponseV2 | D.ExtractTypedJsonResponse, responses=ERR,
           tags=["documents"], dependencies=[Depends(_check_key)])
-async def extract_typed_json(body: D.ExtractTypedJsonRequest):
+async def extract_typed_json(body: E.ExtractRequestV2 | D.ExtractTypedJsonRequest):
     """Extract one logical document using an explicit type and complete canonical/draft schemas."""
     return await _run_document_operation(document_service.extract_typed, body)
+
+
+@app.post("/compare_documents_json", response_model=CompareDocumentsResponse, responses=ERR,
+          tags=["documents"], dependencies=[Depends(_check_key)])
+async def compare_documents_json(body: CompareDocumentsRequest):
+    """Compare cited extracted facts; no business rules, tolerances or decisions."""
+    return await _run_document_operation(document_comparison.compare, body)
 
 
 @app.get("/", include_in_schema=False)

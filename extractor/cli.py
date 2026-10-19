@@ -6,10 +6,17 @@ from pathlib import Path
 
 from . import document_models as D
 from . import document_service
+from . import evidence_contracts as E
 
 
 def parse_request(operation, payload):
-    model = {"classify": D.ClassifyJsonRequest, "extract-typed": D.ExtractTypedJsonRequest}[operation]
+    v2 = payload.get("contract_version") == 2 if isinstance(payload, dict) else False
+    model = {
+        ("classify", False): D.ClassifyJsonRequest,
+        ("classify", True): E.ClassifyRequestV2,
+        ("extract-typed", False): D.ExtractTypedJsonRequest,
+        ("extract-typed", True): E.ExtractRequestV2,
+    }[operation, v2]
     return model.model_validate(payload)
 
 

@@ -1,0 +1,410 @@
+{
+  "$defs": {
+    "EvidenceLocation": {
+      "additionalProperties": false,
+      "properties": {
+        "source_file": {
+          "description": "Filename in this response's immutable source-page manifest.",
+          "minLength": 1,
+          "title": "Source File",
+          "type": "string"
+        },
+        "page": {
+          "description": "Physical page number in the original source, never a printed or regrouped page number.",
+          "maximum": 20,
+          "minimum": 1,
+          "title": "Page",
+          "type": "integer"
+        },
+        "bounding_box": {
+          "anyOf": [
+            {
+              "items": {
+                "maximum": 1,
+                "minimum": 0,
+                "type": "number"
+              },
+              "maxItems": 4,
+              "minItems": 4,
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Normalized [left, top, right, bottom] on the rendered page after the recorded rotation; null means page-level evidence only.",
+          "title": "Bounding Box"
+        }
+      },
+      "required": [
+        "source_file",
+        "page"
+      ],
+      "title": "EvidenceLocation",
+      "type": "object"
+    },
+    "ExtractionPage": {
+      "additionalProperties": false,
+      "properties": {
+        "source_file": {
+          "title": "Source File",
+          "type": "string"
+        },
+        "page": {
+          "maximum": 20,
+          "minimum": 1,
+          "title": "Page",
+          "type": "integer"
+        },
+        "source_sha256": {
+          "pattern": "^[a-f0-9]{64}$",
+          "title": "Source Sha256",
+          "type": "string"
+        },
+        "page_sha256": {
+          "pattern": "^[a-f0-9]{64}$",
+          "title": "Page Sha256",
+          "type": "string"
+        },
+        "rotation_degrees": {
+          "default": 0,
+          "description": "Clockwise rotation used for the upright evidence coordinates.",
+          "enum": [
+            0,
+            90,
+            180,
+            270
+          ],
+          "title": "Rotation Degrees",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "source_file",
+        "page",
+        "source_sha256",
+        "page_sha256"
+      ],
+      "title": "ExtractionPage",
+      "type": "object"
+    },
+    "FieldEvidence": {
+      "additionalProperties": false,
+      "properties": {
+        "pointer": {
+          "description": "RFC 6901 JSON Pointer into attributes, including array indices; bound to this extraction revision.",
+          "maxLength": 500,
+          "minLength": 1,
+          "title": "Pointer",
+          "type": "string"
+        },
+        "candidates": {
+          "items": {
+            "$ref": "#/$defs/ReaderCandidate"
+          },
+          "maxItems": 8,
+          "minItems": 1,
+          "title": "Candidates",
+          "type": "array"
+        },
+        "selected_reader_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Reader supplying the draft attribute; null when unresolved. Selection is not acceptance.",
+          "title": "Selected Reader Id"
+        },
+        "agreement": {
+          "description": "Exact agreement of normalized candidates within this document; no business tolerance or review status.",
+          "enum": [
+            "single_reader",
+            "agree",
+            "disagree",
+            "missing"
+          ],
+          "title": "Agreement",
+          "type": "string"
+        }
+      },
+      "required": [
+        "pointer",
+        "candidates",
+        "agreement"
+      ],
+      "title": "FieldEvidence",
+      "type": "object"
+    },
+    "JsonValue": {},
+    "ProviderUsage": {
+      "additionalProperties": false,
+      "properties": {
+        "model": {
+          "description": "Actual provider/model version used for this operation.",
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Model",
+          "type": "string"
+        },
+        "input_tokens": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Provider-reported input tokens; null when unavailable.",
+          "title": "Input Tokens"
+        },
+        "output_tokens": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Provider-reported output tokens; null when unavailable.",
+          "title": "Output Tokens"
+        },
+        "duration_ms": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Measured provider duration in milliseconds; null when unavailable.",
+          "title": "Duration Ms"
+        }
+      },
+      "required": [
+        "model"
+      ],
+      "title": "ProviderUsage",
+      "type": "object"
+    },
+    "ReaderCandidate": {
+      "additionalProperties": false,
+      "properties": {
+        "reader_id": {
+          "description": "Unique reader identifier within this field, such as textract or vision.",
+          "maxLength": 120,
+          "minLength": 1,
+          "title": "Reader Id",
+          "type": "string"
+        },
+        "model": {
+          "description": "Actual reader model/version; not a reviewer identity.",
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Model",
+          "type": "string"
+        },
+        "value": {
+          "$ref": "#/$defs/JsonValue",
+          "description": "Reader's normalized extraction candidate; null means unreadable or absent."
+        },
+        "raw_text": {
+          "anyOf": [
+            {
+              "maxLength": 10000,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Reader's source transcription when available; no business interpretation.",
+          "title": "Raw Text"
+        },
+        "confidence": {
+          "anyOf": [
+            {
+              "maximum": 1,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Provider-reported extraction confidence for this reading; null if unavailable, never a classification score.",
+          "title": "Confidence"
+        },
+        "locations": {
+          "description": "Source locations supporting this reader's candidate.",
+          "items": {
+            "$ref": "#/$defs/EvidenceLocation"
+          },
+          "maxItems": 100,
+          "title": "Locations",
+          "type": "array"
+        }
+      },
+      "required": [
+        "reader_id",
+        "model",
+        "value"
+      ],
+      "title": "ReaderCandidate",
+      "type": "object"
+    },
+    "SchemaIssue": {
+      "additionalProperties": false,
+      "properties": {
+        "path": {
+          "items": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "integer"
+              }
+            ]
+          },
+          "title": "Path",
+          "type": "array"
+        },
+        "keyword": {
+          "title": "Keyword",
+          "type": "string"
+        }
+      },
+      "required": [
+        "path",
+        "keyword"
+      ],
+      "title": "SchemaIssue",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "document_type": {
+      "title": "Document Type",
+      "type": "string"
+    },
+    "schema_version": {
+      "minimum": 1,
+      "title": "Schema Version",
+      "type": "integer"
+    },
+    "schema_hash": {
+      "pattern": "^[a-f0-9]{64}$",
+      "title": "Schema Hash",
+      "type": "string"
+    },
+    "status": {
+      "const": "draft",
+      "title": "Status",
+      "type": "string"
+    },
+    "attributes": {
+      "additionalProperties": {
+        "$ref": "#/$defs/JsonValue"
+      },
+      "title": "Attributes",
+      "type": "object"
+    },
+    "canonical_schema_valid": {
+      "title": "Canonical Schema Valid",
+      "type": "boolean"
+    },
+    "canonical_schema_errors": {
+      "items": {
+        "$ref": "#/$defs/SchemaIssue"
+      },
+      "title": "Canonical Schema Errors",
+      "type": "array"
+    },
+    "pages": {
+      "items": {
+        "$ref": "#/$defs/ExtractionPage"
+      },
+      "maxItems": 20,
+      "minItems": 1,
+      "title": "Pages",
+      "type": "array"
+    },
+    "model": {
+      "title": "Model",
+      "type": "string"
+    },
+    "cache_hit": {
+      "title": "Cache Hit",
+      "type": "boolean"
+    },
+    "contract_version": {
+      "const": 2,
+      "title": "Contract Version",
+      "type": "integer"
+    },
+    "normalization_version": {
+      "description": "Version of extraction normalization, independent of any Back Office business policy.",
+      "maxLength": 120,
+      "minLength": 1,
+      "title": "Normalization Version",
+      "type": "string"
+    },
+    "field_evidence": {
+      "items": {
+        "$ref": "#/$defs/FieldEvidence"
+      },
+      "maxItems": 5000,
+      "title": "Field Evidence",
+      "type": "array"
+    },
+    "evidence_complete": {
+      "description": "True only when every non-null attribute leaf except document_type has field evidence; not extraction accuracy or document completeness.",
+      "title": "Evidence Complete",
+      "type": "boolean"
+    },
+    "usage": {
+      "items": {
+        "$ref": "#/$defs/ProviderUsage"
+      },
+      "maxItems": 100,
+      "title": "Usage",
+      "type": "array"
+    }
+  },
+  "required": [
+    "document_type",
+    "schema_version",
+    "schema_hash",
+    "status",
+    "attributes",
+    "canonical_schema_valid",
+    "canonical_schema_errors",
+    "pages",
+    "model",
+    "cache_hit",
+    "contract_version",
+    "normalization_version",
+    "field_evidence",
+    "evidence_complete"
+  ],
+  "title": "ExtractionResponseV2",
+  "type": "object"
+}
