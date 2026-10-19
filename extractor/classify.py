@@ -45,10 +45,22 @@ def _int_or_none(v):
         return None
 
 
+def _conf(v) -> float:
+    """LLM may answer "high" or 95: never crash the run, never exceed [0, 1]."""
+    try:
+        f = float(v)
+    except (TypeError, ValueError):
+        return 0.0
+    f = f / 100 if 1 < f <= 100 else f
+    return min(1.0, max(0.0, f))
+
+
 def _classify_one(page: Page) -> dict:
     data, model, meta = converse_json(PROMPT, images=[page.png], system=SYSTEM, max_tokens=300,
                                       model_id=BEDROCK_CLASSIFY_MODEL,
                                       fallbacks=BEDROCK_CLASSIFY_FALLBACKS, return_meta=True)
+    if not isinstance(data, dict):
+        data = {}
     doc_type = data.get("doc_type", "other")
     if doc_type not in DOC_TYPES:
         doc_type = "other"
@@ -64,7 +76,7 @@ def _classify_one(page: Page) -> dict:
         "source_file": page.source_file,
         "page": page.page,
         "doc_type": doc_type,
-        "confidence": float(data.get("confidence") or 0.0),
+        "confidence": _conf(data.get("confidence")),
         "reason": data.get("reason") or "",
         "page_number": pn,
         "page_count": pc,

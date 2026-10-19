@@ -38,6 +38,7 @@ REQUIRED_OUTCOMES = {
 # Rules added after v0.2 are optional so audit runs that embed older rules still re-evaluate.
 OPTIONAL_OUTCOMES = {
     "CONTRACT_SINGLE": {"single", "multiple"},
+    "MODEL_PRIMARY": {"primary", "fallback"},
 }
 REQUIRED_PARAMS = {
     "FIELD_RECONCILE": {"pass_conf", "amount_ocr_wins_min_conf", "ocr_preferred_min_conf",

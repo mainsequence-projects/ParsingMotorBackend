@@ -203,6 +203,19 @@ rules:
       single: passed
       multiple: manual_review
 
+  - id: MODEL_PRIMARY
+    scope: package
+    check: primary_models_used
+    description:
+      es: "Se usaron los modelos previstos; si Bedrock cayó a un modelo de respaldo, se avisa (no se oculta)."
+      en: "The intended models were used; a fallback model (Bedrock error/throttling) is flagged, never hidden."
+    params:
+      classification: eu.anthropic.claude-haiku-4-5-20251001-v1:0
+      extraction: eu.anthropic.claude-sonnet-4-5-20250929-v1:0
+    severity:
+      primary: passed
+      fallback: warning
+
   - id: PAGE_CONTINUITY
     scope: package
     check: pages_complete

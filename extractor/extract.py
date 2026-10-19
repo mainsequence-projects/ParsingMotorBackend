@@ -77,6 +77,8 @@ def _bedrock_for_doc(doc: dict):
     data, model, meta = converse_json(prompt, images=[p["png"] for p in pages], system=SYSTEM,
                                       max_tokens=1800, return_meta=True)
     out = {}
+    if not isinstance(data, dict):
+        data = {}
     for k in fields:
         v = data.get(k)
         img = None

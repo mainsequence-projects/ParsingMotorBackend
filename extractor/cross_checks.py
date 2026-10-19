@@ -298,3 +298,23 @@ def draft_client_message(missing, gaps, checks, client_name) -> str | None:
             lines.append("- Your ID card appears to be expired. Please send a valid ID.")
     lines += ["", "Kind regards,", "Komerční banka – Credit Operations"]
     return "\n".join(lines)
+
+
+def model_checks(docs: list[dict], raw_docs: list[dict], rules: Rules) -> list[dict]:
+    """Flag any page/document that was not read by the configured primary model."""
+    if "MODEL_PRIMARY" not in rules.rules:
+        return []
+    want = rules.params("MODEL_PRIMARY")
+    used = []
+    for rd in raw_docs:
+        for pg in rd.get("pages") or []:
+            if pg.get("model") and pg["model"] != want.get("classification"):
+                used.append({"doc_id": rd["doc_id"], "stage": "classification", "page": pg.get("page"),
+                             "model": pg["model"]})
+        models = {v.get("model") for v in (rd["raw"].get("bedrock") or {}).values()
+                  if isinstance(v, dict) and v.get("model")}
+        for m in sorted(models - {want.get("extraction")}):
+            used.append({"doc_id": rd["doc_id"], "stage": "extraction", "model": m})
+    return [rules.check("MODEL_PRIMARY", "fallback" if used else "primary",
+                        detail=f"fallback models used: {used}" if used else "primary models only",
+                        evidence=used)]

@@ -17,7 +17,7 @@ from .rules_engine import Rules, load_rules
 from .splitter import group_documents
 
 _PAGE_KEYS = ("source_file", "page", "page_number", "page_count", "doc_key", "rotation",
-              "confidence", "page_sha256", "sha256", "source_sha256")
+              "confidence", "page_sha256", "sha256", "source_sha256", "model")
 
 
 def _raw_doc(group: dict) -> dict:

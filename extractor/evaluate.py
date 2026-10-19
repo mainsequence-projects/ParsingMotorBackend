@@ -8,7 +8,7 @@ import copy
 
 from .config import SCHEMAS
 from .cross_checks import (
-    completeness, completeness_checks, document_checks, draft_client_message, package_checks,
+    completeness, completeness_checks, document_checks, draft_client_message, model_checks, package_checks,
     page_gaps, recommended_next_step,
 )
 from .normalize import normalize
@@ -81,6 +81,7 @@ def evaluate_package(raw_docs: list[dict], rules: Rules, *, field_overrides=(), 
     gaps = page_gaps(docs)
     cc, extra = completeness_checks(docs, rules, required, missing, source, gaps)
     checks.extend(cc)
+    checks.extend(model_checks(docs, raw_docs, rules))
     apply_check_overrides(checks, check_overrides)
     missing = list(missing) + [r for r in requested_documents if r not in missing]
 
