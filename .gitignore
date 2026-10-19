@@ -5,3 +5,7 @@ venv/
 *.egg-info/
 .pytest_cache/
 .DS_Store
+.deploy_token
+deploy/build/
+deploy/package.zip
+deploy/*.zip
