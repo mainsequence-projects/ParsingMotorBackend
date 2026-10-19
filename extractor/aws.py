@@ -51,10 +51,11 @@ def textract_queries(png: bytes, queries: dict[str, str]):
     hit = cache.get(k)
     if hit is not None:
         costmeter.record_cache_hit("textract")
-        return hit, {"cache_hit": True, "called": False, "image_sha256": sha256(png)}
+        answers, lines = (hit["answers"], hit.get("lines")) if hit.get("v") == 2 else (hit, None)
+        return answers, {"cache_hit": True, "called": False, "image_sha256": sha256(png), "lines": lines}
     pages_billed = (len(items) + 14) // 15
     costmeter.precheck(costmeter.estimate_textract(pages_billed))
-    out = {}
+    out, lines = {}, None
     for i in range(0, len(items), 15):
         chunk = items[i:i + 15]
         r = _client("textract").analyze_document(
@@ -62,6 +63,9 @@ def textract_queries(png: bytes, queries: dict[str, str]):
             QueriesConfig={"Queries": [{"Text": q, "Alias": a} for a, q in chunk]})
         costmeter.record_textract_page(1, note=f"queries={len(chunk)}")
         blocks = {b["Id"]: b for b in r["Blocks"]}
+        if lines is None:   # same page for every chunk: keep the OCR lines once (reading order)
+            lines = [{"text": b.get("Text", ""), "confidence": round(b.get("Confidence", 0) / 100, 3)}
+                     for b in r["Blocks"] if b["BlockType"] == "LINE"]
         for b in r["Blocks"]:
             if b["BlockType"] != "QUERY":
                 continue
@@ -75,8 +79,8 @@ def textract_queries(png: bytes, queries: dict[str, str]):
                     if alias not in out or conf > out[alias]["confidence"]:
                         out[alias] = {"value": a.get("Text"), "confidence": round(conf, 3),
                                       "bbox": a.get("Geometry", {}).get("BoundingBox")}
-    cache.put(k, out)
-    return out, {"cache_hit": False, "called": True, "image_sha256": sha256(png)}
+    cache.put(k, {"v": 2, "answers": out, "lines": lines})
+    return out, {"cache_hit": False, "called": True, "image_sha256": sha256(png), "lines": lines}
 
 
 def _parse_json(text: str):

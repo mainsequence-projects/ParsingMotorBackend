@@ -186,8 +186,10 @@ def completeness(docs: list[dict], rules: Rules) -> tuple[list[str], list[str], 
     for t in reversed(rules.params("COMPLETENESS").get("always_required") or []):
         if t not in required:
             required.insert(0, t)
+    from .config import DOC_TYPES
     present = {d["doc_type"] for d in docs}
-    return required, [c for c in required if c not in present], source
+    # unknown types are reported by the COMPLETENESS check, never sent to the client as-is
+    return required, [c for c in required if c not in present and c in DOC_TYPES], source
 
 
 def page_gaps(docs: list[dict]) -> list[dict]:
@@ -206,8 +208,16 @@ def page_gaps(docs: list[dict]) -> list[dict]:
 
 
 def completeness_checks(docs, rules, required, missing, source, gaps):
-    checks = [rules.check("COMPLETENESS", "incomplete" if missing else "complete",
-                          detail=f"required({source})={required} missing={missing}")]
+    from .config import DOC_TYPES
+    unknown = [c for c in required if c not in DOC_TYPES]
+    sev = rules.rule("COMPLETENESS")["severity"]
+    if unknown and "unrecognised_type" in sev:
+        outcome = "unrecognised_type"
+    else:
+        outcome = "incomplete" if missing else "complete"
+    checks = [rules.check("COMPLETENESS", outcome,
+                          detail=f"required({source})={required} missing={missing}"
+                                 + (f" unrecognised={unknown}" if unknown else ""))]
     contracts = [d for d in docs if d["doc_type"] == "contract"]
     if "CONTRACT_SINGLE" in rules.rules and len(contracts) > 1:   # optional: absent in v0.2 audit rules
         checks.append(rules.check(

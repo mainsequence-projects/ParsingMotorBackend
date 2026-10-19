@@ -16,7 +16,7 @@ doc_types:
       contract_date: {type: date, query: "What is the contract date (date of signature)?"}
       required_documents:
         type: doc_list
-        textract: false
+        textract: lines   # 2º lector determinista: líneas OCR + sinónimos de rules.yaml (COMPLETENESS)
         description: >-
           List of documents the client must submit according to the contract, mapped to
           codes: id_card, bank_statement, payslip, proof_of_address

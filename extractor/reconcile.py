@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from .config import SCHEMAS
+from .doclist import parse_required_documents
 from .normalize import normalize, values_agree
 from .rules_engine import Rules
 
@@ -19,7 +20,11 @@ def reconcile_fields(doc_type: str, textract: dict, bedrock: dict, rules: Rules)
     out = {}
     for name, meta in fields_meta.items():
         ftype = meta.get("type", "text")
-        t = textract.get(name) or {}
+        if meta.get("textract") == "lines":   # deterministic list parser over raw OCR lines
+            t = parse_required_documents(textract.get("_lines"),
+                                         rules.params("COMPLETENESS").get("list_parser")) or {}
+        else:
+            t = textract.get(name) or {}
         b = bedrock.get(name) or {}
         t_raw, b_raw = t.get("value"), b.get("value")
         t_norm, b_norm = normalize(ftype, t_raw), normalize(ftype, b_raw)

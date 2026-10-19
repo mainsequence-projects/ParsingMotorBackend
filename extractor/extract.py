@@ -24,16 +24,23 @@ def _textract_for_doc(doc: dict):
     queries = {k: f["query"] for k, f in fields.items() if f.get("textract", True) and f.get("query")}
     if not queries:
         return {}, []
-    best, calls = {}, []
+    keep_lines = any(f.get("textract") == "lines" for f in fields.values())
+    best, calls, lines_by_page = {}, [], {}
     with ThreadPoolExecutor(max_workers=min(MAX_WORKERS, len(doc["pages"]))) as pool:
         futs = {pool.submit(textract_queries, p["png"], queries): p["page"] for p in doc["pages"]}
         for fut in as_completed(futs):
             page = futs[fut]
             answers, meta = fut.result()
+            lines_by_page[page] = meta.pop("lines", None)
             calls.append({"page": page, **meta})
             for alias, ans in answers.items():
                 if alias not in best or ans["confidence"] > best[alias]["confidence"]:
                     best[alias] = {**ans, "page": page}
+    if keep_lines:
+        # Raw OCR lines in document order: input for the deterministic list parser (rules layer).
+        order = [p["page"] for p in doc["pages"]]
+        if all(lines_by_page.get(pg) is not None for pg in order):
+            best["_lines"] = [{**ln, "page": pg} for pg in order for ln in lines_by_page[pg]]
     return best, sorted(calls, key=lambda c: c["page"])
 
 
