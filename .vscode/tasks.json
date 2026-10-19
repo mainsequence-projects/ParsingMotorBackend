@@ -1,0 +1,33 @@
+{
+  "version": "0.0.1",
+  "tasks": [
+      {
+        "label": "Create .venv (matching pyproject)",
+        "type": "shell",
+        "command": "python3.13 -m venv .venv",
+        "problemMatcher": []
+      },
+      {
+        "label": "Install uv",
+        "type": "shell",
+        "command": "${workspaceFolder}/.venv/bin/python -m pip install uv",
+        "problemMatcher": []
+      },
+      {
+        "label": "Install project (using uv)",
+        "type": "shell",
+        "command": "${workspaceFolder}/.venv/bin/uv pip install -e ${workspaceFolder}",
+        "problemMatcher": []
+      },
+      {
+        "label": "Setup environment",
+        "dependsOn": [
+          "Create .venv (matching pyproject)",
+          "Install uv",
+          "Install project (using uv)"
+        ],
+        "dependsOrder": "sequence",
+        "problemMatcher": []
+      }
+  ]
+}

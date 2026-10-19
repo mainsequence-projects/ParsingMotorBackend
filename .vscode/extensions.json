@@ -1,0 +1,11 @@
+{
+  // Recommended extensions for Python development in this workspace.
+  // Marketplace entry for MainSequence: https://marketplace.visualstudio.com/items?itemName=MainSequenceGmbH.vscode-mainsequence
+  "recommendations": [
+    "ms-python.python",
+    "ms-python.vscode-pylance",
+
+    "MainSequenceGmbH.vscode-mainsequence"
+  ],
+  "unwantedRecommendations": []
+}
