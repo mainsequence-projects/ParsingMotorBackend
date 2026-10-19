@@ -1,0 +1,197 @@
+{
+  "package_id": "10_photo_id_tax_arrears",
+  "description": {
+    "person": 9,
+    "layout": "B",
+    "required": [
+      "id_card",
+      "bank_statement",
+      "payslip",
+      "proof_of_address",
+      "employer_confirmation",
+      "tax_or_debt_certificate"
+    ],
+    "photo_id": true,
+    "tax_status": "Daňový subjekt má u správce daně evidován daňový nedoplatek ve výši 18 450 Kč.",
+    "next": "manual_review_discrepancy",
+    "flags": [
+      "no_tax_arrears"
+    ]
+  },
+  "person": {
+    "first_name": "Jiří",
+    "last_name": "Marek",
+    "birth_number": "8108164339"
+  },
+  "layouts": {
+    "contract": "B",
+    "id_card": "B",
+    "bank_statement": "B",
+    "payslip": "B",
+    "proof_of_address": "B",
+    "employer_confirmation": "C",
+    "tax_or_debt_certificate": "B"
+  },
+  "inputs": [
+    "package.pdf",
+    "id_photo.jpg"
+  ],
+  "required_documents": [
+    "contract",
+    "id_card",
+    "bank_statement",
+    "payslip",
+    "proof_of_address",
+    "employer_confirmation",
+    "tax_or_debt_certificate"
+  ],
+  "expected_docs": [
+    "contract",
+    "id_card",
+    "bank_statement",
+    "payslip",
+    "proof_of_address",
+    "employer_confirmation",
+    "tax_or_debt_certificate"
+  ],
+  "expected_page_types": [
+    "contract",
+    "bank_statement",
+    "bank_statement",
+    "payslip",
+    "proof_of_address",
+    "employer_confirmation",
+    "tax_or_debt_certificate",
+    "id_card"
+  ],
+  "expected_documents": [
+    {
+      "doc_type": "contract",
+      "pages": [
+        1
+      ],
+      "source_file": "package.pdf"
+    },
+    {
+      "doc_type": "bank_statement",
+      "pages": [
+        2,
+        3
+      ],
+      "source_file": "package.pdf"
+    },
+    {
+      "doc_type": "payslip",
+      "pages": [
+        4
+      ],
+      "source_file": "package.pdf"
+    },
+    {
+      "doc_type": "proof_of_address",
+      "pages": [
+        5
+      ],
+      "source_file": "package.pdf"
+    },
+    {
+      "doc_type": "employer_confirmation",
+      "pages": [
+        6
+      ],
+      "source_file": "package.pdf"
+    },
+    {
+      "doc_type": "tax_or_debt_certificate",
+      "pages": [
+        7
+      ],
+      "source_file": "package.pdf"
+    },
+    {
+      "doc_type": "id_card",
+      "pages": [
+        1
+      ],
+      "source_file": "id_photo.jpg"
+    }
+  ],
+  "expected_fields": {
+    "contract": {
+      "contract_number": "KB-2026-10754",
+      "first_name": "Jiří",
+      "last_name": "Marek",
+      "birth_date": "1981-08-16",
+      "birth_number": "8108164339",
+      "address": "Komenského 31, 586 01 Jihlava",
+      "loan_amount": 750000,
+      "declared_monthly_income": 58700,
+      "contract_date": "2026-10-10",
+      "required_documents": [
+        "bank_statement",
+        "employer_confirmation",
+        "id_card",
+        "payslip",
+        "proof_of_address",
+        "tax_or_debt_certificate"
+      ]
+    },
+    "id_card": {
+      "first_name": "Jiří",
+      "last_name": "Marek",
+      "birth_date": "1981-08-16",
+      "birth_number": "8108164339",
+      "address": "Komenského 31, 586 01 Jihlava",
+      "document_number": "124745210",
+      "expiry_date": "2032-10-19"
+    },
+    "bank_statement": {
+      "account_holder": "Jiří Marek",
+      "iban": "CZ43 0800 0000 5072 6813 4488",
+      "period_from": "2026-09-01",
+      "period_to": "2026-09-30",
+      "salary_credit": 58700,
+      "closing_balance": 73817.52
+    },
+    "payslip": {
+      "first_name": "Jiří",
+      "last_name": "Marek",
+      "birth_number": "8108164339",
+      "employer": "Vysočina Data s.r.o.",
+      "net_income": 58700,
+      "period": "září 2026"
+    },
+    "proof_of_address": {
+      "full_name": "Jiří Marek",
+      "address": "Komenského 31, 586 01 Jihlava",
+      "issuer": "Pražská energetika a.s.",
+      "issue_date": "2026-09-06"
+    },
+    "employer_confirmation": {
+      "employee_name": "Jiří Marek",
+      "birth_number": "8108164339",
+      "employer": "Vysočina Data s.r.o.",
+      "employer_ico": "19042168",
+      "position": "správce sítě",
+      "employment_start": "2016-01-01",
+      "contract_type": "na dobu neurčitou",
+      "monthly_net_income": 58700,
+      "issue_date": "2026-10-04"
+    },
+    "tax_or_debt_certificate": {
+      "holder_name": "Jiří Marek",
+      "birth_number": "8108164339",
+      "tax_office": "Finanční úřad PRO KRAJ VYSOČINA",
+      "certificate_number": "2999649/26/2374-50076-928367",
+      "issue_date": "2026-09-27",
+      "has_tax_arrears": "yes"
+    }
+  },
+  "expected_missing": [],
+  "expected_missing_pages": [],
+  "expected_unexpected": [],
+  "expected_flags": [
+    "no_tax_arrears"
+  ],
+  "expected_next_step": "manual_review_discrepancy"
+}

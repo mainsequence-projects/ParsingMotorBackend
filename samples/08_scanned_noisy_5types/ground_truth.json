@@ -1,0 +1,153 @@
+{
+  "package_id": "08_scanned_noisy_5types",
+  "description": {
+    "person": 7,
+    "layout": "A",
+    "required": [
+      "id_card",
+      "bank_statement",
+      "payslip",
+      "employer_confirmation"
+    ],
+    "scanned": true,
+    "next": "approve_ready",
+    "flags": []
+  },
+  "person": {
+    "first_name": "Pavel",
+    "last_name": "Novotný",
+    "birth_number": "7505083597"
+  },
+  "layouts": {
+    "contract": "A",
+    "id_card": "A",
+    "bank_statement": "A",
+    "payslip": "A",
+    "proof_of_address": "A",
+    "employer_confirmation": "B",
+    "tax_or_debt_certificate": "B"
+  },
+  "inputs": [
+    "package_scan.pdf"
+  ],
+  "required_documents": [
+    "contract",
+    "id_card",
+    "bank_statement",
+    "payslip",
+    "employer_confirmation"
+  ],
+  "expected_docs": [
+    "contract",
+    "id_card",
+    "bank_statement",
+    "payslip",
+    "employer_confirmation"
+  ],
+  "expected_page_types": [
+    "contract",
+    "id_card",
+    "bank_statement",
+    "bank_statement",
+    "payslip",
+    "employer_confirmation"
+  ],
+  "expected_documents": [
+    {
+      "doc_type": "contract",
+      "pages": [
+        1
+      ],
+      "source_file": "package_scan.pdf"
+    },
+    {
+      "doc_type": "id_card",
+      "pages": [
+        2
+      ],
+      "source_file": "package_scan.pdf"
+    },
+    {
+      "doc_type": "bank_statement",
+      "pages": [
+        3,
+        4
+      ],
+      "source_file": "package_scan.pdf"
+    },
+    {
+      "doc_type": "payslip",
+      "pages": [
+        5
+      ],
+      "source_file": "package_scan.pdf"
+    },
+    {
+      "doc_type": "employer_confirmation",
+      "pages": [
+        6
+      ],
+      "source_file": "package_scan.pdf"
+    }
+  ],
+  "expected_fields": {
+    "contract": {
+      "contract_number": "KB-2026-10680",
+      "first_name": "Pavel",
+      "last_name": "Novotný",
+      "birth_date": "1975-05-08",
+      "birth_number": "7505083597",
+      "address": "Gočárova 14, 500 02 Hradec Králové",
+      "loan_amount": 1200000,
+      "declared_monthly_income": 73500,
+      "contract_date": "2026-10-08",
+      "required_documents": [
+        "bank_statement",
+        "employer_confirmation",
+        "id_card",
+        "payslip"
+      ]
+    },
+    "id_card": {
+      "first_name": "Pavel",
+      "last_name": "Novotný",
+      "birth_date": "1975-05-08",
+      "birth_number": "7505083597",
+      "address": "Gočárova 14, 500 02 Hradec Králové",
+      "document_number": "304539796",
+      "expiry_date": "2030-08-17"
+    },
+    "bank_statement": {
+      "account_holder": "Pavel Novotný",
+      "iban": "CZ44 0800 0000 9535 2063 9216",
+      "period_from": "2026-09-01",
+      "period_to": "2026-09-30",
+      "salary_credit": 73500,
+      "closing_balance": 171357.96
+    },
+    "payslip": {
+      "first_name": "Pavel",
+      "last_name": "Novotný",
+      "birth_number": "7505083597",
+      "employer": "Orlické mlýny a.s.",
+      "net_income": 73500,
+      "period": "September 2026"
+    },
+    "employer_confirmation": {
+      "employee_name": "Pavel Novotný",
+      "birth_number": "7505083597",
+      "employer": "Orlické mlýny a.s.",
+      "employer_ico": "50208619",
+      "position": "obchodní zástupce",
+      "employment_start": "2022-08-01",
+      "contract_type": "na dobu neurčitou",
+      "monthly_net_income": 73500,
+      "issue_date": "2026-09-25"
+    }
+  },
+  "expected_missing": [],
+  "expected_missing_pages": [],
+  "expected_unexpected": [],
+  "expected_flags": [],
+  "expected_next_step": "approve_ready"
+}

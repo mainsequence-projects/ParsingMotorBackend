@@ -82,6 +82,10 @@ def score(res, gt):
     s["flags_missed"] = sorted(exp_flags - flagged)
     s["false_alarms"] = sorted(hard - exp_flags)
     s["checks_total"] = len(res["checks"])
+    # check accuracy: every check is a binary prediction "this needs attention" (status != passed)
+    # vs the truth "this check was seeded to fire" (its name is in the expected flags)
+    s["checks_correct"] = sum(1 for c in res["checks"] if (c["status"] != "passed") == (c["check"] in exp_flags))
+    s["doc_types"] = len(set(gt.get("required_documents") or gt.get("expected_docs", [])))
     # package level
     s["next_step"] = res["recommended_next_step"]
     s["next_step_expected"] = gt["expected_next_step"]
@@ -103,19 +107,21 @@ def main():
     ap.add_argument("--cache", action="store_true")
     ap.add_argument("--only", nargs="*")
     ap.add_argument("--from-json", action="store_true", help="score existing samples/out/*.json, no AWS")
+    ap.add_argument("--out", default=str(OUT), help="where to write per-package JSON + summary")
     a = ap.parse_args()
     if a.cache:
         os.environ["EXTRACTOR_CACHE"] = "1"
     from extractor.cost import BudgetExceeded, snapshot
     from extractor.pipeline import run_path
 
-    OUT.mkdir(exist_ok=True)
+    out_dir = Path(a.out)
+    out_dir.mkdir(parents=True, exist_ok=True)
     rows = []
     for pkg in sorted(p for p in SAMPLES.iterdir() if (p / "ground_truth.json").exists()):
         if a.only and pkg.name not in a.only:
             continue
         gt = json.loads((pkg / "ground_truth.json").read_text())
-        out = OUT / f"{pkg.name}.json"
+        out = out_dir / f"{pkg.name}.json"
         if a.from_json:
             res = json.loads(out.read_text())
         else:
@@ -128,7 +134,7 @@ def main():
         s = score(res, gt)
         rows.append(s)
         print(f"{s['package']:<26} pages {s['pages_correct']}/{s['pages_total']}  group {'ok' if s['grouping_ok'] else 'NO'}  "
-              f"fields {s['fields_correct']}/{s['fields_total']}  flags {s['flags_hit']}/{s['flags_expected']}  "
+              f"fields {s['fields_correct']}/{s['fields_total']}  checks {s['checks_correct']}/{s['checks_total']}  flags {s['flags_hit']}/{s['flags_expected']}  "
               f"false {len(s['false_alarms'])}  next {s['next_step']} ({'ok' if s['next_step_ok'] else 'exp ' + s['next_step_expected']})  "
               f"${s['usd']}", flush=True)
 
@@ -140,6 +146,8 @@ def main():
         "field_accuracy": round(tot("fields_correct") / max(1, tot("fields_total")), 3),
         "fields": f"{tot('fields_correct')}/{tot('fields_total')}",
         "expected_flags_hit": f"{tot('flags_hit')}/{tot('flags_expected')}",
+        "check_accuracy": round(tot("checks_correct") / max(1, tot("checks_total")), 3),
+        "checks": f"{tot('checks_correct')}/{tot('checks_total')}",
         "false_alarms": sum(len(r["false_alarms"]) for r in rows),
         "packages_without_false_alarm": f"{sum(not r['false_alarms'] for r in rows)}/{len(rows)}",
         "next_step_accuracy": f"{sum(r['next_step_ok'] for r in rows)}/{len(rows)}",
@@ -151,7 +159,7 @@ def main():
         "ledger": snapshot(),
         "rows": rows,
     }
-    (OUT / "eval_summary.json").write_text(json.dumps(summary, indent=2, ensure_ascii=False, default=str))
+    (out_dir / "eval_summary.json").write_text(json.dumps(summary, indent=2, ensure_ascii=False, default=str))
     print(json.dumps({k: v for k, v in summary.items() if k != "rows"}, indent=2, default=str))
 
 

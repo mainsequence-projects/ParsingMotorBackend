@@ -1,0 +1,190 @@
+{
+  "package_id": "02_happy_all7_B",
+  "description": {
+    "person": 1,
+    "layout": "B",
+    "required": [
+      "id_card",
+      "bank_statement",
+      "payslip",
+      "proof_of_address",
+      "employer_confirmation",
+      "tax_or_debt_certificate"
+    ],
+    "next": "approve_ready",
+    "flags": []
+  },
+  "person": {
+    "first_name": "Petr",
+    "last_name": "Dvořák",
+    "birth_number": "7911031370"
+  },
+  "layouts": {
+    "contract": "B",
+    "id_card": "B",
+    "bank_statement": "B",
+    "payslip": "B",
+    "proof_of_address": "B",
+    "employer_confirmation": "C",
+    "tax_or_debt_certificate": "B"
+  },
+  "inputs": [
+    "package.pdf"
+  ],
+  "required_documents": [
+    "contract",
+    "id_card",
+    "bank_statement",
+    "payslip",
+    "proof_of_address",
+    "employer_confirmation",
+    "tax_or_debt_certificate"
+  ],
+  "expected_docs": [
+    "contract",
+    "id_card",
+    "bank_statement",
+    "payslip",
+    "proof_of_address",
+    "employer_confirmation",
+    "tax_or_debt_certificate"
+  ],
+  "expected_page_types": [
+    "contract",
+    "id_card",
+    "bank_statement",
+    "bank_statement",
+    "payslip",
+    "proof_of_address",
+    "employer_confirmation",
+    "tax_or_debt_certificate"
+  ],
+  "expected_documents": [
+    {
+      "doc_type": "contract",
+      "pages": [
+        1
+      ],
+      "source_file": "package.pdf"
+    },
+    {
+      "doc_type": "id_card",
+      "pages": [
+        2
+      ],
+      "source_file": "package.pdf"
+    },
+    {
+      "doc_type": "bank_statement",
+      "pages": [
+        3,
+        4
+      ],
+      "source_file": "package.pdf"
+    },
+    {
+      "doc_type": "payslip",
+      "pages": [
+        5
+      ],
+      "source_file": "package.pdf"
+    },
+    {
+      "doc_type": "proof_of_address",
+      "pages": [
+        6
+      ],
+      "source_file": "package.pdf"
+    },
+    {
+      "doc_type": "employer_confirmation",
+      "pages": [
+        7
+      ],
+      "source_file": "package.pdf"
+    },
+    {
+      "doc_type": "tax_or_debt_certificate",
+      "pages": [
+        8
+      ],
+      "source_file": "package.pdf"
+    }
+  ],
+  "expected_fields": {
+    "contract": {
+      "contract_number": "KB-2026-10458",
+      "first_name": "Petr",
+      "last_name": "Dvořák",
+      "birth_date": "1979-11-03",
+      "birth_number": "7911031370",
+      "address": "Masarykova 45, 602 00 Brno",
+      "loan_amount": 480000,
+      "declared_monthly_income": 61500,
+      "contract_date": "2026-10-02",
+      "required_documents": [
+        "bank_statement",
+        "employer_confirmation",
+        "id_card",
+        "payslip",
+        "proof_of_address",
+        "tax_or_debt_certificate"
+      ]
+    },
+    "id_card": {
+      "first_name": "Petr",
+      "last_name": "Dvořák",
+      "birth_date": "1979-11-03",
+      "birth_number": "7911031370",
+      "address": "Masarykova 45, 602 00 Brno",
+      "document_number": "439101724",
+      "expiry_date": "2030-02-11"
+    },
+    "bank_statement": {
+      "account_holder": "Petr Dvořák",
+      "iban": "CZ79 0800 0000 5818 8212 5445",
+      "period_from": "2026-09-01",
+      "period_to": "2026-09-30",
+      "salary_credit": 61500,
+      "closing_balance": 27731.29
+    },
+    "payslip": {
+      "first_name": "Petr",
+      "last_name": "Dvořák",
+      "birth_number": "7911031370",
+      "employer": "Moravská strojírna a.s.",
+      "net_income": 61500,
+      "period": "září 2026"
+    },
+    "proof_of_address": {
+      "full_name": "Petr Dvořák",
+      "address": "Masarykova 45, 602 00 Brno",
+      "issuer": "E.ON Energie (fiktivní) a.s.",
+      "issue_date": "2026-09-06"
+    },
+    "employer_confirmation": {
+      "employee_name": "Petr Dvořák",
+      "birth_number": "7911031370",
+      "employer": "Moravská strojírna a.s.",
+      "employer_ico": "84708769",
+      "position": "vedoucí výroby",
+      "employment_start": "2016-02-01",
+      "contract_type": "na dobu neurčitou",
+      "monthly_net_income": 61500,
+      "issue_date": "2026-09-25"
+    },
+    "tax_or_debt_certificate": {
+      "holder_name": "Petr Dvořák",
+      "birth_number": "7911031370",
+      "tax_office": "Finanční úřad PRO JIHOMORAVSKÝ KRAJ",
+      "certificate_number": "7458499/26/2758-43223-340877",
+      "issue_date": "2026-09-27",
+      "has_tax_arrears": "no"
+    }
+  },
+  "expected_missing": [],
+  "expected_missing_pages": [],
+  "expected_unexpected": [],
+  "expected_flags": [],
+  "expected_next_step": "approve_ready"
+}

@@ -20,8 +20,8 @@ def test_filename_is_sanitised():
 
 
 def test_two_files_with_same_name_from_folders_are_not_merged():
-    a = SAMPLES / "01_clean" / "contract.pdf"
-    b = SAMPLES / "04_name_typo_invalid_rc" / "contract.pdf"
+    a = SAMPLES / "01_happy_all7_A" / "contract.pdf"
+    b = SAMPLES / "02_happy_all7_B" / "contract.pdf"
     pages, inputs = load_inputs([a, b])
     assert [p.source_file for p in pages] == ["contract.pdf", "contract__2.pdf"]
     assert inputs[1]["original_name"] == "contract.pdf"
@@ -57,7 +57,7 @@ def test_a4_render_unchanged_so_hashes_stay_stable():
 
     from extractor.config import RENDER_DPI
     from extractor.ingest import load_bytes, to_png
-    data = (SAMPLES / "01_clean" / "contract.pdf").read_bytes()
+    data = (SAMPLES / "01_happy_all7_A" / "contract.pdf").read_bytes()
     pix = fitz.open(stream=data, filetype="pdf")[0].get_pixmap(dpi=RENDER_DPI)   # v0.2 render
     old = to_png(Image.frombytes("RGB", (pix.width, pix.height), pix.samples))
     assert load_bytes("c.pdf", data)[0].png == old

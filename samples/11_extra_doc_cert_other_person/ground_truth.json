@@ -1,0 +1,200 @@
+{
+  "package_id": "11_extra_doc_cert_other_person",
+  "description": {
+    "person": 10,
+    "layout": "A",
+    "required": [
+      "id_card",
+      "bank_statement",
+      "payslip",
+      "employer_confirmation",
+      "tax_or_debt_certificate"
+    ],
+    "extra_other": true,
+    "tax_holder": [
+      "Jan Krejčí",
+      "1985-02-11",
+      false
+    ],
+    "next": "manual_review_discrepancy",
+    "flags": [
+      "certificate_holder_matches_id",
+      "birth_number_consistent",
+      "no_unrequested_documents"
+    ],
+    "unexpected": [
+      "other"
+    ]
+  },
+  "person": {
+    "first_name": "Alena",
+    "last_name": "Krejčí",
+    "birth_number": "8760024702"
+  },
+  "layouts": {
+    "contract": "A",
+    "id_card": "A",
+    "bank_statement": "A",
+    "payslip": "A",
+    "proof_of_address": "A",
+    "employer_confirmation": "B",
+    "tax_or_debt_certificate": "B"
+  },
+  "inputs": [
+    "package.pdf"
+  ],
+  "required_documents": [
+    "contract",
+    "id_card",
+    "bank_statement",
+    "payslip",
+    "employer_confirmation",
+    "tax_or_debt_certificate"
+  ],
+  "expected_docs": [
+    "contract",
+    "id_card",
+    "bank_statement",
+    "payslip",
+    "employer_confirmation",
+    "tax_or_debt_certificate",
+    "other"
+  ],
+  "expected_page_types": [
+    "contract",
+    "id_card",
+    "bank_statement",
+    "bank_statement",
+    "payslip",
+    "employer_confirmation",
+    "tax_or_debt_certificate",
+    "other"
+  ],
+  "expected_documents": [
+    {
+      "doc_type": "contract",
+      "pages": [
+        1
+      ],
+      "source_file": "package.pdf"
+    },
+    {
+      "doc_type": "id_card",
+      "pages": [
+        2
+      ],
+      "source_file": "package.pdf"
+    },
+    {
+      "doc_type": "bank_statement",
+      "pages": [
+        3,
+        4
+      ],
+      "source_file": "package.pdf"
+    },
+    {
+      "doc_type": "payslip",
+      "pages": [
+        5
+      ],
+      "source_file": "package.pdf"
+    },
+    {
+      "doc_type": "employer_confirmation",
+      "pages": [
+        6
+      ],
+      "source_file": "package.pdf"
+    },
+    {
+      "doc_type": "tax_or_debt_certificate",
+      "pages": [
+        7
+      ],
+      "source_file": "package.pdf"
+    },
+    {
+      "doc_type": "other",
+      "pages": [
+        8
+      ],
+      "source_file": "package.pdf"
+    }
+  ],
+  "expected_fields": {
+    "contract": {
+      "contract_number": "KB-2026-10791",
+      "first_name": "Alena",
+      "last_name": "Krejčí",
+      "birth_date": "1987-10-02",
+      "birth_number": "8760024702",
+      "address": "Sokolovská 50, 360 01 Karlovy Vary",
+      "loan_amount": 280000,
+      "declared_monthly_income": 44100,
+      "contract_date": "2026-10-01",
+      "required_documents": [
+        "bank_statement",
+        "employer_confirmation",
+        "id_card",
+        "payslip",
+        "tax_or_debt_certificate"
+      ]
+    },
+    "id_card": {
+      "first_name": "Alena",
+      "last_name": "Krejčí",
+      "birth_date": "1987-10-02",
+      "birth_number": "8760024702",
+      "address": "Sokolovská 50, 360 01 Karlovy Vary",
+      "document_number": "467774746",
+      "expiry_date": "2033-11-20"
+    },
+    "bank_statement": {
+      "account_holder": "Alena Krejčí",
+      "iban": "CZ42 0800 0000 4618 3549 4442",
+      "period_from": "2026-09-01",
+      "period_to": "2026-09-30",
+      "salary_credit": 44100,
+      "closing_balance": 133183.54
+    },
+    "payslip": {
+      "first_name": "Alena",
+      "last_name": "Krejčí",
+      "birth_number": "8760024702",
+      "employer": "Lázně Vřídlo s.r.o.",
+      "net_income": 44100,
+      "period": "September 2026"
+    },
+    "employer_confirmation": {
+      "employee_name": "Alena Krejčí",
+      "birth_number": "8760024702",
+      "employer": "Lázně Vřídlo s.r.o.",
+      "employer_ico": "93372239",
+      "position": "recepční",
+      "employment_start": "2017-02-01",
+      "contract_type": "na dobu neurčitou",
+      "monthly_net_income": 44100,
+      "issue_date": "2026-09-24"
+    },
+    "tax_or_debt_certificate": {
+      "holder_name": "Jan Krejčí",
+      "birth_number": "8502112113",
+      "tax_office": "Finanční úřad PRO KARLOVARSKÝ KRAJ",
+      "certificate_number": "4001941/26/2293-32253-583297",
+      "issue_date": "2026-09-27",
+      "has_tax_arrears": "no"
+    }
+  },
+  "expected_missing": [],
+  "expected_missing_pages": [],
+  "expected_unexpected": [
+    "other"
+  ],
+  "expected_flags": [
+    "certificate_holder_matches_id",
+    "birth_number_consistent",
+    "no_unrequested_documents"
+  ],
+  "expected_next_step": "manual_review_discrepancy"
+}

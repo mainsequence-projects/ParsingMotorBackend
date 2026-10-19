@@ -1,0 +1,173 @@
+{
+  "package_id": "09_shuffled_6types",
+  "description": {
+    "person": 8,
+    "layout": "mix",
+    "required": [
+      "id_card",
+      "bank_statement",
+      "payslip",
+      "employer_confirmation",
+      "tax_or_debt_certificate"
+    ],
+    "shuffle": true,
+    "next": "approve_ready",
+    "flags": []
+  },
+  "person": {
+    "first_name": "Lenka",
+    "last_name": "Pokorná",
+    "birth_number": "8453213967"
+  },
+  "layouts": {
+    "contract": "A",
+    "id_card": "B",
+    "bank_statement": "A",
+    "payslip": "B",
+    "proof_of_address": "A",
+    "employer_confirmation": "C",
+    "tax_or_debt_certificate": "C"
+  },
+  "inputs": [
+    "package.pdf"
+  ],
+  "required_documents": [
+    "contract",
+    "id_card",
+    "bank_statement",
+    "payslip",
+    "employer_confirmation",
+    "tax_or_debt_certificate"
+  ],
+  "expected_docs": [
+    "contract",
+    "id_card",
+    "bank_statement",
+    "payslip",
+    "employer_confirmation",
+    "tax_or_debt_certificate"
+  ],
+  "expected_page_types": [
+    "bank_statement",
+    "employer_confirmation",
+    "bank_statement",
+    "payslip",
+    "tax_or_debt_certificate",
+    "contract",
+    "id_card"
+  ],
+  "expected_documents": [
+    {
+      "doc_type": "contract",
+      "pages": [
+        6
+      ],
+      "source_file": "package.pdf"
+    },
+    {
+      "doc_type": "id_card",
+      "pages": [
+        7
+      ],
+      "source_file": "package.pdf"
+    },
+    {
+      "doc_type": "bank_statement",
+      "pages": [
+        3,
+        1
+      ],
+      "source_file": "package.pdf"
+    },
+    {
+      "doc_type": "payslip",
+      "pages": [
+        4
+      ],
+      "source_file": "package.pdf"
+    },
+    {
+      "doc_type": "employer_confirmation",
+      "pages": [
+        2
+      ],
+      "source_file": "package.pdf"
+    },
+    {
+      "doc_type": "tax_or_debt_certificate",
+      "pages": [
+        5
+      ],
+      "source_file": "package.pdf"
+    }
+  ],
+  "expected_fields": {
+    "contract": {
+      "contract_number": "KB-2026-10717",
+      "first_name": "Lenka",
+      "last_name": "Pokorná",
+      "birth_date": "1984-03-21",
+      "birth_number": "8453213967",
+      "address": "Jiráskova 6, 460 01 Liberec",
+      "loan_amount": 350000,
+      "declared_monthly_income": 49800,
+      "contract_date": "2026-10-09",
+      "required_documents": [
+        "bank_statement",
+        "employer_confirmation",
+        "id_card",
+        "payslip",
+        "tax_or_debt_certificate"
+      ]
+    },
+    "id_card": {
+      "first_name": "Lenka",
+      "last_name": "Pokorná",
+      "birth_date": "1984-03-21",
+      "birth_number": "8453213967",
+      "address": "Jiráskova 6, 460 01 Liberec",
+      "document_number": "198116102",
+      "expiry_date": "2031-09-18"
+    },
+    "bank_statement": {
+      "account_holder": "Lenka Pokorná",
+      "iban": "CZ81 0800 0000 6205 8312 3444",
+      "period_from": "2026-09-01",
+      "period_to": "2026-09-30",
+      "salary_credit": 49800,
+      "closing_balance": 85604.26
+    },
+    "payslip": {
+      "first_name": "Lenka",
+      "last_name": "Pokorná",
+      "birth_number": "8453213967",
+      "employer": "Ještěd Textil s.r.o.",
+      "net_income": 49800,
+      "period": "září 2026"
+    },
+    "employer_confirmation": {
+      "employee_name": "Lenka Pokorná",
+      "birth_number": "8453213967",
+      "employer": "Ještěd Textil s.r.o.",
+      "employer_ico": "79993547",
+      "position": "designérka",
+      "employment_start": "2015-09-01",
+      "contract_type": "na dobu neurčitou",
+      "monthly_net_income": 49800,
+      "issue_date": "2026-09-25"
+    },
+    "tax_or_debt_certificate": {
+      "holder_name": "Lenka Pokorná",
+      "birth_number": "8453213967",
+      "tax_office": "Finanční úřad PRO LIBERECKÝ KRAJ",
+      "certificate_number": "6083225/26/2565-37036-705478",
+      "issue_date": "2026-09-27",
+      "has_tax_arrears": "no"
+    }
+  },
+  "expected_missing": [],
+  "expected_missing_pages": [],
+  "expected_unexpected": [],
+  "expected_flags": [],
+  "expected_next_step": "approve_ready"
+}

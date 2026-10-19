@@ -1,0 +1,185 @@
+{
+  "package_id": "04_missing_statement_page",
+  "description": {
+    "person": 3,
+    "layout": "B",
+    "required": [
+      "id_card",
+      "bank_statement",
+      "payslip",
+      "employer_confirmation",
+      "tax_or_debt_certificate"
+    ],
+    "statement_pages": [
+      1
+    ],
+    "next": "request_missing_documents",
+    "flags": [
+      "pages_complete"
+    ]
+  },
+  "person": {
+    "first_name": "Tomáš",
+    "last_name": "Procházka",
+    "birth_number": "8307192113"
+  },
+  "layouts": {
+    "contract": "B",
+    "id_card": "B",
+    "bank_statement": "B",
+    "payslip": "B",
+    "proof_of_address": "B",
+    "employer_confirmation": "C",
+    "tax_or_debt_certificate": "B"
+  },
+  "inputs": [
+    "package.pdf"
+  ],
+  "required_documents": [
+    "contract",
+    "id_card",
+    "bank_statement",
+    "payslip",
+    "employer_confirmation",
+    "tax_or_debt_certificate"
+  ],
+  "expected_docs": [
+    "contract",
+    "id_card",
+    "bank_statement",
+    "payslip",
+    "employer_confirmation",
+    "tax_or_debt_certificate"
+  ],
+  "expected_page_types": [
+    "contract",
+    "id_card",
+    "bank_statement",
+    "payslip",
+    "employer_confirmation",
+    "tax_or_debt_certificate"
+  ],
+  "expected_documents": [
+    {
+      "doc_type": "contract",
+      "pages": [
+        1
+      ],
+      "source_file": "package.pdf"
+    },
+    {
+      "doc_type": "id_card",
+      "pages": [
+        2
+      ],
+      "source_file": "package.pdf"
+    },
+    {
+      "doc_type": "bank_statement",
+      "pages": [
+        3
+      ],
+      "source_file": "package.pdf"
+    },
+    {
+      "doc_type": "payslip",
+      "pages": [
+        4
+      ],
+      "source_file": "package.pdf"
+    },
+    {
+      "doc_type": "employer_confirmation",
+      "pages": [
+        5
+      ],
+      "source_file": "package.pdf"
+    },
+    {
+      "doc_type": "tax_or_debt_certificate",
+      "pages": [
+        6
+      ],
+      "source_file": "package.pdf"
+    }
+  ],
+  "expected_fields": {
+    "contract": {
+      "contract_number": "KB-2026-10532",
+      "first_name": "Tomáš",
+      "last_name": "Procházka",
+      "birth_date": "1983-07-19",
+      "birth_number": "8307192113",
+      "address": "Husova 17, 301 00 Plzeň",
+      "loan_amount": 320000,
+      "declared_monthly_income": 47200,
+      "contract_date": "2026-10-04",
+      "required_documents": [
+        "bank_statement",
+        "employer_confirmation",
+        "id_card",
+        "payslip",
+        "tax_or_debt_certificate"
+      ]
+    },
+    "id_card": {
+      "first_name": "Tomáš",
+      "last_name": "Procházka",
+      "birth_date": "1983-07-19",
+      "birth_number": "8307192113",
+      "address": "Husova 17, 301 00 Plzeň",
+      "document_number": "922819222",
+      "expiry_date": "2032-04-13"
+    },
+    "bank_statement": {
+      "account_holder": "Tomáš Procházka",
+      "iban": "CZ22 0800 0000 7025 1620 7394",
+      "period_from": "2026-09-01",
+      "period_to": "2026-09-30",
+      "salary_credit": 47200,
+      "closing_balance": null
+    },
+    "payslip": {
+      "first_name": "Tomáš",
+      "last_name": "Procházka",
+      "birth_number": "8307192113",
+      "employer": "Plzeňské pivovary Trend a.s.",
+      "net_income": 47200,
+      "period": "září 2026"
+    },
+    "employer_confirmation": {
+      "employee_name": "Tomáš Procházka",
+      "birth_number": "8307192113",
+      "employer": "Plzeňské pivovary Trend a.s.",
+      "employer_ico": "10000449",
+      "position": "technolog",
+      "employment_start": "2018-04-01",
+      "contract_type": "na dobu neurčitou",
+      "monthly_net_income": 47200,
+      "issue_date": "2026-09-25"
+    },
+    "tax_or_debt_certificate": {
+      "holder_name": "Tomáš Procházka",
+      "birth_number": "8307192113",
+      "tax_office": "Finanční úřad PRO PLZEŇSKÝ KRAJ",
+      "certificate_number": "6482840/26/2600-85883-834704",
+      "issue_date": "2026-09-27",
+      "has_tax_arrears": "no"
+    }
+  },
+  "expected_missing": [],
+  "expected_missing_pages": [
+    {
+      "doc_type": "bank_statement",
+      "page_count": 2,
+      "missing_page_numbers": [
+        2
+      ]
+    }
+  ],
+  "expected_unexpected": [],
+  "expected_flags": [
+    "pages_complete"
+  ],
+  "expected_next_step": "request_missing_documents"
+}

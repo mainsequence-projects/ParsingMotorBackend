@@ -1,0 +1,145 @@
+{
+  "package_id": "12_happy_5types_B",
+  "description": {
+    "person": 11,
+    "layout": "B",
+    "required": [
+      "id_card",
+      "payslip",
+      "proof_of_address",
+      "tax_or_debt_certificate"
+    ],
+    "next": "approve_ready",
+    "flags": []
+  },
+  "person": {
+    "first_name": "Ondřej",
+    "last_name": "Fiala",
+    "birth_number": "9306255079"
+  },
+  "layouts": {
+    "contract": "B",
+    "id_card": "B",
+    "bank_statement": "B",
+    "payslip": "B",
+    "proof_of_address": "B",
+    "employer_confirmation": "C",
+    "tax_or_debt_certificate": "B"
+  },
+  "inputs": [
+    "package.pdf"
+  ],
+  "required_documents": [
+    "contract",
+    "id_card",
+    "payslip",
+    "proof_of_address",
+    "tax_or_debt_certificate"
+  ],
+  "expected_docs": [
+    "contract",
+    "id_card",
+    "payslip",
+    "proof_of_address",
+    "tax_or_debt_certificate"
+  ],
+  "expected_page_types": [
+    "contract",
+    "id_card",
+    "payslip",
+    "proof_of_address",
+    "tax_or_debt_certificate"
+  ],
+  "expected_documents": [
+    {
+      "doc_type": "contract",
+      "pages": [
+        1
+      ],
+      "source_file": "package.pdf"
+    },
+    {
+      "doc_type": "id_card",
+      "pages": [
+        2
+      ],
+      "source_file": "package.pdf"
+    },
+    {
+      "doc_type": "payslip",
+      "pages": [
+        3
+      ],
+      "source_file": "package.pdf"
+    },
+    {
+      "doc_type": "proof_of_address",
+      "pages": [
+        4
+      ],
+      "source_file": "package.pdf"
+    },
+    {
+      "doc_type": "tax_or_debt_certificate",
+      "pages": [
+        5
+      ],
+      "source_file": "package.pdf"
+    }
+  ],
+  "expected_fields": {
+    "contract": {
+      "contract_number": "KB-2026-10828",
+      "first_name": "Ondřej",
+      "last_name": "Fiala",
+      "birth_date": "1993-06-25",
+      "birth_number": "9306255079",
+      "address": "Školní 2, 400 01 Ústí nad Labem",
+      "loan_amount": 180000,
+      "declared_monthly_income": 39600,
+      "contract_date": "2026-10-02",
+      "required_documents": [
+        "id_card",
+        "payslip",
+        "proof_of_address",
+        "tax_or_debt_certificate"
+      ]
+    },
+    "id_card": {
+      "first_name": "Ondřej",
+      "last_name": "Fiala",
+      "birth_date": "1993-06-25",
+      "birth_number": "9306255079",
+      "address": "Školní 2, 400 01 Ústí nad Labem",
+      "document_number": "966354048",
+      "expiry_date": "2034-12-21"
+    },
+    "payslip": {
+      "first_name": "Ondřej",
+      "last_name": "Fiala",
+      "birth_number": "9306255079",
+      "employer": "Labská chemie a.s.",
+      "net_income": 39600,
+      "period": "září 2026"
+    },
+    "proof_of_address": {
+      "full_name": "Ondřej Fiala",
+      "address": "Školní 2, 400 01 Ústí nad Labem",
+      "issuer": "innogy (fiktivní) s.r.o.",
+      "issue_date": "2026-08-27"
+    },
+    "tax_or_debt_certificate": {
+      "holder_name": "Ondřej Fiala",
+      "birth_number": "9306255079",
+      "tax_office": "Finanční úřad PRO ÚSTECKÝ KRAJ",
+      "certificate_number": "7089803/26/2391-16784-121040",
+      "issue_date": "2026-09-27",
+      "has_tax_arrears": "no"
+    }
+  },
+  "expected_missing": [],
+  "expected_missing_pages": [],
+  "expected_unexpected": [],
+  "expected_flags": [],
+  "expected_next_step": "approve_ready"
+}

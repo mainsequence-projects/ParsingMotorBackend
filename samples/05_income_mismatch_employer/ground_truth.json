@@ -1,0 +1,197 @@
+{
+  "package_id": "05_income_mismatch_employer",
+  "description": {
+    "person": 4,
+    "layout": "A",
+    "required": [
+      "id_card",
+      "bank_statement",
+      "payslip",
+      "proof_of_address",
+      "employer_confirmation",
+      "tax_or_debt_certificate"
+    ],
+    "emp_net": 41000,
+    "next": "manual_review_discrepancy",
+    "flags": [
+      "income_contract_vs_employer",
+      "income_payslip_vs_employer"
+    ]
+  },
+  "person": {
+    "first_name": "Eva",
+    "last_name": "Horáková",
+    "birth_number": "9059052486"
+  },
+  "layouts": {
+    "contract": "A",
+    "id_card": "A",
+    "bank_statement": "A",
+    "payslip": "A",
+    "proof_of_address": "A",
+    "employer_confirmation": "B",
+    "tax_or_debt_certificate": "B"
+  },
+  "inputs": [
+    "package.pdf"
+  ],
+  "required_documents": [
+    "contract",
+    "id_card",
+    "bank_statement",
+    "payslip",
+    "proof_of_address",
+    "employer_confirmation",
+    "tax_or_debt_certificate"
+  ],
+  "expected_docs": [
+    "contract",
+    "id_card",
+    "bank_statement",
+    "payslip",
+    "proof_of_address",
+    "employer_confirmation",
+    "tax_or_debt_certificate"
+  ],
+  "expected_page_types": [
+    "contract",
+    "id_card",
+    "bank_statement",
+    "bank_statement",
+    "payslip",
+    "proof_of_address",
+    "employer_confirmation",
+    "tax_or_debt_certificate"
+  ],
+  "expected_documents": [
+    {
+      "doc_type": "contract",
+      "pages": [
+        1
+      ],
+      "source_file": "package.pdf"
+    },
+    {
+      "doc_type": "id_card",
+      "pages": [
+        2
+      ],
+      "source_file": "package.pdf"
+    },
+    {
+      "doc_type": "bank_statement",
+      "pages": [
+        3,
+        4
+      ],
+      "source_file": "package.pdf"
+    },
+    {
+      "doc_type": "payslip",
+      "pages": [
+        5
+      ],
+      "source_file": "package.pdf"
+    },
+    {
+      "doc_type": "proof_of_address",
+      "pages": [
+        6
+      ],
+      "source_file": "package.pdf"
+    },
+    {
+      "doc_type": "employer_confirmation",
+      "pages": [
+        7
+      ],
+      "source_file": "package.pdf"
+    },
+    {
+      "doc_type": "tax_or_debt_certificate",
+      "pages": [
+        8
+      ],
+      "source_file": "package.pdf"
+    }
+  ],
+  "expected_fields": {
+    "contract": {
+      "contract_number": "KB-2026-10569",
+      "first_name": "Eva",
+      "last_name": "Horáková",
+      "birth_date": "1990-09-05",
+      "birth_number": "9059052486",
+      "address": "Lidická 3, 370 01 České Budějovice",
+      "loan_amount": 600000,
+      "declared_monthly_income": 56000,
+      "contract_date": "2026-10-05",
+      "required_documents": [
+        "bank_statement",
+        "employer_confirmation",
+        "id_card",
+        "payslip",
+        "proof_of_address",
+        "tax_or_debt_certificate"
+      ]
+    },
+    "id_card": {
+      "first_name": "Eva",
+      "last_name": "Horáková",
+      "birth_date": "1990-09-05",
+      "birth_number": "9059052486",
+      "address": "Lidická 3, 370 01 České Budějovice",
+      "document_number": "753073662",
+      "expiry_date": "2033-05-14"
+    },
+    "bank_statement": {
+      "account_holder": "Eva Horáková",
+      "iban": "CZ44 0800 0000 9913 5973 6332",
+      "period_from": "2026-09-01",
+      "period_to": "2026-09-30",
+      "salary_credit": 56000,
+      "closing_balance": 32773.62
+    },
+    "payslip": {
+      "first_name": "Eva",
+      "last_name": "Horáková",
+      "birth_number": "9059052486",
+      "employer": "Jihočeská energie s.r.o.",
+      "net_income": 56000,
+      "period": "September 2026"
+    },
+    "proof_of_address": {
+      "full_name": "Eva Horáková",
+      "address": "Lidická 3, 370 01 České Budějovice",
+      "issuer": "E.ON Energie (fiktivní) a.s.",
+      "issue_date": "2026-09-06"
+    },
+    "employer_confirmation": {
+      "employee_name": "Eva Horáková",
+      "birth_number": "9059052486",
+      "employer": "Jihočeská energie s.r.o.",
+      "employer_ico": "43623601",
+      "position": "účetní",
+      "employment_start": "2019-05-01",
+      "contract_type": "na dobu neurčitou",
+      "monthly_net_income": 41000,
+      "issue_date": "2026-09-25"
+    },
+    "tax_or_debt_certificate": {
+      "holder_name": "Eva Horáková",
+      "birth_number": "9059052486",
+      "tax_office": "Finanční úřad PRO JIHOČESKÝ KRAJ",
+      "certificate_number": "3281189/26/2606-71540-173019",
+      "issue_date": "2026-09-27",
+      "has_tax_arrears": "no"
+    }
+  },
+  "expected_missing": [],
+  "expected_missing_pages": [],
+  "expected_unexpected": [],
+  "expected_flags": [
+    "income_contract_vs_employer",
+    "income_payslip_vs_employer"
+  ],
+  "expected_next_step": "manual_review_discrepancy"
+}

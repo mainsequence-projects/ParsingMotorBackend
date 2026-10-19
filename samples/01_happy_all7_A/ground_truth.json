@@ -1,0 +1,190 @@
+{
+  "package_id": "01_happy_all7_A",
+  "description": {
+    "person": 0,
+    "layout": "A",
+    "required": [
+      "id_card",
+      "bank_statement",
+      "payslip",
+      "proof_of_address",
+      "employer_confirmation",
+      "tax_or_debt_certificate"
+    ],
+    "next": "approve_ready",
+    "flags": []
+  },
+  "person": {
+    "first_name": "Jana",
+    "last_name": "Nováková",
+    "birth_number": "8854121001"
+  },
+  "layouts": {
+    "contract": "A",
+    "id_card": "A",
+    "bank_statement": "A",
+    "payslip": "A",
+    "proof_of_address": "A",
+    "employer_confirmation": "B",
+    "tax_or_debt_certificate": "B"
+  },
+  "inputs": [
+    "package.pdf"
+  ],
+  "required_documents": [
+    "contract",
+    "id_card",
+    "bank_statement",
+    "payslip",
+    "proof_of_address",
+    "employer_confirmation",
+    "tax_or_debt_certificate"
+  ],
+  "expected_docs": [
+    "contract",
+    "id_card",
+    "bank_statement",
+    "payslip",
+    "proof_of_address",
+    "employer_confirmation",
+    "tax_or_debt_certificate"
+  ],
+  "expected_page_types": [
+    "contract",
+    "id_card",
+    "bank_statement",
+    "bank_statement",
+    "payslip",
+    "proof_of_address",
+    "employer_confirmation",
+    "tax_or_debt_certificate"
+  ],
+  "expected_documents": [
+    {
+      "doc_type": "contract",
+      "pages": [
+        1
+      ],
+      "source_file": "package.pdf"
+    },
+    {
+      "doc_type": "id_card",
+      "pages": [
+        2
+      ],
+      "source_file": "package.pdf"
+    },
+    {
+      "doc_type": "bank_statement",
+      "pages": [
+        3,
+        4
+      ],
+      "source_file": "package.pdf"
+    },
+    {
+      "doc_type": "payslip",
+      "pages": [
+        5
+      ],
+      "source_file": "package.pdf"
+    },
+    {
+      "doc_type": "proof_of_address",
+      "pages": [
+        6
+      ],
+      "source_file": "package.pdf"
+    },
+    {
+      "doc_type": "employer_confirmation",
+      "pages": [
+        7
+      ],
+      "source_file": "package.pdf"
+    },
+    {
+      "doc_type": "tax_or_debt_certificate",
+      "pages": [
+        8
+      ],
+      "source_file": "package.pdf"
+    }
+  ],
+  "expected_fields": {
+    "contract": {
+      "contract_number": "KB-2026-10421",
+      "first_name": "Jana",
+      "last_name": "Nováková",
+      "birth_date": "1988-04-12",
+      "birth_number": "8854121001",
+      "address": "Vinohradská 12, 120 00 Praha 2",
+      "loan_amount": 250000,
+      "declared_monthly_income": 52000,
+      "contract_date": "2026-10-01",
+      "required_documents": [
+        "bank_statement",
+        "employer_confirmation",
+        "id_card",
+        "payslip",
+        "proof_of_address",
+        "tax_or_debt_certificate"
+      ]
+    },
+    "id_card": {
+      "first_name": "Jana",
+      "last_name": "Nováková",
+      "birth_date": "1988-04-12",
+      "birth_number": "8854121001",
+      "address": "Vinohradská 12, 120 00 Praha 2",
+      "document_number": "679049464",
+      "expiry_date": "2029-01-10"
+    },
+    "bank_statement": {
+      "account_holder": "Jana Nováková",
+      "iban": "CZ85 0800 0000 6287 2970 4472",
+      "period_from": "2026-09-01",
+      "period_to": "2026-09-30",
+      "salary_credit": 52000,
+      "closing_balance": 63282.8
+    },
+    "payslip": {
+      "first_name": "Jana",
+      "last_name": "Nováková",
+      "birth_number": "8854121001",
+      "employer": "Vltava Software s.r.o.",
+      "net_income": 52000,
+      "period": "September 2026"
+    },
+    "proof_of_address": {
+      "full_name": "Jana Nováková",
+      "address": "Vinohradská 12, 120 00 Praha 2",
+      "issuer": "Pražská energetika a.s.",
+      "issue_date": "2026-09-06"
+    },
+    "employer_confirmation": {
+      "employee_name": "Jana Nováková",
+      "birth_number": "8854121001",
+      "employer": "Vltava Software s.r.o.",
+      "employer_ico": "73092316",
+      "position": "softwarová analytička",
+      "employment_start": "2015-01-01",
+      "contract_type": "na dobu neurčitou",
+      "monthly_net_income": 52000,
+      "issue_date": "2026-09-25"
+    },
+    "tax_or_debt_certificate": {
+      "holder_name": "Jana Nováková",
+      "birth_number": "8854121001",
+      "tax_office": "Finanční úřad PRO HLAVNÍ MĚSTO PRAHU",
+      "certificate_number": "1464544/26/2457-28059-105809",
+      "issue_date": "2026-09-27",
+      "has_tax_arrears": "no"
+    }
+  },
+  "expected_missing": [],
+  "expected_missing_pages": [],
+  "expected_unexpected": [],
+  "expected_flags": [],
+  "expected_next_step": "approve_ready"
+}

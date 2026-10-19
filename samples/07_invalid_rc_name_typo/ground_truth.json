@@ -1,0 +1,180 @@
+{
+  "package_id": "07_invalid_rc_name_typo",
+  "description": {
+    "person": 6,
+    "layout": "B",
+    "required": [
+      "id_card",
+      "bank_statement",
+      "payslip",
+      "proof_of_address",
+      "employer_confirmation"
+    ],
+    "id_rc_bad": true,
+    "pay_last_name": "Veselova",
+    "next": "manual_review_discrepancy",
+    "flags": [
+      "birth_number_valid",
+      "birth_number_consistent",
+      "last_name_consistent"
+    ]
+  },
+  "person": {
+    "first_name": "Kateřina",
+    "last_name": "Veselá",
+    "birth_number": "9262143220"
+  },
+  "layouts": {
+    "contract": "B",
+    "id_card": "B",
+    "bank_statement": "B",
+    "payslip": "B",
+    "proof_of_address": "B",
+    "employer_confirmation": "B",
+    "tax_or_debt_certificate": "B"
+  },
+  "inputs": [
+    "package.pdf"
+  ],
+  "required_documents": [
+    "contract",
+    "id_card",
+    "bank_statement",
+    "payslip",
+    "proof_of_address",
+    "employer_confirmation"
+  ],
+  "expected_docs": [
+    "contract",
+    "id_card",
+    "bank_statement",
+    "payslip",
+    "proof_of_address",
+    "employer_confirmation"
+  ],
+  "expected_page_types": [
+    "contract",
+    "id_card",
+    "bank_statement",
+    "bank_statement",
+    "payslip",
+    "proof_of_address",
+    "employer_confirmation"
+  ],
+  "expected_documents": [
+    {
+      "doc_type": "contract",
+      "pages": [
+        1
+      ],
+      "source_file": "package.pdf"
+    },
+    {
+      "doc_type": "id_card",
+      "pages": [
+        2
+      ],
+      "source_file": "package.pdf"
+    },
+    {
+      "doc_type": "bank_statement",
+      "pages": [
+        3,
+        4
+      ],
+      "source_file": "package.pdf"
+    },
+    {
+      "doc_type": "payslip",
+      "pages": [
+        5
+      ],
+      "source_file": "package.pdf"
+    },
+    {
+      "doc_type": "proof_of_address",
+      "pages": [
+        6
+      ],
+      "source_file": "package.pdf"
+    },
+    {
+      "doc_type": "employer_confirmation",
+      "pages": [
+        7
+      ],
+      "source_file": "package.pdf"
+    }
+  ],
+  "expected_fields": {
+    "contract": {
+      "contract_number": "KB-2026-10643",
+      "first_name": "Kateřina",
+      "last_name": "Veselá",
+      "birth_date": "1992-12-14",
+      "birth_number": "9262143220",
+      "address": "Třída Míru 9, 530 02 Pardubice",
+      "loan_amount": 200000,
+      "declared_monthly_income": 42300,
+      "contract_date": "2026-10-07",
+      "required_documents": [
+        "bank_statement",
+        "employer_confirmation",
+        "id_card",
+        "payslip",
+        "proof_of_address"
+      ]
+    },
+    "id_card": {
+      "first_name": "Kateřina",
+      "last_name": "Veselá",
+      "birth_date": "1992-12-14",
+      "birth_number": "9262143223",
+      "address": "Třída Míru 9, 530 02 Pardubice",
+      "document_number": "121421969",
+      "expiry_date": "2029-07-16"
+    },
+    "bank_statement": {
+      "account_holder": "Kateřina Veselá",
+      "iban": "CZ40 0800 0000 7350 5184 2748",
+      "period_from": "2026-09-01",
+      "period_to": "2026-09-30",
+      "salary_credit": 42300,
+      "closing_balance": 101937.8
+    },
+    "payslip": {
+      "first_name": "Kateřina",
+      "last_name": "Veselova",
+      "birth_number": "9262143220",
+      "employer": "Východočeská nemocniční s.r.o.",
+      "net_income": 42300,
+      "period": "září 2026"
+    },
+    "proof_of_address": {
+      "full_name": "Kateřina Veselá",
+      "address": "Třída Míru 9, 530 02 Pardubice",
+      "issuer": "Pražská energetika a.s.",
+      "issue_date": "2026-09-06"
+    },
+    "employer_confirmation": {
+      "employee_name": "Kateřina Veselá",
+      "birth_number": "9262143220",
+      "employer": "Východočeská nemocniční s.r.o.",
+      "employer_ico": "52538394",
+      "position": "zdravotní sestra",
+      "employment_start": "2021-07-01",
+      "contract_type": "na dobu neurčitou",
+      "monthly_net_income": 42300,
+      "issue_date": "2026-09-25"
+    }
+  },
+  "expected_missing": [],
+  "expected_missing_pages": [],
+  "expected_unexpected": [],
+  "expected_flags": [
+    "birth_number_valid",
+    "birth_number_consistent",
+    "last_name_consistent"
+  ],
+  "expected_next_step": "manual_review_discrepancy"
+}
