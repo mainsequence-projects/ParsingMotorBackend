@@ -1,5 +1,6 @@
 """Versioned, schema-driven observations. No requirements, review or lending rules."""
 
+import copy
 import json
 import time
 
@@ -8,6 +9,7 @@ from pydantic import Field, JsonValue
 from . import document_models as D
 from . import document_service as service
 from . import evidence_contracts as E
+from . import ocr_reader
 from .config import BEDROCK_CLASSIFY_FALLBACKS, BEDROCK_CLASSIFY_MODEL
 from .evidence_base import StrictModel
 from .ingest import InputError
@@ -127,68 +129,75 @@ def extract(request):
         + "\nOUTPUT_SCHEMA: "
         + json.dumps(request.output_schema)
     )
-    readers, costs, cache_hits = [], [], []
-    modes = ["vision_primary"]
-    if request.reader_mode == "independent_readers":
-        modes.append("vision_secondary")
-    for reader_id in modes:
+    started = time.monotonic()
+    data, model, meta = service.converse_json(
+        prompt + "\nReading identity: vision_primary. Read the source independently.",
+        images=[p.png for p in pages],
+        system=service.SYSTEM,
+        max_tokens=16384,
+        return_meta=True,
+    )
+    reading = Reading.model_validate(data)
+    validator(request.output_schema).validate(reading.attributes)
+    if reading.attributes.get("document_type") != request.document_type:
+        raise ValueError("extraction changed the explicit document type")
+    values = dict(leaves(reading.attributes))
+    citations = {}
+    for citation in reading.citations:
+        if (
+            citation.pointer in citations
+            or citation.pointer not in values
+            or len(set(citation.pages)) != len(citation.pages)
+            or any(p not in selected for p in citation.pages)
+        ):
+            raise ValueError("invalid or duplicate field citation")
+        citations[citation.pointer] = citation
+    if any(v is not None and p not in citations for p, v in values.items()):
+        raise ValueError("reader omitted evidence for an extracted value")
+    costs, cache_hits = [usage(model, meta, started)], [bool(meta.get("cache_hit", False))]
+    # Second reader = Textract (a different modality: OCR with its own confidence and box),
+    # so the two readers do not share the same failure mode. It never sees the vision values.
+    independent = request.reader_mode == "independent_readers"
+    ocr = {}
+    if independent:
         started = time.monotonic()
-        options = (
-            {}
-            if reader_id == "vision_primary"
-            else {"model_id": BEDROCK_CLASSIFY_MODEL, "fallbacks": []}
-        )
-        data, model, meta = service.converse_json(
-            prompt + f"\nReading identity: {reader_id}. Read the source independently.",
-            images=[p.png for p in pages],
-            system=service.SYSTEM,
-            max_tokens=16384,
-            return_meta=True,
-            **options,
-        )
-        if readers and model == readers[0][1]:
-            raise ValueError("independent readers require distinct configured models")
-        reading = Reading.model_validate(data)
-        validator(request.output_schema).validate(reading.attributes)
-        if reading.attributes.get("document_type") != request.document_type:
-            raise ValueError("extraction changed the explicit document type")
-        values = dict(leaves(reading.attributes))
-        citations = {}
-        for citation in reading.citations:
-            if (
-                citation.pointer in citations
-                or citation.pointer not in values
-                or len(set(citation.pages)) != len(citation.pages)
-                or any(p not in selected for p in citation.pages)
-            ):
-                raise ValueError("invalid or duplicate field citation")
-            citations[citation.pointer] = citation
-        if any(v is not None and p not in citations for p, v in values.items()):
-            raise ValueError("reader omitted evidence for an extracted value")
-        # Different array shapes cannot safely be aligned by index. Fail closed, never discard
-        # an unmatched reader value or pretend records in differently shaped arrays agree.
-        if readers and values.keys() != readers[0][2].keys():
-            raise ValueError("independent reader structures require alignment")
-        readers.append((reader_id, model, values, citations, reading.attributes))
-        costs.append(usage(model, meta, started))
-        cache_hits.append(bool(meta.get("cache_hit", False)))
+        ocr = ocr_reader.read(pages, request.output_schema, values, citations)
+        costs.append(E.ProviderUsage(model=ocr_reader.MODEL,
+                                     duration_ms=int((time.monotonic() - started) * 1000)))
+    attributes = copy.deepcopy(reading.attributes)
     fields = []
-    for pointer, value in readers[0][2].items():
-        candidates = []
-        for reader_id, model, values, citations, _ in readers:
-            citation = citations.get(pointer)
+    for pointer, value in values.items():
+        leaf = ocr_reader.leaf_schema(request.output_schema, pointer)
+        citation = citations.get(pointer)
+        candidates = [
+            E.ReaderCandidate(
+                reader_id="vision_primary",
+                model=model,
+                value=value,
+                raw_text=citation.raw_text if citation else None,
+                confidence=None,
+                locations=[
+                    E.EvidenceLocation(source_file=pages[0].source_file, page=p)
+                    for p in citation.pages
+                ]
+                if citation
+                else [],
+            )
+        ]
+        hit = ocr.get(pointer)
+        if independent and leaf is not None:
             candidates.append(
                 E.ReaderCandidate(
-                    reader_id=reader_id,
-                    model=model,
-                    value=values[pointer],
-                    raw_text=citation.raw_text if citation else None,
-                    confidence=None,
+                    reader_id=ocr_reader.READER_ID,
+                    model=ocr_reader.MODEL,
+                    value=ocr_reader.candidate_value(leaf, pointer, value, hit["value"]) if hit else None,
+                    raw_text=hit["value"] if hit else None,
+                    confidence=hit["confidence"] if hit else None,
                     locations=[
-                        E.EvidenceLocation(source_file=pages[0].source_file, page=p)
-                        for p in citation.pages
+                        E.EvidenceLocation(source_file=hit["source_file"], page=hit["page"],
+                                           bounding_box=ocr_reader.box(hit.get("bbox")))
                     ]
-                    if citation
+                    if hit
                     else [],
                 )
             )
@@ -202,15 +211,17 @@ def extract(request):
             if all(v == present[0] for v in present)
             else "disagree"
         )
+        chosen, ocr_value = ocr_reader.select(leaf, pointer, value, hit, agreement)
+        if chosen == ocr_reader.READER_ID:
+            ocr_reader.set_pointer(attributes, pointer, ocr_value)
         fields.append(
             E.FieldEvidence(
                 pointer=pointer,
                 candidates=candidates,
-                selected_reader_id="vision_primary" if value is not None else None,
+                selected_reader_id=chosen,
                 agreement=agreement,
             )
         )
-    attributes = readers[0][4]
     issues = [
         {"path": list(e.absolute_path), "keyword": str(e.validator)}
         for e in validator(request.canonical_schema).iter_errors(attributes)
@@ -225,9 +236,9 @@ def extract(request):
         canonical_schema_valid=not issues,
         canonical_schema_errors=issues,
         pages=[{**p, "rotation_degrees": by_number[p["page"]].rotation_applied} for p in manifest],
-        model=readers[0][1],
+        model=model,
         cache_hit=all(cache_hits),
-        normalization_version="schema_vision_v1",
+        normalization_version=ocr_reader.NORMALIZATION_VERSION,
         field_evidence=fields,
         evidence_complete=True,
         usage=costs,
