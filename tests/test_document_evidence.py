@@ -193,7 +193,8 @@ def test_array_items_are_never_aligned_by_index(client, upload, monkeypatch):
     )
     assert response.status_code == 200, response.text
     holder = next(f for f in response.json()["field_evidence"] if f["pointer"] == "/account_holders/0")
-    assert holder["agreement"] == "single_reader" and len(holder["candidates"]) == 1
+    assert holder["agreement"] == "single_reader"
+    assert [c["value"] for c in holder["candidates"] if c["reader_id"] == "ocr_textract"] == [None]
 
 def test_prompts_restate_the_reply_shape_last_and_classify_by_meaning(client, upload, monkeypatch):
     calls = replies(monkeypatch, [reading()])

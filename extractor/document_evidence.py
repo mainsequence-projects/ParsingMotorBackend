@@ -214,7 +214,9 @@ def extract(request):
             )
         ]
         hit = ocr.get(pointer)
-        if independent and leaf is not None:
+        # Back Office rejects an independent_readers run unless EVERY field has both readers
+        # (validate_reader_strategy), so arrays/objects get an explicit null OCR candidate.
+        if independent:
             candidates.append(
                 E.ReaderCandidate(
                     reader_id=ocr_reader.READER_ID,

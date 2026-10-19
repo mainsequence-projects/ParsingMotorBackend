@@ -13,8 +13,9 @@ DRAFT = BANK["draft_schema"]
 
 
 def vision(attrs, page=1):
+    from extractor.document_evidence import leaves
     citations = [{"pointer": p, "pages": [page], "raw_text": str(v)}
-                 for p, v in ocr_reader.scalar_leaves(attrs)]
+                 for p, v in leaves(attrs) if v is not None]
     return {"attributes": {"document_type": "bank_statement", **attrs}, "citations": citations}
 
 
@@ -57,6 +58,8 @@ def field(result, pointer):
     ("/account_identifier", "CZ65 0800 0000 1920 0014 5399", "CZ6508000000192000145399"),
     ("/bank_name", "Komercni banka", "Komerční banka"),          # Textract has no Czech model
     ("/opening_balance/currency", "Kč", "CZK"),
+    ("/opening_balance/currency", "52 440,00 Kc", "CZK"),    # Textract answers with the amount
+    ("/account_identifier", "IČO 25094921", "25094921"),     # printed label is not the identifier
 ])
 def test_normalized_forms_agree(pointer, a, b):
     leaf = ocr_reader.leaf_schema(DRAFT, pointer)
@@ -109,3 +112,12 @@ def test_single_mode_does_not_call_textract(client, upload, monkeypatch):
     seen = fake_readers(monkeypatch, {"bank_name": "KB"}, {})
     r = client.post("/extract_typed_json", json={**typed_body(upload), "contract_version": 2})
     assert r.status_code == 200 and seen == []
+
+
+def test_every_field_has_both_readers_as_back_office_requires(client, upload, monkeypatch):
+    """validate_reader_strategy rejects the run unless each field has >= 2 candidates/models."""
+    attrs = {"bank_name": "KB", "account_holders": ["Eva Horáková"], "holder_address": None}
+    fake_readers(monkeypatch, attrs, {"bank name": ("KB", 0.99)})
+    result = post(client, upload)
+    for f in result.field_evidence:
+        assert len(f.candidates) >= 2 and len({c.model for c in f.candidates}) >= 2, f.pointer
