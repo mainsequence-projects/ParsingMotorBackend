@@ -61,3 +61,56 @@ def group_documents(classified: list[dict]) -> list[dict]:
         for p in g["pages"]:
             p.pop("_order", None)
     return groups
+
+
+def group_v2_pages(pages: list[dict]) -> list[dict]:
+    """Group /classify_json V2 page observations (printed page numbers, group_hint) into documents."""
+    groups = group_documents([{"source_file": p["source_file"], "page": p["page"], "doc_type": p["document_type"],
+                               "doc_key": p.get("group_hint"), "page_number": p.get("printed_page_number"),
+                               "page_count": p.get("printed_page_count"), "hint": p.get("group_hint"),
+                               "confidence": p["confidence"], "reason": p.get("reason", "")} for p in pages])
+    return _merge_complementary(groups)
+
+
+def _ids(group) -> set:
+    """Identifier-like digit runs (account, IČO, card or reference numbers) seen on a group's pages."""
+    out = set()
+    for p in group["pages"]:
+        for run in re.findall(r"\d[\d \-/]{4,}\d", p.get("hint") or ""):
+            digits = re.sub(r"\D", "", run)
+            if len(digits) >= 6:
+                out.add(digits)
+    return out
+
+
+def _numbers(group):
+    nums = [p.get("page_number") for p in group["pages"]]
+    counts = {p.get("page_count") for p in group["pages"]}
+    return (set(nums), counts.pop()) if None not in nums and len(counts) == 1 and None not in counts else (None, None)
+
+
+def _merge_complementary(groups: list[dict]) -> list[dict]:
+    """Free-text group hints differ page to page ('VÝPIS Z ÚČTU' vs 'Account 2329-…'), so shuffled
+    pages of one document land in several groups. Merge same-type groups of one file whose printed
+    page numbers complete each other within the same 'of N', unless both carry identifiers and
+    share none (two different documents). Complete or overlapping groups are never merged."""
+    out: list[dict] = []
+    for g in groups:
+        nums, count = _numbers(g)
+        target = None
+        if nums is not None:
+            for t in out:
+                tn, tc = _numbers(t)
+                if (t["doc_type"] == g["doc_type"] and t["source_file"] == g["source_file"] and tc == count
+                        and tn is not None and not tn & nums and len(tn | nums) <= count
+                        and not (_ids(t) and _ids(g) and not _ids(t) & _ids(g))):
+                    target = t
+                    break
+        if target is None:
+            out.append(g)
+            continue
+        target["pages"] = sorted(target["pages"] + g["pages"], key=lambda p: p["page_number"])
+        target["confidence"] = min(target["confidence"], g["confidence"])
+    for i, g in enumerate(out):
+        g["doc_id"] = f"d{i + 1}"
+    return out
