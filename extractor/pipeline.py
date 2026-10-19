@@ -134,7 +134,7 @@ def run_package(pages, *, inputs=None, package_id: str = "package", explain: boo
             {k: c.get(k) for k in ("source_file", "page", "doc_type", "confidence", "reason",
                                    "page_number", "page_count", "doc_key", "rotation", "cache_hit")}
             for c in classified],
-        "cost": {"run": run_cost, "cache_hits": cache_hits, "ledger": costmeter.snapshot()},
+        "cost": {"run": run_cost, "cache_hits": cache_hits, "ledger": _public_ledger(costmeter.snapshot())},
         "audit_file": audit.run_path(run_id).name if audit_enabled else None,
     }
 
@@ -145,6 +145,14 @@ def run_path(paths, **kwargs) -> dict:
     pages, inputs = load_inputs(paths)
     pid = kwargs.pop("package_id", None) or Path(paths[0]).name
     return run_package(pages, inputs=inputs, package_id=pid, **kwargs)
+
+
+def _public_ledger(snap: dict) -> dict:
+    """Ledger totals for the client; the ledger file's server path stays on the server."""
+    out = dict(snap)
+    if out.get("ledger"):
+        out["ledger"] = Path(str(out["ledger"])).name
+    return out
 
 
 def run_uploads(files: list[tuple[str, bytes]], **kwargs) -> dict:

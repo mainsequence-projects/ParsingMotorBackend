@@ -116,3 +116,9 @@ def test_cors_off_by_default_on_with_env(monkeypatch):
         assert "access-control-allow-origin" not in bad.headers
     finally:
         _reload_api(monkeypatch, None)
+
+
+def test_cost_ledger_path_is_not_exposed():
+    from extractor.pipeline import _public_ledger
+    assert _public_ledger({"total_usd": 1, "ledger": "/tmp/x/.cost/ledger.json"}) == {
+        "total_usd": 1, "ledger": "ledger.json"}

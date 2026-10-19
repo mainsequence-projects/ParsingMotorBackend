@@ -1818,8 +1818,8 @@
       "cache_hits_textract": 26,
       "cache_hits_bedrock": 50,
       "aborted": false,
-      "ledger": "/workspace/hack/ParsingMotorBackend/.cost/review_2026-10-19.json"
+      "ledger": "review_2026-10-19.json"
     }
   },
-  "audit_file": "/workspace/hack/ParsingMotorBackend/audit/20261019T125633Z-77898bbb.jsonl"
+  "audit_file": "20261019T125633Z-77898bbb.jsonl"
 }
