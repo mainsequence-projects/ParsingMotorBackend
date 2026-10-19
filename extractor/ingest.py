@@ -66,6 +66,24 @@ def load_bytes(name: str, data: bytes) -> list[Page]:
     raise ValueError(f"unsupported file type: {name}")
 
 
+def safe_name(name: str | None, seen: set[str] | None = None) -> str:
+    """Basename only, no control chars, max 120 chars; duplicates get '__2', '__3'... .
+
+    Two uploads called 'scan.pdf' must stay two different sources: the splitter groups pages
+    by source_file, so equal names would merge two different documents into one.
+    """
+    raw = str(name or "upload.bin").replace("\\", "/").split("/")[-1]
+    raw = "".join(ch for ch in raw if ch.isprintable()).strip() or "upload.bin"
+    stem, suffix = Path(raw).stem[:100] or "upload", Path(raw).suffix[:10]
+    out, n = stem + suffix, 1
+    if seen is not None:
+        while out in seen:
+            n += 1
+            out = f"{stem}__{n}{suffix}"
+        seen.add(out)
+    return out
+
+
 def _files(paths) -> list[Path]:
     out = []
     for path in paths:
@@ -80,11 +98,12 @@ def _files(paths) -> list[Path]:
 def load_inputs(paths) -> tuple[list[Page], list[dict]]:
     if isinstance(paths, (str, Path)):
         paths = [paths]
-    pages, inputs = [], []
+    pages, inputs, seen = [], [], set()
     for f in _files(paths):
         data = f.read_bytes()
-        inputs.append({"name": f.name, "bytes": len(data), "sha256": sha256(data)})
-        pages += load_bytes(f.name, data)
+        name = safe_name(f.name, seen)
+        inputs.append({"name": name, "original_name": f.name, "bytes": len(data), "sha256": sha256(data)})
+        pages += load_bytes(name, data)
     return pages, inputs
 
 
