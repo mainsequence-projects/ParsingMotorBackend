@@ -86,7 +86,8 @@ def run_package(pages, *, inputs=None, package_id: str = "package", explain: boo
             for rd in raw_docs:
                 audit.append(run_id, "extraction", {"document": {k: v for k, v in rd.items() if k != "calls"},
                                                     "calls": rd["calls"]})
-        result = evaluate_package(raw_docs, rules)
+        # same reference date as /runs/{id} re-evaluations (not the box's local "today")
+        result = evaluate_package(raw_docs, rules, run_date=audit.run_date(run_id))
     except Exception as e:
         if audit_enabled:
             audit.append(run_id, "run_failed", {"error": f"{type(e).__name__}: {e}",

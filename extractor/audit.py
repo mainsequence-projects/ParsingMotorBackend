@@ -70,6 +70,11 @@ def new_run_id() -> str:
     return datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ") + "-" + uuid.uuid4().hex[:8]
 
 
+def run_date(run_id: str) -> str:
+    """UTC date encoded in the run_id: the single reference date for date rules of a run."""
+    return f"{run_id[0:4]}-{run_id[4:6]}-{run_id[6:8]}"
+
+
 def git_info() -> dict:
     env = os.getenv("EXTRACTOR_GIT_COMMIT")
     if env:
@@ -206,9 +211,8 @@ def current_state(run_id: str, rules=None, path=None) -> dict:
     events = read_events(run_id, path)
     r = _rules_for_run(events, rules)
     fo, co, req = _decisions(events)
-    run_date = events[0]["ts"][:10]
     res = evaluate_package(_raw_docs(events), r, field_overrides=fo, check_overrides=co,
-                           requested_documents=req, run_date=run_date)
+                           requested_documents=req, run_date=run_date(run_id or events[0]["run_id"]))
     res["run_id"] = run_id
     res["decisions"] = [e["payload"] | {"event_hash": e["hash"], "ts": e["ts"]}
                         for e in events if e["type"] == "decision"]
