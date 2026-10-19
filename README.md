@@ -39,7 +39,10 @@ Czech *rodné číslo* rules, cross-document checks. Built for the hackathon Tra
 | Main Sequence entry | [`api/kb_extractor/main.py`](api/kb_extractor/main.py) |
 | Decision log (ES) | [`NOTAS_CARLOS.md`](NOTAS_CARLOS.md) |
 | Architecture diagram | [`arquitectura_motor.png`](arquitectura_motor.png) |
-| Synthetic samples + eval | [`samples/`](samples/), [`eval.py`](eval.py) |
+| Rules (versioned config) | [`extractor/rules.yaml`](extractor/rules.yaml) |
+| Audit trail | [`extractor/audit.py`](extractor/audit.py) |
+| Synthetic samples + eval | [`samples/`](samples/), [`scripts/eval.py`](scripts/eval.py) |
+| Tests (no AWS) | [`tests/`](tests/) |
 | AWS deploy scripts | [`deploy/`](deploy/) |
 
 ### Run the KB API locally
@@ -53,8 +56,16 @@ curl -s http://127.0.0.1:8080/health
 CLI (same engine):
 
 ```bash
-python -m extractor samples/02_missing_payslip/package.pdf -o /tmp/out.json
+python -m extractor samples/02_missing_payslip/package.pdf -o /tmp/out.json [--rules my_rules.yaml] [--cache]
+python -m extractor recheck <run_id> --rules my_rules.yaml   # re-apply rules, no AWS
+python -m extractor decide <run_id> --field payslip.last_name --action confirm --reviewer ana
+python -m extractor verify <run_id>                           # hash-chain check
+python -m extractor learn                                     # override report, never auto-applied
+python -m pytest -q                                           # 31 tests, no AWS
 ```
+
+Audit/decision API: `POST /runs/{run_id}/decisions`, `GET /runs/{run_id}`,
+`GET /runs/{run_id}/verify`, `GET /learning`, `GET /rules`.
 
 ### Public demo
 
@@ -62,6 +73,8 @@ CloudFront (no token in this README): https://d31su4idgeitei.cloudfront.net/
 
 API token is only on the deployer's machine (`.deploy_token`, gitignored). See `NOTAS_CARLOS.md` §8.
 
-### Measured eval (AWS, 2026-10-19)
+### Measured eval (AWS eu-central-1, 2026-10-19, 9 synthetic packages)
 
-`4/4` packages fully correct · `field_accuracy=1.0` · `check_accuracy=1.0`
+Page classification 39/39 · grouping 9/9 · fields 254/255 · expected flags 8/8 ·
+false alarms 2 (scanned package 05) · next step exact 5/9, same-or-stricter 9/9.
+Details and honest caveats: `NOTAS_CARLOS.md` §12. The deployed Lambda still runs 0.1.0.
