@@ -55,15 +55,25 @@ def cross_document_checks(docs: list[dict]) -> list[dict]:
             "page": firsts[0][1].get("page"),
         })
     if len(lasts) >= 2:
-        vals = {f[1]["normalized"] for f in lasts}
-        # tolerate near-miss (OCR typo) via SequenceMatcher already in values_agree for text,
-        # here we require exact after diacritic strip; soft-fail as warning if close
+        from difflib import SequenceMatcher
+        from .normalize import normalize as _norm
+        # Prefer OCR raw when engines disagreed (Bedrock often "autocorrects" typos)
+        vals = set()
+        for _, f in lasts:
+            raw = f.get("textract") if f.get("status") == "manual_review" and f.get("textract") else f.get("value")
+            n = _norm("name", raw) or f.get("normalized")
+            if n:
+                vals.add(n)
         status = "passed" if len(vals) == 1 else "discrepancy"
         if status != "passed":
-            from difflib import SequenceMatcher
             vs = list(vals)
             if len(vs) == 2 and SequenceMatcher(None, vs[0], vs[1]).ratio() >= 0.85:
                 status = "warning"
+        # Any engine disagreement on surname is at least a warning for the clerk
+        if status == "passed" and any(f.get("status") == "manual_review" for _, f in lasts):
+            status = "warning"
+            vals = {str(f.get("textract")) + "|" + str(f.get("bedrock")) for _, f in lasts
+                    if f.get("status") == "manual_review"}
         checks.append({
             "check": "last_name_consistent",
             "status": status,

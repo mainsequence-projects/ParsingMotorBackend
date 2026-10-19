@@ -50,7 +50,7 @@ def _bedrock_for_doc(doc: dict) -> dict:
         f"{json.dumps(schema_hint, indent=2)}\n"
         "Rules:\n"
         "- Dates as YYYY-MM-DD when possible, else keep the original string.\n"
-        "- Amounts as numbers (no currency symbol).\n"
+        "- Amounts as numbers (no currency symbol). For declared_monthly_income use ONLY the figure next to that label, never the loan amount.\n"
         "- birth_number (rodne cislo) digits with optional slash, exactly as printed.\n"
         "- For required_documents, map free text to the codes: id_card, bank_statement, "
         "payslip, proof_of_address. Only include those that are listed as required.\n"

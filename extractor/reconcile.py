@@ -3,6 +3,9 @@ from .config import AMOUNT_TOLERANCE, SCHEMAS, TEXTRACT_PASS_CONF
 from .normalize import normalize, values_agree
 from .rules import parse_birth_number
 
+# Field types where a confident Textract reading beats a disagreeing LLM (OCR-native).
+OCR_PREFERRED = {"amount", "date", "birth_number", "iban", "id", "name"}
+
 
 def reconcile_fields(doc_type: str, textract: dict, bedrock: dict) -> dict:
     fields_meta = SCHEMAS.get(doc_type, {}).get("fields") or {}
@@ -16,29 +19,38 @@ def reconcile_fields(doc_type: str, textract: dict, bedrock: dict) -> dict:
         conf = float(t.get("confidence") or 0.0)
         page = t.get("page") or b.get("page")
 
-        # Prefer Bedrock value when they agree or Textract missing; keep both for audit.
-        chosen_raw = b_raw if b_raw not in (None, "", []) else t_raw
-        chosen_norm = b_norm if b_norm is not None else t_norm
+        agree = False
+        if t_norm is not None and b_norm is not None:
+            if ftype == "amount":
+                base = max(abs(t_norm), abs(b_norm), 1.0)
+                agree = abs(t_norm - b_norm) / base <= AMOUNT_TOLERANCE
+            else:
+                agree = values_agree(ftype, t_norm, b_norm)
 
         if t_norm is None and b_norm is None:
             status = "missing"
-        elif t_norm is not None and b_norm is not None and values_agree(ftype, t_norm, b_norm):
-            status = "passed" if conf >= TEXTRACT_PASS_CONF else "warning"
-        elif ftype == "amount" and t_norm is not None and b_norm is not None:
-            base = max(abs(t_norm), abs(b_norm), 1.0)
-            if abs(t_norm - b_norm) / base <= AMOUNT_TOLERANCE:
-                status = "passed" if conf >= TEXTRACT_PASS_CONF else "warning"
-            else:
-                status = "manual_review"
-        elif t_norm is None or b_norm is None:
-            # One engine has it -> still usable but needs a human glance
-            status = "warning" if (t_norm or b_norm) else "missing"
-            if t_norm is None and b_norm is not None:
-                status = "warning"  # Bedrock-only (e.g. doc_list)
-            elif b_norm is None and t_norm is not None:
-                status = "manual_review"
+            chosen_raw, chosen_norm = None, None
+        elif agree:
+            status = "passed" if conf >= TEXTRACT_PASS_CONF or t_norm is None else "warning"
+            # Prefer Textract raw (keeps original formatting) when present
+            chosen_raw = t_raw if t_raw not in (None, "") else b_raw
+            chosen_norm = t_norm if t_norm is not None else b_norm
+            if t_norm is None:
+                status = "warning"  # Bedrock-only agreement path (e.g. doc_list)
+                chosen_raw, chosen_norm = b_raw, b_norm
+        elif t_norm is None and b_norm is not None:
+            status = "warning"  # Bedrock-only field
+            chosen_raw, chosen_norm = b_raw, b_norm
+        elif b_norm is None and t_norm is not None:
+            status = "manual_review" if conf < TEXTRACT_PASS_CONF else "warning"
+            chosen_raw, chosen_norm = t_raw, t_norm
         else:
+            # Disagreement: LLM must NOT silently win. Prefer OCR for OCR-native types.
             status = "manual_review"
+            if ftype in OCR_PREFERRED and conf >= 0.4 and t_norm is not None:
+                chosen_raw, chosen_norm = t_raw, t_norm
+            else:
+                chosen_raw, chosen_norm = b_raw, b_norm
 
         out[name] = {
             "value": chosen_raw,
@@ -73,7 +85,7 @@ def run_field_rules(fields: dict) -> list[dict]:
     checks = []
     bn = fields.get("birth_number") or {}
     if bn.get("normalized"):
-        info = parse_birth_number(bn["normalized"])
+        info = parse_birth_number(str(bn["normalized"]))
         checks.append({
             "check": "birth_number_valid",
             "status": "passed" if info["valid"] else "discrepancy",
