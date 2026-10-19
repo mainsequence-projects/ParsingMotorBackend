@@ -9,6 +9,9 @@ readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
   "fastapi>=0.110,<1",
+  "pydantic>=2.7,<3",
+  "jsonschema[format-nongpl]>=4.23,<5",
+  "referencing>=0.35,<1",
   "mainsequence==8.1.10",
   "mainsequence[server]",
   "uvicorn==0.52.4",

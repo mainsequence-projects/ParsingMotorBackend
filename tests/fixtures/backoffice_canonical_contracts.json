@@ -1,0 +1,4719 @@
+[
+  {
+    "document_type": "national_identity_card",
+    "version": 1,
+    "canonical_schema": {
+      "$defs": {
+        "EvidenceRegion": {
+          "additionalProperties": false,
+          "description": "A location within one immutable raw source.",
+          "properties": {
+            "raw_document_uid": {
+              "description": "UID of the immutable source document containing this evidence.",
+              "format": "uuid",
+              "title": "Source document UID",
+              "type": "string"
+            },
+            "page_number": {
+              "description": "One-based page number in the source document.",
+              "exclusiveMinimum": 0,
+              "title": "Page number",
+              "type": "integer"
+            },
+            "bounding_box": {
+              "anyOf": [
+                {
+                  "items": {
+                    "maximum": 1,
+                    "minimum": 0,
+                    "type": "number"
+                  },
+                  "maxItems": 4,
+                  "minItems": 4,
+                  "type": "array"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Normalized [left, top, right, bottom] coordinates on the upright page; null when only the page is known.",
+              "title": "Bounding box"
+            }
+          },
+          "required": [
+            "raw_document_uid",
+            "page_number"
+          ],
+          "title": "EvidenceRegion",
+          "type": "object"
+        }
+      },
+      "additionalProperties": false,
+      "description": "Structured facts from a national identity card.",
+      "properties": {
+        "document_type": {
+          "const": "national_identity_card",
+          "default": "national_identity_card",
+          "description": "Identifies this payload as national identity card.",
+          "title": "Document type",
+          "type": "string"
+        },
+        "full_name": {
+          "description": "Holder's complete name exactly as printed on the card.",
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Full name",
+          "type": "string"
+        },
+        "given_names": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "pattern": "\\S",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "All given names in their printed order when identified separately.",
+          "title": "Given names"
+        },
+        "last_name": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "pattern": "\\S",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Surname or family name when identified separately on the card.",
+          "title": "Last name"
+        },
+        "date_of_birth": {
+          "description": "Holder's printed date of birth, entered as YYYY-MM-DD.",
+          "format": "date",
+          "title": "Date of birth",
+          "type": "string"
+        },
+        "identity_number": {
+          "description": "Identity identifier printed on the card, preserving letters and leading zeros.",
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Identity number",
+          "type": "string"
+        },
+        "issuing_country": {
+          "description": "Country or issuing authority identified on the card.",
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Issuing country",
+          "type": "string"
+        },
+        "issue_date": {
+          "anyOf": [
+            {
+              "format": "date",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Date the card was issued, if printed.",
+          "title": "Issue date"
+        },
+        "validity_type": {
+          "description": "Whether the source states a fixed expiry, permanent validity, or does not establish validity.",
+          "enum": [
+            "fixed_term",
+            "permanent",
+            "unknown"
+          ],
+          "title": "Validity type",
+          "type": "string"
+        },
+        "expiration_date": {
+          "anyOf": [
+            {
+              "format": "date",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Printed expiry date; required when validity is fixed-term.",
+          "title": "Expiration date"
+        },
+        "portrait_reference": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/EvidenceRegion"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Location of the holder's portrait in the source document.",
+          "title": "Portrait reference"
+        }
+      },
+      "required": [
+        "full_name",
+        "date_of_birth",
+        "identity_number",
+        "issuing_country",
+        "validity_type"
+      ],
+      "title": "NationalIdentityCard",
+      "type": "object"
+    },
+    "draft_schema": {
+      "$defs": {
+        "EvidenceRegionDraft": {
+          "additionalProperties": false,
+          "properties": {
+            "raw_document_uid": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "UID of the immutable source document containing this evidence.",
+              "title": "Source document UID"
+            },
+            "page_number": {
+              "anyOf": [
+                {
+                  "exclusiveMinimum": 0,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "One-based page number in the source document.",
+              "title": "Page number"
+            },
+            "bounding_box": {
+              "anyOf": [
+                {
+                  "items": {
+                    "maximum": 1,
+                    "minimum": 0,
+                    "type": "number"
+                  },
+                  "maxItems": 4,
+                  "minItems": 4,
+                  "type": "array"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Normalized [left, top, right, bottom] coordinates on the upright page; null when only the page is known.",
+              "title": "Bounding box"
+            }
+          },
+          "title": "EvidenceRegionDraft",
+          "type": "object"
+        }
+      },
+      "additionalProperties": false,
+      "properties": {
+        "document_type": {
+          "const": "national_identity_card",
+          "default": "national_identity_card",
+          "description": "Identifies this payload as national identity card.",
+          "title": "Document type",
+          "type": "string"
+        },
+        "full_name": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "pattern": "\\S",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Holder's complete name exactly as printed on the card.",
+          "title": "Full name"
+        },
+        "given_names": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "pattern": "\\S",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "All given names in their printed order when identified separately.",
+          "title": "Given names"
+        },
+        "last_name": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "pattern": "\\S",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Surname or family name when identified separately on the card.",
+          "title": "Last name"
+        },
+        "date_of_birth": {
+          "anyOf": [
+            {
+              "format": "date",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Holder's printed date of birth, entered as YYYY-MM-DD.",
+          "title": "Date of birth"
+        },
+        "identity_number": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "pattern": "\\S",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Identity identifier printed on the card, preserving letters and leading zeros.",
+          "title": "Identity number"
+        },
+        "issuing_country": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "pattern": "\\S",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Country or issuing authority identified on the card.",
+          "title": "Issuing country"
+        },
+        "issue_date": {
+          "anyOf": [
+            {
+              "format": "date",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Date the card was issued, if printed.",
+          "title": "Issue date"
+        },
+        "validity_type": {
+          "anyOf": [
+            {
+              "enum": [
+                "fixed_term",
+                "permanent",
+                "unknown"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Whether the source states a fixed expiry, permanent validity, or does not establish validity.",
+          "title": "Validity type"
+        },
+        "expiration_date": {
+          "anyOf": [
+            {
+              "format": "date",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Printed expiry date; required when validity is fixed-term.",
+          "title": "Expiration date"
+        },
+        "portrait_reference": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/EvidenceRegionDraft"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Location of the holder's portrait in the source document.",
+          "title": "Portrait reference"
+        }
+      },
+      "title": "NationalIdentityCardDraft",
+      "type": "object"
+    },
+    "content_sha256": "af5d7fa9caba6d77f11badd2e1d550a1148291ed221e8448279e6a1ca1798a6f"
+  },
+  {
+    "document_type": "passport",
+    "version": 1,
+    "canonical_schema": {
+      "$defs": {
+        "EvidenceRegion": {
+          "additionalProperties": false,
+          "description": "A location within one immutable raw source.",
+          "properties": {
+            "raw_document_uid": {
+              "description": "UID of the immutable source document containing this evidence.",
+              "format": "uuid",
+              "title": "Source document UID",
+              "type": "string"
+            },
+            "page_number": {
+              "description": "One-based page number in the source document.",
+              "exclusiveMinimum": 0,
+              "title": "Page number",
+              "type": "integer"
+            },
+            "bounding_box": {
+              "anyOf": [
+                {
+                  "items": {
+                    "maximum": 1,
+                    "minimum": 0,
+                    "type": "number"
+                  },
+                  "maxItems": 4,
+                  "minItems": 4,
+                  "type": "array"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Normalized [left, top, right, bottom] coordinates on the upright page; null when only the page is known.",
+              "title": "Bounding box"
+            }
+          },
+          "required": [
+            "raw_document_uid",
+            "page_number"
+          ],
+          "title": "EvidenceRegion",
+          "type": "object"
+        }
+      },
+      "additionalProperties": false,
+      "description": "Structured facts from a passport.",
+      "properties": {
+        "document_type": {
+          "const": "passport",
+          "default": "passport",
+          "description": "Identifies this payload as passport.",
+          "title": "Document type",
+          "type": "string"
+        },
+        "full_name": {
+          "description": "Holder's complete name exactly as printed in the visual inspection zone.",
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Full name",
+          "type": "string"
+        },
+        "given_names": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "pattern": "\\S",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "All given names in their printed order, if separately identified.",
+          "title": "Given names"
+        },
+        "last_name": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "pattern": "\\S",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Printed surname or family name, if separately identified.",
+          "title": "Last name"
+        },
+        "date_of_birth": {
+          "description": "Holder's printed date of birth, entered as YYYY-MM-DD.",
+          "format": "date",
+          "title": "Date of birth",
+          "type": "string"
+        },
+        "passport_number": {
+          "description": "Passport identifier exactly as printed, preserving letters and leading zeros.",
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Passport number",
+          "type": "string"
+        },
+        "nationality": {
+          "description": "Nationality exactly as stated by the passport; retain the original value.",
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Nationality",
+          "type": "string"
+        },
+        "issuing_country": {
+          "description": "Country or issuing authority identified on the passport.",
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Issuing country",
+          "type": "string"
+        },
+        "issue_date": {
+          "anyOf": [
+            {
+              "format": "date",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Date the passport was issued, if printed.",
+          "title": "Issue date"
+        },
+        "expiration_date": {
+          "description": "Printed passport expiry date, entered as YYYY-MM-DD.",
+          "format": "date",
+          "title": "Expiration date",
+          "type": "string"
+        },
+        "mrz_lines": {
+          "anyOf": [
+            {
+              "items": {
+                "minLength": 1,
+                "pattern": "\\S",
+                "type": "string"
+              },
+              "minItems": 1,
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "MRZ lines in printed order, preserving every character including `<` fillers.",
+          "title": "Mrz lines"
+        },
+        "portrait_reference": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/EvidenceRegion"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Location of the holder's portrait in the passport source.",
+          "title": "Portrait reference"
+        }
+      },
+      "required": [
+        "full_name",
+        "date_of_birth",
+        "passport_number",
+        "nationality",
+        "issuing_country",
+        "expiration_date"
+      ],
+      "title": "Passport",
+      "type": "object"
+    },
+    "draft_schema": {
+      "$defs": {
+        "EvidenceRegionDraft": {
+          "additionalProperties": false,
+          "properties": {
+            "raw_document_uid": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "UID of the immutable source document containing this evidence.",
+              "title": "Source document UID"
+            },
+            "page_number": {
+              "anyOf": [
+                {
+                  "exclusiveMinimum": 0,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "One-based page number in the source document.",
+              "title": "Page number"
+            },
+            "bounding_box": {
+              "anyOf": [
+                {
+                  "items": {
+                    "maximum": 1,
+                    "minimum": 0,
+                    "type": "number"
+                  },
+                  "maxItems": 4,
+                  "minItems": 4,
+                  "type": "array"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Normalized [left, top, right, bottom] coordinates on the upright page; null when only the page is known.",
+              "title": "Bounding box"
+            }
+          },
+          "title": "EvidenceRegionDraft",
+          "type": "object"
+        }
+      },
+      "additionalProperties": false,
+      "properties": {
+        "document_type": {
+          "const": "passport",
+          "default": "passport",
+          "description": "Identifies this payload as passport.",
+          "title": "Document type",
+          "type": "string"
+        },
+        "full_name": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "pattern": "\\S",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Holder's complete name exactly as printed in the visual inspection zone.",
+          "title": "Full name"
+        },
+        "given_names": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "pattern": "\\S",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "All given names in their printed order, if separately identified.",
+          "title": "Given names"
+        },
+        "last_name": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "pattern": "\\S",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Printed surname or family name, if separately identified.",
+          "title": "Last name"
+        },
+        "date_of_birth": {
+          "anyOf": [
+            {
+              "format": "date",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Holder's printed date of birth, entered as YYYY-MM-DD.",
+          "title": "Date of birth"
+        },
+        "passport_number": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "pattern": "\\S",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Passport identifier exactly as printed, preserving letters and leading zeros.",
+          "title": "Passport number"
+        },
+        "nationality": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "pattern": "\\S",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Nationality exactly as stated by the passport; retain the original value.",
+          "title": "Nationality"
+        },
+        "issuing_country": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "pattern": "\\S",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Country or issuing authority identified on the passport.",
+          "title": "Issuing country"
+        },
+        "issue_date": {
+          "anyOf": [
+            {
+              "format": "date",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Date the passport was issued, if printed.",
+          "title": "Issue date"
+        },
+        "expiration_date": {
+          "anyOf": [
+            {
+              "format": "date",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Printed passport expiry date, entered as YYYY-MM-DD.",
+          "title": "Expiration date"
+        },
+        "mrz_lines": {
+          "anyOf": [
+            {
+              "items": {
+                "minLength": 1,
+                "pattern": "\\S",
+                "type": "string"
+              },
+              "minItems": 1,
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "MRZ lines in printed order, preserving every character including `<` fillers.",
+          "title": "Mrz lines"
+        },
+        "portrait_reference": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/EvidenceRegionDraft"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Location of the holder's portrait in the passport source.",
+          "title": "Portrait reference"
+        }
+      },
+      "title": "PassportDraft",
+      "type": "object"
+    },
+    "content_sha256": "9947df976cb66da16124e07d2e116f162951cfd190300ad232d8773b3ca2a850"
+  },
+  {
+    "document_type": "residence_permit",
+    "version": 1,
+    "canonical_schema": {
+      "additionalProperties": false,
+      "description": "Structured facts from a residence permit.",
+      "properties": {
+        "document_type": {
+          "const": "residence_permit",
+          "default": "residence_permit",
+          "description": "Identifies this payload as residence permit.",
+          "title": "Document type",
+          "type": "string"
+        },
+        "full_name": {
+          "description": "Permit holder's complete name exactly as printed.",
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Full name",
+          "type": "string"
+        },
+        "date_of_birth": {
+          "anyOf": [
+            {
+              "format": "date",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Holder's printed date of birth, if present.",
+          "title": "Date of birth"
+        },
+        "permit_number": {
+          "description": "Residence-permit identifier exactly as printed.",
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Permit number",
+          "type": "string"
+        },
+        "issuing_country": {
+          "description": "Country or authority that issued the residence permit.",
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Issuing country",
+          "type": "string"
+        },
+        "permit_type": {
+          "description": "Printed permit category or class without inferring additional entitlements.",
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Permit type",
+          "type": "string"
+        },
+        "residency_status": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "pattern": "\\S",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Residency status explicitly stated by the source.",
+          "title": "Residency status"
+        },
+        "issue_date": {
+          "anyOf": [
+            {
+              "format": "date",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Printed permit issue date.",
+          "title": "Issue date"
+        },
+        "validity_type": {
+          "description": "Validity stated by the document; unknown when the source does not establish it.",
+          "enum": [
+            "fixed_term",
+            "permanent",
+            "unknown"
+          ],
+          "title": "Validity type",
+          "type": "string"
+        },
+        "expiration_date": {
+          "anyOf": [
+            {
+              "format": "date",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Printed expiry date; required for fixed-term validity.",
+          "title": "Expiration date"
+        },
+        "conditions": {
+          "anyOf": [
+            {
+              "items": {
+                "minLength": 1,
+                "pattern": "\\S",
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Restrictions or conditions transcribed from the permit.",
+          "title": "Conditions"
+        }
+      },
+      "required": [
+        "full_name",
+        "permit_number",
+        "issuing_country",
+        "permit_type",
+        "validity_type"
+      ],
+      "title": "ResidencePermit",
+      "type": "object"
+    },
+    "draft_schema": {
+      "additionalProperties": false,
+      "properties": {
+        "document_type": {
+          "const": "residence_permit",
+          "default": "residence_permit",
+          "description": "Identifies this payload as residence permit.",
+          "title": "Document type",
+          "type": "string"
+        },
+        "full_name": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "pattern": "\\S",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Permit holder's complete name exactly as printed.",
+          "title": "Full name"
+        },
+        "date_of_birth": {
+          "anyOf": [
+            {
+              "format": "date",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Holder's printed date of birth, if present.",
+          "title": "Date of birth"
+        },
+        "permit_number": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "pattern": "\\S",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Residence-permit identifier exactly as printed.",
+          "title": "Permit number"
+        },
+        "issuing_country": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "pattern": "\\S",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Country or authority that issued the residence permit.",
+          "title": "Issuing country"
+        },
+        "permit_type": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "pattern": "\\S",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Printed permit category or class without inferring additional entitlements.",
+          "title": "Permit type"
+        },
+        "residency_status": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "pattern": "\\S",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Residency status explicitly stated by the source.",
+          "title": "Residency status"
+        },
+        "issue_date": {
+          "anyOf": [
+            {
+              "format": "date",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Printed permit issue date.",
+          "title": "Issue date"
+        },
+        "validity_type": {
+          "anyOf": [
+            {
+              "enum": [
+                "fixed_term",
+                "permanent",
+                "unknown"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Validity stated by the document; unknown when the source does not establish it.",
+          "title": "Validity type"
+        },
+        "expiration_date": {
+          "anyOf": [
+            {
+              "format": "date",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Printed expiry date; required for fixed-term validity.",
+          "title": "Expiration date"
+        },
+        "conditions": {
+          "anyOf": [
+            {
+              "items": {
+                "minLength": 1,
+                "pattern": "\\S",
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Restrictions or conditions transcribed from the permit.",
+          "title": "Conditions"
+        }
+      },
+      "title": "ResidencePermitDraft",
+      "type": "object"
+    },
+    "content_sha256": "724670e9ec06cb109cd4ad44af3f30e8d0427e1d712f5d88a06572f5137ba7ed"
+  },
+  {
+    "document_type": "utility_bill",
+    "version": 1,
+    "canonical_schema": {
+      "$defs": {
+        "DatePeriod": {
+          "additionalProperties": false,
+          "description": "Inclusive calendar interval.",
+          "properties": {
+            "start_date": {
+              "description": "First calendar date included in the reporting or payment period, as YYYY-MM-DD.",
+              "format": "date",
+              "title": "Start date",
+              "type": "string"
+            },
+            "end_date": {
+              "description": "Last calendar date included in the period, as YYYY-MM-DD; must not precede the start date.",
+              "format": "date",
+              "title": "End date",
+              "type": "string"
+            }
+          },
+          "required": [
+            "start_date",
+            "end_date"
+          ],
+          "title": "DatePeriod",
+          "type": "object"
+        },
+        "Money": {
+          "additionalProperties": false,
+          "description": "Exact monetary value; JSON serializes the amount as a decimal string.",
+          "properties": {
+            "amount": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "string"
+                }
+              ],
+              "description": "Monetary amount in the associated currency, preserving source precision and sign.",
+              "title": "Amount"
+            },
+            "currency": {
+              "description": "ISO three-letter currency code for the monetary amount.",
+              "pattern": "^[A-Z]{3}$",
+              "title": "Currency",
+              "type": "string"
+            }
+          },
+          "required": [
+            "amount",
+            "currency"
+          ],
+          "title": "Money",
+          "type": "object"
+        },
+        "PostalAddress": {
+          "additionalProperties": false,
+          "description": "An address as printed; policy decides which local components are necessary.",
+          "properties": {
+            "address_line_1": {
+              "description": "Primary street, building, or locality line exactly as stated by the source.",
+              "minLength": 1,
+              "pattern": "\\S",
+              "title": "Address line 1",
+              "type": "string"
+            },
+            "address_line_2": {
+              "anyOf": [
+                {
+                  "minLength": 1,
+                  "pattern": "\\S",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Additional unit, floor, building, or locality information; null when absent.",
+              "title": "Address line 2"
+            },
+            "city": {
+              "anyOf": [
+                {
+                  "minLength": 1,
+                  "pattern": "\\S",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "City or locality named in the address; null when absent.",
+              "title": "City"
+            },
+            "region": {
+              "anyOf": [
+                {
+                  "minLength": 1,
+                  "pattern": "\\S",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "State, province, or administrative region named in the address; null when absent.",
+              "title": "Region"
+            },
+            "postal_code": {
+              "anyOf": [
+                {
+                  "minLength": 1,
+                  "pattern": "\\S",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Postal code as printed, preserving letters, spaces, and leading zeros; null when absent.",
+              "title": "Postal code"
+            },
+            "country_code": {
+              "anyOf": [
+                {
+                  "pattern": "^[A-Z]{2}$",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "ISO two-letter country code established by the source or verified reference; null when unknown.",
+              "title": "Country code"
+            }
+          },
+          "required": [
+            "address_line_1"
+          ],
+          "title": "PostalAddress",
+          "type": "object"
+        }
+      },
+      "additionalProperties": false,
+      "description": "Structured facts from a utility bill.",
+      "properties": {
+        "document_type": {
+          "const": "utility_bill",
+          "default": "utility_bill",
+          "description": "Identifies this payload as utility bill.",
+          "title": "Document type",
+          "type": "string"
+        },
+        "account_holder_name": {
+          "description": "Customer or account-holder name printed on the bill.",
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Account holder name",
+          "type": "string"
+        },
+        "service_address": {
+          "$ref": "#/$defs/PostalAddress",
+          "description": "Address where the utility service is supplied, distinguished from a mailing address.",
+          "title": "Service address"
+        },
+        "provider_name": {
+          "description": "Utility provider's name as printed.",
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Provider name",
+          "type": "string"
+        },
+        "utility_type": {
+          "description": "Type of service stated by the bill, such as electricity, water, gas, or telecommunications.",
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Utility type",
+          "type": "string"
+        },
+        "issue_date": {
+          "description": "Bill issue date used for the document-age check.",
+          "format": "date",
+          "title": "Issue date",
+          "type": "string"
+        },
+        "billing_period": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/DatePeriod"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Service period covered by the bill, when printed.",
+          "title": "Billing period"
+        },
+        "account_number": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "pattern": "\\S",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Provider's customer/account identifier, preserving leading zeros.",
+          "title": "Account number"
+        },
+        "total_due": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Money"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Total amount due as printed, if needed by the configured workflow.",
+          "title": "Total due"
+        }
+      },
+      "required": [
+        "account_holder_name",
+        "service_address",
+        "provider_name",
+        "utility_type",
+        "issue_date"
+      ],
+      "title": "UtilityBill",
+      "type": "object"
+    },
+    "draft_schema": {
+      "$defs": {
+        "DatePeriodDraft": {
+          "additionalProperties": false,
+          "properties": {
+            "start_date": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "First calendar date included in the reporting or payment period, as YYYY-MM-DD.",
+              "title": "Start date"
+            },
+            "end_date": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Last calendar date included in the period, as YYYY-MM-DD; must not precede the start date.",
+              "title": "End date"
+            }
+          },
+          "title": "DatePeriodDraft",
+          "type": "object"
+        },
+        "MoneyDraft": {
+          "additionalProperties": false,
+          "properties": {
+            "amount": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Monetary amount in the associated currency, preserving source precision and sign.",
+              "title": "Amount"
+            },
+            "currency": {
+              "anyOf": [
+                {
+                  "pattern": "^[A-Z]{3}$",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "ISO three-letter currency code for the monetary amount.",
+              "title": "Currency"
+            }
+          },
+          "title": "MoneyDraft",
+          "type": "object"
+        },
+        "PostalAddressDraft": {
+          "additionalProperties": false,
+          "properties": {
+            "address_line_1": {
+              "anyOf": [
+                {
+                  "minLength": 1,
+                  "pattern": "\\S",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Primary street, building, or locality line exactly as stated by the source.",
+              "title": "Address line 1"
+            },
+            "address_line_2": {
+              "anyOf": [
+                {
+                  "minLength": 1,
+                  "pattern": "\\S",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Additional unit, floor, building, or locality information; null when absent.",
+              "title": "Address line 2"
+            },
+            "city": {
+              "anyOf": [
+                {
+                  "minLength": 1,
+                  "pattern": "\\S",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "City or locality named in the address; null when absent.",
+              "title": "City"
+            },
+            "region": {
+              "anyOf": [
+                {
+                  "minLength": 1,
+                  "pattern": "\\S",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "State, province, or administrative region named in the address; null when absent.",
+              "title": "Region"
+            },
+            "postal_code": {
+              "anyOf": [
+                {
+                  "minLength": 1,
+                  "pattern": "\\S",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Postal code as printed, preserving letters, spaces, and leading zeros; null when absent.",
+              "title": "Postal code"
+            },
+            "country_code": {
+              "anyOf": [
+                {
+                  "pattern": "^[A-Z]{2}$",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "ISO two-letter country code established by the source or verified reference; null when unknown.",
+              "title": "Country code"
+            }
+          },
+          "title": "PostalAddressDraft",
+          "type": "object"
+        }
+      },
+      "additionalProperties": false,
+      "properties": {
+        "document_type": {
+          "const": "utility_bill",
+          "default": "utility_bill",
+          "description": "Identifies this payload as utility bill.",
+          "title": "Document type",
+          "type": "string"
+        },
+        "account_holder_name": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "pattern": "\\S",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Customer or account-holder name printed on the bill.",
+          "title": "Account holder name"
+        },
+        "service_address": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PostalAddressDraft"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Address where the utility service is supplied, distinguished from a mailing address.",
+          "title": "Service address"
+        },
+        "provider_name": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "pattern": "\\S",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Utility provider's name as printed.",
+          "title": "Provider name"
+        },
+        "utility_type": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "pattern": "\\S",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Type of service stated by the bill, such as electricity, water, gas, or telecommunications.",
+          "title": "Utility type"
+        },
+        "issue_date": {
+          "anyOf": [
+            {
+              "format": "date",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Bill issue date used for the document-age check.",
+          "title": "Issue date"
+        },
+        "billing_period": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/DatePeriodDraft"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Service period covered by the bill, when printed.",
+          "title": "Billing period"
+        },
+        "account_number": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "pattern": "\\S",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Provider's customer/account identifier, preserving leading zeros.",
+          "title": "Account number"
+        },
+        "total_due": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/MoneyDraft"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Total amount due as printed, if needed by the configured workflow.",
+          "title": "Total due"
+        }
+      },
+      "title": "UtilityBillDraft",
+      "type": "object"
+    },
+    "content_sha256": "7e9d10eaefa020974ee40988ae0c23e254cb9f7beeab98e42900a6e52612a511"
+  },
+  {
+    "document_type": "bank_statement",
+    "version": 1,
+    "canonical_schema": {
+      "$defs": {
+        "BankTransaction": {
+          "additionalProperties": false,
+          "description": "A transcribed bank entry, not a claim of complete statement coverage.",
+          "properties": {
+            "booking_date": {
+              "description": "Date the bank records the transaction in the statement, as YYYY-MM-DD.",
+              "format": "date",
+              "title": "Booking date",
+              "type": "string"
+            },
+            "value_date": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Printed transaction value date; null when not stated separately.",
+              "title": "Value date"
+            },
+            "amount": {
+              "$ref": "#/$defs/Money",
+              "description": "Signed amount: positive is credit and negative is debit from the account holder's perspective.",
+              "title": "Transaction amount"
+            },
+            "description": {
+              "anyOf": [
+                {
+                  "minLength": 1,
+                  "pattern": "\\S",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Transaction narrative exactly as printed; null when absent.",
+              "title": "Transaction description"
+            },
+            "counterparty_name": {
+              "anyOf": [
+                {
+                  "minLength": 1,
+                  "pattern": "\\S",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Named payer or payee explicitly identified by the statement; null when absent.",
+              "title": "Counterparty name"
+            }
+          },
+          "required": [
+            "booking_date",
+            "amount"
+          ],
+          "title": "BankTransaction",
+          "type": "object"
+        },
+        "DatePeriod": {
+          "additionalProperties": false,
+          "description": "Inclusive calendar interval.",
+          "properties": {
+            "start_date": {
+              "description": "First calendar date included in the reporting or payment period, as YYYY-MM-DD.",
+              "format": "date",
+              "title": "Start date",
+              "type": "string"
+            },
+            "end_date": {
+              "description": "Last calendar date included in the period, as YYYY-MM-DD; must not precede the start date.",
+              "format": "date",
+              "title": "End date",
+              "type": "string"
+            }
+          },
+          "required": [
+            "start_date",
+            "end_date"
+          ],
+          "title": "DatePeriod",
+          "type": "object"
+        },
+        "Money": {
+          "additionalProperties": false,
+          "description": "Exact monetary value; JSON serializes the amount as a decimal string.",
+          "properties": {
+            "amount": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "string"
+                }
+              ],
+              "description": "Monetary amount in the associated currency, preserving source precision and sign.",
+              "title": "Amount"
+            },
+            "currency": {
+              "description": "ISO three-letter currency code for the monetary amount.",
+              "pattern": "^[A-Z]{3}$",
+              "title": "Currency",
+              "type": "string"
+            }
+          },
+          "required": [
+            "amount",
+            "currency"
+          ],
+          "title": "Money",
+          "type": "object"
+        },
+        "PostalAddress": {
+          "additionalProperties": false,
+          "description": "An address as printed; policy decides which local components are necessary.",
+          "properties": {
+            "address_line_1": {
+              "description": "Primary street, building, or locality line exactly as stated by the source.",
+              "minLength": 1,
+              "pattern": "\\S",
+              "title": "Address line 1",
+              "type": "string"
+            },
+            "address_line_2": {
+              "anyOf": [
+                {
+                  "minLength": 1,
+                  "pattern": "\\S",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Additional unit, floor, building, or locality information; null when absent.",
+              "title": "Address line 2"
+            },
+            "city": {
+              "anyOf": [
+                {
+                  "minLength": 1,
+                  "pattern": "\\S",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "City or locality named in the address; null when absent.",
+              "title": "City"
+            },
+            "region": {
+              "anyOf": [
+                {
+                  "minLength": 1,
+                  "pattern": "\\S",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "State, province, or administrative region named in the address; null when absent.",
+              "title": "Region"
+            },
+            "postal_code": {
+              "anyOf": [
+                {
+                  "minLength": 1,
+                  "pattern": "\\S",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Postal code as printed, preserving letters, spaces, and leading zeros; null when absent.",
+              "title": "Postal code"
+            },
+            "country_code": {
+              "anyOf": [
+                {
+                  "pattern": "^[A-Z]{2}$",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "ISO two-letter country code established by the source or verified reference; null when unknown.",
+              "title": "Country code"
+            }
+          },
+          "required": [
+            "address_line_1"
+          ],
+          "title": "PostalAddress",
+          "type": "object"
+        }
+      },
+      "additionalProperties": false,
+      "description": "Structured facts from a bank statement.",
+      "properties": {
+        "document_type": {
+          "const": "bank_statement",
+          "default": "bank_statement",
+          "description": "Identifies this payload as bank statement.",
+          "title": "Document type",
+          "type": "string"
+        },
+        "account_holders": {
+          "description": "One or more account-holder names exactly as printed, including joint holders.",
+          "items": {
+            "minLength": 1,
+            "pattern": "\\S",
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Account holders",
+          "type": "array"
+        },
+        "bank_name": {
+          "description": "Institution issuing the statement.",
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Bank name",
+          "type": "string"
+        },
+        "account_identifier": {
+          "description": "Printed account number or IBAN; retain masking and leading zeros.",
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Account identifier",
+          "type": "string"
+        },
+        "holder_address": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PostalAddress"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Account-holder address printed on the statement.",
+          "title": "Holder address"
+        },
+        "statement_period": {
+          "$ref": "#/$defs/DatePeriod",
+          "description": "Inclusive reporting period covered by the statement.",
+          "title": "Statement period"
+        },
+        "issue_date": {
+          "anyOf": [
+            {
+              "format": "date",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Statement issue date, if separately stated from the period end.",
+          "title": "Issue date"
+        },
+        "currency": {
+          "description": "ISO three-letter currency of the statement account.",
+          "pattern": "^[A-Z]{3}$",
+          "title": "Currency",
+          "type": "string"
+        },
+        "opening_balance": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Money"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Account balance at the beginning of the stated reporting period.",
+          "title": "Opening balance"
+        },
+        "closing_balance": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Money"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Account balance at the end of the stated reporting period.",
+          "title": "Closing balance"
+        },
+        "transactions": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/BankTransaction"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Transcribed transactions; null means not extracted, while an empty list requires evidence of no transactions.",
+          "title": "Transactions"
+        }
+      },
+      "required": [
+        "account_holders",
+        "bank_name",
+        "account_identifier",
+        "statement_period",
+        "currency"
+      ],
+      "title": "BankStatement",
+      "type": "object"
+    },
+    "draft_schema": {
+      "$defs": {
+        "BankTransactionDraft": {
+          "additionalProperties": false,
+          "properties": {
+            "booking_date": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Date the bank records the transaction in the statement, as YYYY-MM-DD.",
+              "title": "Booking date"
+            },
+            "value_date": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Printed transaction value date; null when not stated separately.",
+              "title": "Value date"
+            },
+            "amount": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/MoneyDraft"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Signed amount: positive is credit and negative is debit from the account holder's perspective.",
+              "title": "Transaction amount"
+            },
+            "description": {
+              "anyOf": [
+                {
+                  "minLength": 1,
+                  "pattern": "\\S",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Transaction narrative exactly as printed; null when absent.",
+              "title": "Transaction description"
+            },
+            "counterparty_name": {
+              "anyOf": [
+                {
+                  "minLength": 1,
+                  "pattern": "\\S",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Named payer or payee explicitly identified by the statement; null when absent.",
+              "title": "Counterparty name"
+            }
+          },
+          "title": "BankTransactionDraft",
+          "type": "object"
+        },
+        "DatePeriodDraft": {
+          "additionalProperties": false,
+          "properties": {
+            "start_date": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "First calendar date included in the reporting or payment period, as YYYY-MM-DD.",
+              "title": "Start date"
+            },
+            "end_date": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Last calendar date included in the period, as YYYY-MM-DD; must not precede the start date.",
+              "title": "End date"
+            }
+          },
+          "title": "DatePeriodDraft",
+          "type": "object"
+        },
+        "MoneyDraft": {
+          "additionalProperties": false,
+          "properties": {
+            "amount": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Monetary amount in the associated currency, preserving source precision and sign.",
+              "title": "Amount"
+            },
+            "currency": {
+              "anyOf": [
+                {
+                  "pattern": "^[A-Z]{3}$",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "ISO three-letter currency code for the monetary amount.",
+              "title": "Currency"
+            }
+          },
+          "title": "MoneyDraft",
+          "type": "object"
+        },
+        "PostalAddressDraft": {
+          "additionalProperties": false,
+          "properties": {
+            "address_line_1": {
+              "anyOf": [
+                {
+                  "minLength": 1,
+                  "pattern": "\\S",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Primary street, building, or locality line exactly as stated by the source.",
+              "title": "Address line 1"
+            },
+            "address_line_2": {
+              "anyOf": [
+                {
+                  "minLength": 1,
+                  "pattern": "\\S",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Additional unit, floor, building, or locality information; null when absent.",
+              "title": "Address line 2"
+            },
+            "city": {
+              "anyOf": [
+                {
+                  "minLength": 1,
+                  "pattern": "\\S",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "City or locality named in the address; null when absent.",
+              "title": "City"
+            },
+            "region": {
+              "anyOf": [
+                {
+                  "minLength": 1,
+                  "pattern": "\\S",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "State, province, or administrative region named in the address; null when absent.",
+              "title": "Region"
+            },
+            "postal_code": {
+              "anyOf": [
+                {
+                  "minLength": 1,
+                  "pattern": "\\S",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Postal code as printed, preserving letters, spaces, and leading zeros; null when absent.",
+              "title": "Postal code"
+            },
+            "country_code": {
+              "anyOf": [
+                {
+                  "pattern": "^[A-Z]{2}$",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "ISO two-letter country code established by the source or verified reference; null when unknown.",
+              "title": "Country code"
+            }
+          },
+          "title": "PostalAddressDraft",
+          "type": "object"
+        }
+      },
+      "additionalProperties": false,
+      "properties": {
+        "document_type": {
+          "const": "bank_statement",
+          "default": "bank_statement",
+          "description": "Identifies this payload as bank statement.",
+          "title": "Document type",
+          "type": "string"
+        },
+        "account_holders": {
+          "anyOf": [
+            {
+              "items": {
+                "minLength": 1,
+                "pattern": "\\S",
+                "type": "string"
+              },
+              "minItems": 1,
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "One or more account-holder names exactly as printed, including joint holders.",
+          "title": "Account holders"
+        },
+        "bank_name": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "pattern": "\\S",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Institution issuing the statement.",
+          "title": "Bank name"
+        },
+        "account_identifier": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "pattern": "\\S",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Printed account number or IBAN; retain masking and leading zeros.",
+          "title": "Account identifier"
+        },
+        "holder_address": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PostalAddressDraft"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Account-holder address printed on the statement.",
+          "title": "Holder address"
+        },
+        "statement_period": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/DatePeriodDraft"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Inclusive reporting period covered by the statement.",
+          "title": "Statement period"
+        },
+        "issue_date": {
+          "anyOf": [
+            {
+              "format": "date",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Statement issue date, if separately stated from the period end.",
+          "title": "Issue date"
+        },
+        "currency": {
+          "anyOf": [
+            {
+              "pattern": "^[A-Z]{3}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "ISO three-letter currency of the statement account.",
+          "title": "Currency"
+        },
+        "opening_balance": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/MoneyDraft"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Account balance at the beginning of the stated reporting period.",
+          "title": "Opening balance"
+        },
+        "closing_balance": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/MoneyDraft"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Account balance at the end of the stated reporting period.",
+          "title": "Closing balance"
+        },
+        "transactions": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/BankTransactionDraft"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Transcribed transactions; null means not extracted, while an empty list requires evidence of no transactions.",
+          "title": "Transactions"
+        }
+      },
+      "title": "BankStatementDraft",
+      "type": "object"
+    },
+    "content_sha256": "2becf035ca9f8e23dd936f477ab16b9e9778368b16a177312caddf5551bc9a02"
+  },
+  {
+    "document_type": "employment_contract",
+    "version": 1,
+    "canonical_schema": {
+      "$defs": {
+        "Employer": {
+          "additionalProperties": false,
+          "description": "Employer identity stated in a document.",
+          "properties": {
+            "name": {
+              "description": "Employer's legal or trading name exactly as printed.",
+              "minLength": 1,
+              "pattern": "\\S",
+              "title": "Employer name",
+              "type": "string"
+            },
+            "registration_number": {
+              "anyOf": [
+                {
+                  "minLength": 1,
+                  "pattern": "\\S",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Employer registration identifier as printed, preserving formatting and leading zeros; null when absent.",
+              "title": "Registration number"
+            },
+            "address": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/PostalAddress"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Employer address stated in the document; null when absent.",
+              "title": "Employer address"
+            }
+          },
+          "required": [
+            "name"
+          ],
+          "title": "Employer",
+          "type": "object"
+        },
+        "Money": {
+          "additionalProperties": false,
+          "description": "Exact monetary value; JSON serializes the amount as a decimal string.",
+          "properties": {
+            "amount": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "string"
+                }
+              ],
+              "description": "Monetary amount in the associated currency, preserving source precision and sign.",
+              "title": "Amount"
+            },
+            "currency": {
+              "description": "ISO three-letter currency code for the monetary amount.",
+              "pattern": "^[A-Z]{3}$",
+              "title": "Currency",
+              "type": "string"
+            }
+          },
+          "required": [
+            "amount",
+            "currency"
+          ],
+          "title": "Money",
+          "type": "object"
+        },
+        "PostalAddress": {
+          "additionalProperties": false,
+          "description": "An address as printed; policy decides which local components are necessary.",
+          "properties": {
+            "address_line_1": {
+              "description": "Primary street, building, or locality line exactly as stated by the source.",
+              "minLength": 1,
+              "pattern": "\\S",
+              "title": "Address line 1",
+              "type": "string"
+            },
+            "address_line_2": {
+              "anyOf": [
+                {
+                  "minLength": 1,
+                  "pattern": "\\S",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Additional unit, floor, building, or locality information; null when absent.",
+              "title": "Address line 2"
+            },
+            "city": {
+              "anyOf": [
+                {
+                  "minLength": 1,
+                  "pattern": "\\S",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "City or locality named in the address; null when absent.",
+              "title": "City"
+            },
+            "region": {
+              "anyOf": [
+                {
+                  "minLength": 1,
+                  "pattern": "\\S",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "State, province, or administrative region named in the address; null when absent.",
+              "title": "Region"
+            },
+            "postal_code": {
+              "anyOf": [
+                {
+                  "minLength": 1,
+                  "pattern": "\\S",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Postal code as printed, preserving letters, spaces, and leading zeros; null when absent.",
+              "title": "Postal code"
+            },
+            "country_code": {
+              "anyOf": [
+                {
+                  "pattern": "^[A-Z]{2}$",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "ISO two-letter country code established by the source or verified reference; null when unknown.",
+              "title": "Country code"
+            }
+          },
+          "required": [
+            "address_line_1"
+          ],
+          "title": "PostalAddress",
+          "type": "object"
+        }
+      },
+      "additionalProperties": false,
+      "description": "Structured facts from a employment contract.",
+      "properties": {
+        "document_type": {
+          "const": "employment_contract",
+          "default": "employment_contract",
+          "description": "Identifies this payload as employment contract.",
+          "title": "Document type",
+          "type": "string"
+        },
+        "employee_name": {
+          "description": "Employee's complete name as stated in the contract.",
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Employee name",
+          "type": "string"
+        },
+        "employer": {
+          "$ref": "#/$defs/Employer",
+          "description": "Employer identity and optional registration/address details stated in the contract."
+        },
+        "job_title": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "pattern": "\\S",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Position or occupation named in the contract.",
+          "title": "Job title"
+        },
+        "employment_type": {
+          "description": "Employment arrangement stated by the contract, such as permanent or fixed-term.",
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Employment type",
+          "type": "string"
+        },
+        "start_date": {
+          "description": "Contractual employment start date.",
+          "format": "date",
+          "title": "Start date",
+          "type": "string"
+        },
+        "end_date": {
+          "anyOf": [
+            {
+              "format": "date",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Contractual end date when a fixed term is stated.",
+          "title": "End date"
+        },
+        "salary": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Money"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Contractual salary amount in the stated currency and frequency.",
+          "title": "Salary"
+        },
+        "salary_frequency": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "pattern": "\\S",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Period the salary covers, such as hourly, monthly, or annually; required when salary is supplied.",
+          "title": "Salary frequency"
+        },
+        "salary_basis": {
+          "anyOf": [
+            {
+              "enum": [
+                "gross",
+                "net",
+                "unspecified"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Whether the stated salary is gross or net; required when salary is supplied.",
+          "title": "Salary basis"
+        },
+        "signed_date": {
+          "anyOf": [
+            {
+              "format": "date",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Signature date stated in the contract.",
+          "title": "Signed date"
+        }
+      },
+      "required": [
+        "employee_name",
+        "employer",
+        "employment_type",
+        "start_date"
+      ],
+      "title": "EmploymentContract",
+      "type": "object"
+    },
+    "draft_schema": {
+      "$defs": {
+        "EmployerDraft": {
+          "additionalProperties": false,
+          "properties": {
+            "name": {
+              "anyOf": [
+                {
+                  "minLength": 1,
+                  "pattern": "\\S",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Employer's legal or trading name exactly as printed.",
+              "title": "Employer name"
+            },
+            "registration_number": {
+              "anyOf": [
+                {
+                  "minLength": 1,
+                  "pattern": "\\S",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Employer registration identifier as printed, preserving formatting and leading zeros; null when absent.",
+              "title": "Registration number"
+            },
+            "address": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/PostalAddressDraft"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Employer address stated in the document; null when absent.",
+              "title": "Employer address"
+            }
+          },
+          "title": "EmployerDraft",
+          "type": "object"
+        },
+        "MoneyDraft": {
+          "additionalProperties": false,
+          "properties": {
+            "amount": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Monetary amount in the associated currency, preserving source precision and sign.",
+              "title": "Amount"
+            },
+            "currency": {
+              "anyOf": [
+                {
+                  "pattern": "^[A-Z]{3}$",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "ISO three-letter currency code for the monetary amount.",
+              "title": "Currency"
+            }
+          },
+          "title": "MoneyDraft",
+          "type": "object"
+        },
+        "PostalAddressDraft": {
+          "additionalProperties": false,
+          "properties": {
+            "address_line_1": {
+              "anyOf": [
+                {
+                  "minLength": 1,
+                  "pattern": "\\S",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Primary street, building, or locality line exactly as stated by the source.",
+              "title": "Address line 1"
+            },
+            "address_line_2": {
+              "anyOf": [
+                {
+                  "minLength": 1,
+                  "pattern": "\\S",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Additional unit, floor, building, or locality information; null when absent.",
+              "title": "Address line 2"
+            },
+            "city": {
+              "anyOf": [
+                {
+                  "minLength": 1,
+                  "pattern": "\\S",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "City or locality named in the address; null when absent.",
+              "title": "City"
+            },
+            "region": {
+              "anyOf": [
+                {
+                  "minLength": 1,
+                  "pattern": "\\S",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "State, province, or administrative region named in the address; null when absent.",
+              "title": "Region"
+            },
+            "postal_code": {
+              "anyOf": [
+                {
+                  "minLength": 1,
+                  "pattern": "\\S",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Postal code as printed, preserving letters, spaces, and leading zeros; null when absent.",
+              "title": "Postal code"
+            },
+            "country_code": {
+              "anyOf": [
+                {
+                  "pattern": "^[A-Z]{2}$",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "ISO two-letter country code established by the source or verified reference; null when unknown.",
+              "title": "Country code"
+            }
+          },
+          "title": "PostalAddressDraft",
+          "type": "object"
+        }
+      },
+      "additionalProperties": false,
+      "properties": {
+        "document_type": {
+          "const": "employment_contract",
+          "default": "employment_contract",
+          "description": "Identifies this payload as employment contract.",
+          "title": "Document type",
+          "type": "string"
+        },
+        "employee_name": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "pattern": "\\S",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Employee's complete name as stated in the contract.",
+          "title": "Employee name"
+        },
+        "employer": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/EmployerDraft"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Employer identity and optional registration/address details stated in the contract.",
+          "title": "Employer"
+        },
+        "job_title": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "pattern": "\\S",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Position or occupation named in the contract.",
+          "title": "Job title"
+        },
+        "employment_type": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "pattern": "\\S",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Employment arrangement stated by the contract, such as permanent or fixed-term.",
+          "title": "Employment type"
+        },
+        "start_date": {
+          "anyOf": [
+            {
+              "format": "date",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Contractual employment start date.",
+          "title": "Start date"
+        },
+        "end_date": {
+          "anyOf": [
+            {
+              "format": "date",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Contractual end date when a fixed term is stated.",
+          "title": "End date"
+        },
+        "salary": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/MoneyDraft"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Contractual salary amount in the stated currency and frequency.",
+          "title": "Salary"
+        },
+        "salary_frequency": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "pattern": "\\S",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Period the salary covers, such as hourly, monthly, or annually; required when salary is supplied.",
+          "title": "Salary frequency"
+        },
+        "salary_basis": {
+          "anyOf": [
+            {
+              "enum": [
+                "gross",
+                "net",
+                "unspecified"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Whether the stated salary is gross or net; required when salary is supplied.",
+          "title": "Salary basis"
+        },
+        "signed_date": {
+          "anyOf": [
+            {
+              "format": "date",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Signature date stated in the contract.",
+          "title": "Signed date"
+        }
+      },
+      "title": "EmploymentContractDraft",
+      "type": "object"
+    },
+    "content_sha256": "b863407ded17b026def7ddcabc70c01e28d379599f2faaa88a2ec2e1b2863e79"
+  },
+  {
+    "document_type": "payslip",
+    "version": 1,
+    "canonical_schema": {
+      "$defs": {
+        "DatePeriod": {
+          "additionalProperties": false,
+          "description": "Inclusive calendar interval.",
+          "properties": {
+            "start_date": {
+              "description": "First calendar date included in the reporting or payment period, as YYYY-MM-DD.",
+              "format": "date",
+              "title": "Start date",
+              "type": "string"
+            },
+            "end_date": {
+              "description": "Last calendar date included in the period, as YYYY-MM-DD; must not precede the start date.",
+              "format": "date",
+              "title": "End date",
+              "type": "string"
+            }
+          },
+          "required": [
+            "start_date",
+            "end_date"
+          ],
+          "title": "DatePeriod",
+          "type": "object"
+        },
+        "Employer": {
+          "additionalProperties": false,
+          "description": "Employer identity stated in a document.",
+          "properties": {
+            "name": {
+              "description": "Employer's legal or trading name exactly as printed.",
+              "minLength": 1,
+              "pattern": "\\S",
+              "title": "Employer name",
+              "type": "string"
+            },
+            "registration_number": {
+              "anyOf": [
+                {
+                  "minLength": 1,
+                  "pattern": "\\S",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Employer registration identifier as printed, preserving formatting and leading zeros; null when absent.",
+              "title": "Registration number"
+            },
+            "address": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/PostalAddress"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Employer address stated in the document; null when absent.",
+              "title": "Employer address"
+            }
+          },
+          "required": [
+            "name"
+          ],
+          "title": "Employer",
+          "type": "object"
+        },
+        "Money": {
+          "additionalProperties": false,
+          "description": "Exact monetary value; JSON serializes the amount as a decimal string.",
+          "properties": {
+            "amount": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "string"
+                }
+              ],
+              "description": "Monetary amount in the associated currency, preserving source precision and sign.",
+              "title": "Amount"
+            },
+            "currency": {
+              "description": "ISO three-letter currency code for the monetary amount.",
+              "pattern": "^[A-Z]{3}$",
+              "title": "Currency",
+              "type": "string"
+            }
+          },
+          "required": [
+            "amount",
+            "currency"
+          ],
+          "title": "Money",
+          "type": "object"
+        },
+        "PostalAddress": {
+          "additionalProperties": false,
+          "description": "An address as printed; policy decides which local components are necessary.",
+          "properties": {
+            "address_line_1": {
+              "description": "Primary street, building, or locality line exactly as stated by the source.",
+              "minLength": 1,
+              "pattern": "\\S",
+              "title": "Address line 1",
+              "type": "string"
+            },
+            "address_line_2": {
+              "anyOf": [
+                {
+                  "minLength": 1,
+                  "pattern": "\\S",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Additional unit, floor, building, or locality information; null when absent.",
+              "title": "Address line 2"
+            },
+            "city": {
+              "anyOf": [
+                {
+                  "minLength": 1,
+                  "pattern": "\\S",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "City or locality named in the address; null when absent.",
+              "title": "City"
+            },
+            "region": {
+              "anyOf": [
+                {
+                  "minLength": 1,
+                  "pattern": "\\S",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "State, province, or administrative region named in the address; null when absent.",
+              "title": "Region"
+            },
+            "postal_code": {
+              "anyOf": [
+                {
+                  "minLength": 1,
+                  "pattern": "\\S",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Postal code as printed, preserving letters, spaces, and leading zeros; null when absent.",
+              "title": "Postal code"
+            },
+            "country_code": {
+              "anyOf": [
+                {
+                  "pattern": "^[A-Z]{2}$",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "ISO two-letter country code established by the source or verified reference; null when unknown.",
+              "title": "Country code"
+            }
+          },
+          "required": [
+            "address_line_1"
+          ],
+          "title": "PostalAddress",
+          "type": "object"
+        }
+      },
+      "additionalProperties": false,
+      "description": "Structured facts from a payslip.",
+      "properties": {
+        "document_type": {
+          "const": "payslip",
+          "default": "payslip",
+          "description": "Identifies this payload as payslip.",
+          "title": "Document type",
+          "type": "string"
+        },
+        "employee_name": {
+          "description": "Employee name exactly as printed on the payslip.",
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Employee name",
+          "type": "string"
+        },
+        "employer": {
+          "$ref": "#/$defs/Employer",
+          "description": "Employer identity stated by the payslip."
+        },
+        "pay_period": {
+          "$ref": "#/$defs/DatePeriod",
+          "description": "Inclusive employment/pay period represented by the payslip.",
+          "title": "Pay period"
+        },
+        "payment_date": {
+          "anyOf": [
+            {
+              "format": "date",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Date on which payment is stated to occur.",
+          "title": "Payment date"
+        },
+        "gross_pay": {
+          "$ref": "#/$defs/Money",
+          "description": "Total pay before deductions, in the stated currency.",
+          "title": "Gross pay"
+        },
+        "net_pay": {
+          "$ref": "#/$defs/Money",
+          "description": "Amount payable to the employee after deductions.",
+          "title": "Net pay"
+        },
+        "deductions": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Money"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Total deductions stated on the payslip; absence is not a zero deduction.",
+          "title": "Deductions"
+        },
+        "employee_identifier": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "pattern": "\\S",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Employer-assigned payroll identifier as printed.",
+          "title": "Employee identifier"
+        }
+      },
+      "required": [
+        "employee_name",
+        "employer",
+        "pay_period",
+        "gross_pay",
+        "net_pay"
+      ],
+      "title": "Payslip",
+      "type": "object"
+    },
+    "draft_schema": {
+      "$defs": {
+        "DatePeriodDraft": {
+          "additionalProperties": false,
+          "properties": {
+            "start_date": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "First calendar date included in the reporting or payment period, as YYYY-MM-DD.",
+              "title": "Start date"
+            },
+            "end_date": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Last calendar date included in the period, as YYYY-MM-DD; must not precede the start date.",
+              "title": "End date"
+            }
+          },
+          "title": "DatePeriodDraft",
+          "type": "object"
+        },
+        "EmployerDraft": {
+          "additionalProperties": false,
+          "properties": {
+            "name": {
+              "anyOf": [
+                {
+                  "minLength": 1,
+                  "pattern": "\\S",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Employer's legal or trading name exactly as printed.",
+              "title": "Employer name"
+            },
+            "registration_number": {
+              "anyOf": [
+                {
+                  "minLength": 1,
+                  "pattern": "\\S",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Employer registration identifier as printed, preserving formatting and leading zeros; null when absent.",
+              "title": "Registration number"
+            },
+            "address": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/PostalAddressDraft"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Employer address stated in the document; null when absent.",
+              "title": "Employer address"
+            }
+          },
+          "title": "EmployerDraft",
+          "type": "object"
+        },
+        "MoneyDraft": {
+          "additionalProperties": false,
+          "properties": {
+            "amount": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Monetary amount in the associated currency, preserving source precision and sign.",
+              "title": "Amount"
+            },
+            "currency": {
+              "anyOf": [
+                {
+                  "pattern": "^[A-Z]{3}$",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "ISO three-letter currency code for the monetary amount.",
+              "title": "Currency"
+            }
+          },
+          "title": "MoneyDraft",
+          "type": "object"
+        },
+        "PostalAddressDraft": {
+          "additionalProperties": false,
+          "properties": {
+            "address_line_1": {
+              "anyOf": [
+                {
+                  "minLength": 1,
+                  "pattern": "\\S",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Primary street, building, or locality line exactly as stated by the source.",
+              "title": "Address line 1"
+            },
+            "address_line_2": {
+              "anyOf": [
+                {
+                  "minLength": 1,
+                  "pattern": "\\S",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Additional unit, floor, building, or locality information; null when absent.",
+              "title": "Address line 2"
+            },
+            "city": {
+              "anyOf": [
+                {
+                  "minLength": 1,
+                  "pattern": "\\S",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "City or locality named in the address; null when absent.",
+              "title": "City"
+            },
+            "region": {
+              "anyOf": [
+                {
+                  "minLength": 1,
+                  "pattern": "\\S",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "State, province, or administrative region named in the address; null when absent.",
+              "title": "Region"
+            },
+            "postal_code": {
+              "anyOf": [
+                {
+                  "minLength": 1,
+                  "pattern": "\\S",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Postal code as printed, preserving letters, spaces, and leading zeros; null when absent.",
+              "title": "Postal code"
+            },
+            "country_code": {
+              "anyOf": [
+                {
+                  "pattern": "^[A-Z]{2}$",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "ISO two-letter country code established by the source or verified reference; null when unknown.",
+              "title": "Country code"
+            }
+          },
+          "title": "PostalAddressDraft",
+          "type": "object"
+        }
+      },
+      "additionalProperties": false,
+      "properties": {
+        "document_type": {
+          "const": "payslip",
+          "default": "payslip",
+          "description": "Identifies this payload as payslip.",
+          "title": "Document type",
+          "type": "string"
+        },
+        "employee_name": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "pattern": "\\S",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Employee name exactly as printed on the payslip.",
+          "title": "Employee name"
+        },
+        "employer": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/EmployerDraft"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Employer identity stated by the payslip.",
+          "title": "Employer"
+        },
+        "pay_period": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/DatePeriodDraft"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Inclusive employment/pay period represented by the payslip.",
+          "title": "Pay period"
+        },
+        "payment_date": {
+          "anyOf": [
+            {
+              "format": "date",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Date on which payment is stated to occur.",
+          "title": "Payment date"
+        },
+        "gross_pay": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/MoneyDraft"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Total pay before deductions, in the stated currency.",
+          "title": "Gross pay"
+        },
+        "net_pay": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/MoneyDraft"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Amount payable to the employee after deductions.",
+          "title": "Net pay"
+        },
+        "deductions": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/MoneyDraft"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Total deductions stated on the payslip; absence is not a zero deduction.",
+          "title": "Deductions"
+        },
+        "employee_identifier": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "pattern": "\\S",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Employer-assigned payroll identifier as printed.",
+          "title": "Employee identifier"
+        }
+      },
+      "title": "PayslipDraft",
+      "type": "object"
+    },
+    "content_sha256": "fe9ba29ae4db457396b1e42578b3ba2a83e102da189532d19ae52ec295e1d631"
+  },
+  {
+    "document_type": "tax_return",
+    "version": 1,
+    "canonical_schema": {
+      "$defs": {
+        "DatePeriod": {
+          "additionalProperties": false,
+          "description": "Inclusive calendar interval.",
+          "properties": {
+            "start_date": {
+              "description": "First calendar date included in the reporting or payment period, as YYYY-MM-DD.",
+              "format": "date",
+              "title": "Start date",
+              "type": "string"
+            },
+            "end_date": {
+              "description": "Last calendar date included in the period, as YYYY-MM-DD; must not precede the start date.",
+              "format": "date",
+              "title": "End date",
+              "type": "string"
+            }
+          },
+          "required": [
+            "start_date",
+            "end_date"
+          ],
+          "title": "DatePeriod",
+          "type": "object"
+        },
+        "Money": {
+          "additionalProperties": false,
+          "description": "Exact monetary value; JSON serializes the amount as a decimal string.",
+          "properties": {
+            "amount": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "string"
+                }
+              ],
+              "description": "Monetary amount in the associated currency, preserving source precision and sign.",
+              "title": "Amount"
+            },
+            "currency": {
+              "description": "ISO three-letter currency code for the monetary amount.",
+              "pattern": "^[A-Z]{3}$",
+              "title": "Currency",
+              "type": "string"
+            }
+          },
+          "required": [
+            "amount",
+            "currency"
+          ],
+          "title": "Money",
+          "type": "object"
+        }
+      },
+      "additionalProperties": false,
+      "description": "Structured facts from a tax return.",
+      "properties": {
+        "document_type": {
+          "const": "tax_return",
+          "default": "tax_return",
+          "description": "Identifies this payload as tax return.",
+          "title": "Document type",
+          "type": "string"
+        },
+        "taxpayer_name": {
+          "description": "Taxpayer's full name exactly as stated in the return.",
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Taxpayer name",
+          "type": "string"
+        },
+        "tax_identifier": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "pattern": "\\S",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Taxpayer identifier as printed, retaining masking and leading zeros.",
+          "title": "Tax identifier"
+        },
+        "tax_jurisdiction": {
+          "description": "Tax authority or jurisdiction to which the return relates.",
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Tax jurisdiction",
+          "type": "string"
+        },
+        "tax_period": {
+          "$ref": "#/$defs/DatePeriod",
+          "description": "Inclusive fiscal period covered by the return.",
+          "title": "Tax period"
+        },
+        "declared_income": {
+          "$ref": "#/$defs/Money",
+          "description": "Total income declared for the stated period and currency.",
+          "title": "Declared income"
+        },
+        "taxable_income": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Money"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Income subject to taxation as stated by the return.",
+          "title": "Taxable income"
+        },
+        "economic_activity": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "pattern": "\\S",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Occupation, business activity, or category explicitly declared in the return.",
+          "title": "Economic activity"
+        },
+        "filing_date": {
+          "anyOf": [
+            {
+              "format": "date",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Date of submission when established by the source.",
+          "title": "Filing date"
+        },
+        "filing_reference": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "pattern": "\\S",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Authority-issued submission/acknowledgment reference, when supplied.",
+          "title": "Filing reference"
+        }
+      },
+      "required": [
+        "taxpayer_name",
+        "tax_jurisdiction",
+        "tax_period",
+        "declared_income"
+      ],
+      "title": "TaxReturn",
+      "type": "object"
+    },
+    "draft_schema": {
+      "$defs": {
+        "DatePeriodDraft": {
+          "additionalProperties": false,
+          "properties": {
+            "start_date": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "First calendar date included in the reporting or payment period, as YYYY-MM-DD.",
+              "title": "Start date"
+            },
+            "end_date": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Last calendar date included in the period, as YYYY-MM-DD; must not precede the start date.",
+              "title": "End date"
+            }
+          },
+          "title": "DatePeriodDraft",
+          "type": "object"
+        },
+        "MoneyDraft": {
+          "additionalProperties": false,
+          "properties": {
+            "amount": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Monetary amount in the associated currency, preserving source precision and sign.",
+              "title": "Amount"
+            },
+            "currency": {
+              "anyOf": [
+                {
+                  "pattern": "^[A-Z]{3}$",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "ISO three-letter currency code for the monetary amount.",
+              "title": "Currency"
+            }
+          },
+          "title": "MoneyDraft",
+          "type": "object"
+        }
+      },
+      "additionalProperties": false,
+      "properties": {
+        "document_type": {
+          "const": "tax_return",
+          "default": "tax_return",
+          "description": "Identifies this payload as tax return.",
+          "title": "Document type",
+          "type": "string"
+        },
+        "taxpayer_name": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "pattern": "\\S",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Taxpayer's full name exactly as stated in the return.",
+          "title": "Taxpayer name"
+        },
+        "tax_identifier": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "pattern": "\\S",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Taxpayer identifier as printed, retaining masking and leading zeros.",
+          "title": "Tax identifier"
+        },
+        "tax_jurisdiction": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "pattern": "\\S",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Tax authority or jurisdiction to which the return relates.",
+          "title": "Tax jurisdiction"
+        },
+        "tax_period": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/DatePeriodDraft"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Inclusive fiscal period covered by the return.",
+          "title": "Tax period"
+        },
+        "declared_income": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/MoneyDraft"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Total income declared for the stated period and currency.",
+          "title": "Declared income"
+        },
+        "taxable_income": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/MoneyDraft"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Income subject to taxation as stated by the return.",
+          "title": "Taxable income"
+        },
+        "economic_activity": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "pattern": "\\S",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Occupation, business activity, or category explicitly declared in the return.",
+          "title": "Economic activity"
+        },
+        "filing_date": {
+          "anyOf": [
+            {
+              "format": "date",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Date of submission when established by the source.",
+          "title": "Filing date"
+        },
+        "filing_reference": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "pattern": "\\S",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Authority-issued submission/acknowledgment reference, when supplied.",
+          "title": "Filing reference"
+        }
+      },
+      "title": "TaxReturnDraft",
+      "type": "object"
+    },
+    "content_sha256": "1a86ab68957344028135c99cdfe7cea2e5f37d8e2fc0d951b8db313a98fb6f8e"
+  },
+  {
+    "document_type": "source_of_funds_evidence",
+    "version": 1,
+    "canonical_schema": {
+      "$defs": {
+        "Money": {
+          "additionalProperties": false,
+          "description": "Exact monetary value; JSON serializes the amount as a decimal string.",
+          "properties": {
+            "amount": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "string"
+                }
+              ],
+              "description": "Monetary amount in the associated currency, preserving source precision and sign.",
+              "title": "Amount"
+            },
+            "currency": {
+              "description": "ISO three-letter currency code for the monetary amount.",
+              "pattern": "^[A-Z]{3}$",
+              "title": "Currency",
+              "type": "string"
+            }
+          },
+          "required": [
+            "amount",
+            "currency"
+          ],
+          "title": "Money",
+          "type": "object"
+        }
+      },
+      "additionalProperties": false,
+      "description": "Structured facts from a source-of-funds evidence.",
+      "properties": {
+        "document_type": {
+          "const": "source_of_funds_evidence",
+          "default": "source_of_funds_evidence",
+          "description": "Identifies this payload as source-of-funds evidence.",
+          "title": "Document type",
+          "type": "string"
+        },
+        "owner_name": {
+          "description": "Person or entity identified as the owner or recipient of the funds.",
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Owner name",
+          "type": "string"
+        },
+        "source_type": {
+          "description": "Stated origin category, such as salary, savings, asset sale, inheritance, gift, business income, or other.",
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Source type",
+          "type": "string"
+        },
+        "amount": {
+          "$ref": "#/$defs/Money",
+          "description": "Amount whose source is being explained, with its currency.",
+          "title": "Amount"
+        },
+        "event_date": {
+          "anyOf": [
+            {
+              "format": "date",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Date of the originating event or transfer, when stated.",
+          "title": "Event date"
+        },
+        "originator_name": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "pattern": "\\S",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Named payer, donor, seller, estate, or other originating party.",
+          "title": "Originator name"
+        },
+        "explanation": {
+          "description": "Factual explanation connecting the originating event to the funds being assessed.",
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Explanation",
+          "type": "string"
+        },
+        "supporting_document_ids": {
+          "anyOf": [
+            {
+              "items": {
+                "format": "uuid",
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Linked evidence documents supporting the explanation; required for policies that request substantiation.",
+          "title": "Supporting document ids"
+        }
+      },
+      "required": [
+        "owner_name",
+        "source_type",
+        "amount",
+        "explanation"
+      ],
+      "title": "SourceOfFundsEvidence",
+      "type": "object"
+    },
+    "draft_schema": {
+      "$defs": {
+        "MoneyDraft": {
+          "additionalProperties": false,
+          "properties": {
+            "amount": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Monetary amount in the associated currency, preserving source precision and sign.",
+              "title": "Amount"
+            },
+            "currency": {
+              "anyOf": [
+                {
+                  "pattern": "^[A-Z]{3}$",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "ISO three-letter currency code for the monetary amount.",
+              "title": "Currency"
+            }
+          },
+          "title": "MoneyDraft",
+          "type": "object"
+        }
+      },
+      "additionalProperties": false,
+      "properties": {
+        "document_type": {
+          "const": "source_of_funds_evidence",
+          "default": "source_of_funds_evidence",
+          "description": "Identifies this payload as source-of-funds evidence.",
+          "title": "Document type",
+          "type": "string"
+        },
+        "owner_name": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "pattern": "\\S",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Person or entity identified as the owner or recipient of the funds.",
+          "title": "Owner name"
+        },
+        "source_type": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "pattern": "\\S",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Stated origin category, such as salary, savings, asset sale, inheritance, gift, business income, or other.",
+          "title": "Source type"
+        },
+        "amount": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/MoneyDraft"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Amount whose source is being explained, with its currency.",
+          "title": "Amount"
+        },
+        "event_date": {
+          "anyOf": [
+            {
+              "format": "date",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Date of the originating event or transfer, when stated.",
+          "title": "Event date"
+        },
+        "originator_name": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "pattern": "\\S",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Named payer, donor, seller, estate, or other originating party.",
+          "title": "Originator name"
+        },
+        "explanation": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "pattern": "\\S",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Factual explanation connecting the originating event to the funds being assessed.",
+          "title": "Explanation"
+        },
+        "supporting_document_ids": {
+          "anyOf": [
+            {
+              "items": {
+                "format": "uuid",
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Linked evidence documents supporting the explanation; required for policies that request substantiation.",
+          "title": "Supporting document ids"
+        }
+      },
+      "title": "SourceOfFundsEvidenceDraft",
+      "type": "object"
+    },
+    "content_sha256": "f62ed55ef215b771f0d2066e1a1f57c4afd62c9b271621d95f320bc35abd420b"
+  },
+  {
+    "document_type": "kyc_questionnaire",
+    "version": 1,
+    "canonical_schema": {
+      "$defs": {
+        "Money": {
+          "additionalProperties": false,
+          "description": "Exact monetary value; JSON serializes the amount as a decimal string.",
+          "properties": {
+            "amount": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "string"
+                }
+              ],
+              "description": "Monetary amount in the associated currency, preserving source precision and sign.",
+              "title": "Amount"
+            },
+            "currency": {
+              "description": "ISO three-letter currency code for the monetary amount.",
+              "pattern": "^[A-Z]{3}$",
+              "title": "Currency",
+              "type": "string"
+            }
+          },
+          "required": [
+            "amount",
+            "currency"
+          ],
+          "title": "Money",
+          "type": "object"
+        }
+      },
+      "additionalProperties": false,
+      "description": "Structured facts from a kyc questionnaire.",
+      "properties": {
+        "document_type": {
+          "const": "kyc_questionnaire",
+          "default": "kyc_questionnaire",
+          "description": "Identifies this payload as kyc questionnaire.",
+          "title": "Document type",
+          "type": "string"
+        },
+        "full_name": {
+          "description": "Name supplied by the person completing the questionnaire.",
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Full name",
+          "type": "string"
+        },
+        "occupation": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "pattern": "\\S",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Person's declared occupation or principal economic activity.",
+          "title": "Occupation"
+        },
+        "employment_status": {
+          "description": "Declared status, such as employed, self-employed, retired, student, or unemployed.",
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Employment status",
+          "type": "string"
+        },
+        "account_purpose": {
+          "description": "Person's explanation of the intended use of the account.",
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Account purpose",
+          "type": "string"
+        },
+        "expected_monthly_inflow": {
+          "$ref": "#/$defs/Money",
+          "description": "Expected total incoming funds per calendar month, with currency.",
+          "title": "Expected monthly inflow"
+        },
+        "expected_monthly_outflow": {
+          "$ref": "#/$defs/Money",
+          "description": "Expected total outgoing funds per calendar month, with currency.",
+          "title": "Expected monthly outflow"
+        },
+        "source_of_funds": {
+          "description": "One or more declared origins of the money expected to enter the account.",
+          "items": {
+            "minLength": 1,
+            "pattern": "\\S",
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Source of funds",
+          "type": "array"
+        },
+        "completed_at": {
+          "description": "Time the completed submission was recorded; generated by the server for in-application forms.",
+          "format": "date-time",
+          "title": "Completed at",
+          "type": "string"
+        },
+        "questionnaire_version": {
+          "description": "Version of the questionnaire presented to the person.",
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Questionnaire version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "full_name",
+        "employment_status",
+        "account_purpose",
+        "expected_monthly_inflow",
+        "expected_monthly_outflow",
+        "source_of_funds",
+        "completed_at",
+        "questionnaire_version"
+      ],
+      "title": "KYCQuestionnaire",
+      "type": "object"
+    },
+    "draft_schema": {
+      "$defs": {
+        "MoneyDraft": {
+          "additionalProperties": false,
+          "properties": {
+            "amount": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Monetary amount in the associated currency, preserving source precision and sign.",
+              "title": "Amount"
+            },
+            "currency": {
+              "anyOf": [
+                {
+                  "pattern": "^[A-Z]{3}$",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "ISO three-letter currency code for the monetary amount.",
+              "title": "Currency"
+            }
+          },
+          "title": "MoneyDraft",
+          "type": "object"
+        }
+      },
+      "additionalProperties": false,
+      "properties": {
+        "document_type": {
+          "const": "kyc_questionnaire",
+          "default": "kyc_questionnaire",
+          "description": "Identifies this payload as kyc questionnaire.",
+          "title": "Document type",
+          "type": "string"
+        },
+        "full_name": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "pattern": "\\S",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Name supplied by the person completing the questionnaire.",
+          "title": "Full name"
+        },
+        "occupation": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "pattern": "\\S",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Person's declared occupation or principal economic activity.",
+          "title": "Occupation"
+        },
+        "employment_status": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "pattern": "\\S",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Declared status, such as employed, self-employed, retired, student, or unemployed.",
+          "title": "Employment status"
+        },
+        "account_purpose": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "pattern": "\\S",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Person's explanation of the intended use of the account.",
+          "title": "Account purpose"
+        },
+        "expected_monthly_inflow": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/MoneyDraft"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Expected total incoming funds per calendar month, with currency.",
+          "title": "Expected monthly inflow"
+        },
+        "expected_monthly_outflow": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/MoneyDraft"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Expected total outgoing funds per calendar month, with currency.",
+          "title": "Expected monthly outflow"
+        },
+        "source_of_funds": {
+          "anyOf": [
+            {
+              "items": {
+                "minLength": 1,
+                "pattern": "\\S",
+                "type": "string"
+              },
+              "minItems": 1,
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "One or more declared origins of the money expected to enter the account.",
+          "title": "Source of funds"
+        },
+        "completed_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Time the completed submission was recorded; generated by the server for in-application forms.",
+          "title": "Completed at"
+        },
+        "questionnaire_version": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "pattern": "\\S",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Version of the questionnaire presented to the person.",
+          "title": "Questionnaire version"
+        }
+      },
+      "title": "KYCQuestionnaireDraft",
+      "type": "object"
+    },
+    "content_sha256": "b6f63c6e50d3c3a09c2a5966aebff6beae735910e57390df42008c16252fd5e1"
+  }
+]

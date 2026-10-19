@@ -1,11 +1,14 @@
 """Pydantic models of the HTTP contract (what /openapi.json publishes for Jose).
 
-extra="allow" everywhere: the engine may add keys (never remove them) without breaking
-clients; FastAPI still validates every documented key on the way out.
+Legacy responses allow additional keys so engine additions do not break clients.
+Strict upload request contracts are re-exported from document_models.
 """
 from typing import Any, Dict, List, Literal, Optional, Union
 
 from pydantic import BaseModel, ConfigDict, Field
+
+# Re-export the strict upload contracts for existing Python clients.
+from .document_models import ExtractJsonRequest, FileB64  # noqa: F401
 
 FieldStatus = Literal["passed", "warning", "manual_review", "missing"]
 CheckStatus = Literal["passed", "discrepancy", "warning", "manual_review"]
@@ -254,12 +257,3 @@ class RuleReviewResponse(_Open):
     event: Dict[str, Any]
     ledger: Dict[str, Any]
 
-
-class FileB64(BaseModel):
-    filename: str = Field("upload.bin", max_length=300)
-    content_base64: str
-
-
-class ExtractJsonRequest(BaseModel):
-    files: List[FileB64] = Field(..., min_length=1)
-    explain: bool = False

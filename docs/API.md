@@ -7,7 +7,7 @@
 >
 > EN: HTTP contract for Jose (frontend + Main Sequence). The formal source of truth is
 > [`docs/openapi.json`](openapi.json). Every response is validated against the models in
-> `extractor/api_models.py`: keys may be **added** later, never removed.
+> `extractor/api_models.py` and `extractor/document_models.py`: keys may be **added** later, never removed.
 
 | | |
 |---|---|
@@ -62,6 +62,8 @@ off by default; never on Lambda (duplicated headers break browsers).
 | GET | `/session` | key | Credenciales STS 15 min para SigV4 | 15-min STS creds for SigV4 |
 | POST | `/extract` | key (+SigV4 en Lambda) | multipart `files` (1..12) | multipart `files` |
 | POST | `/extract_json` | key (+SigV4 en Lambda) | JSON con archivos en base64 | JSON with base64 files |
+| POST | `/classify_json` | key (+SigV4 en Lambda) | Solo clasificación | Discovery only, supplied type catalog |
+| POST | `/extract_typed_json` | key (+SigV4 en Lambda) | Tipo explícito + esquemas completos | Explicit type + full canonical/draft schemas |
 | GET | `/runs/{run_id}` | key | Estado actual (motor + decisiones humanas) | Current state |
 | POST | `/runs/{run_id}/decisions` | key | Añade decisión humana y recalcula | Append human decision, re-evaluate |
 | GET | `/runs/{run_id}/verify` | key | Verifica la cadena de hashes | Verify hash chain |
@@ -123,6 +125,114 @@ son esas letras cuenta como acuerdo y se guarda la grafía del LLM), `disagree`,
 `employer_confirmation` (potvrzení o zaměstnání a výši příjmu), `tax_or_debt_certificate`
 (potvrzení o bezdlužnosti, Finanční úřad), `other`. El contrato define cuáles (5–7) son
 obligatorios; ver `GET /rules` y `extractor/schemas.yaml` para los campos.
+
+### 2.2a `POST /classify_json` — discovery only
+
+Accepts a strict `ClassifyJsonRequest`. The caller supplies the current canonical type
+catalog; the legacy Czech-loan taxonomy is not used. Types must be unique.
+
+```json
+{
+  "files": [{"filename": "document.pdf", "content_base64": "<standard base64>"}],
+  "document_types": [
+    {"document_type": "passport", "description": "Travel document identifying its holder"},
+    {"document_type": "bank_statement", "description": "Bank account statement with balances"}
+  ]
+}
+```
+
+Returns `{"pages": [...]}` in file/page order. Each entry has `source_file`, one-based
+`page`, `source_sha256`, `page_sha256`, `document_type`, `confidence` (0–1), `reason`,
+`model`, and `cache_hit`. `document_type: null` means unrecognized/uncertain. Classification
+is per page: the caller selects/groups the pages belonging to a logical document before
+requesting extraction. No attributes are extracted and no loan rules are evaluated.
+
+### 2.2b `POST /extract_typed_json` — explicit type and full canonical contract
+
+Accepts `ExtractTypedJsonRequest`. Send **one logical document**, possibly spanning several
+files, with its explicit type. This endpoint skips classification. It uses Bedrock vision
+with all supplied pages and the entire JSON Schemas; the legacy flat Textract queries and
+loan rules are not used. The operation is synchronous.
+
+Construct the request directly from the Back Office canonical models; do not flatten the
+schemas to an attribute-name list or copy the parser's legacy `schemas.yaml`:
+
+```python
+from backoffice.schemas.catalog import document_schema
+
+contract = document_schema("bank_statement", version=1)
+request = {
+    "files": [{"filename": "statement.pdf", "content_base64": encoded_file}],
+    "document_type": contract.document_type,
+    "schema_version": contract.version,
+    "schema_hash": contract.content_sha256,
+    "canonical_schema": contract.canonical_schema,
+    "output_schema": contract.draft_schema,
+}
+# SigV4 POST {functionUrl}extract_typed_json with x-api-key.
+```
+
+Required fields: `files`, `document_type`, positive integer `schema_version`, lowercase
+SHA-256 `schema_hash`, `canonical_schema`, and `output_schema`. Both schemas are complete
+JSON Schema Draft 2020-12 objects, including descriptions, required fields, nested objects,
+arrays, constraints, `$defs`, and local `$ref` references. Their root must have
+`type: object`, `additionalProperties: false`, and `properties.document_type.const` equal
+to the explicit type. The caller owns the type/version registry. The hash verifies the
+submitted schema pair's integrity, not its authenticity or registration in Back Office.
+
+The checksum is exactly the Back Office catalog checksum:
+
+```python
+sha256(json.dumps(
+    {"canonical_schema": canonical_schema, "draft_schema": output_schema},
+    sort_keys=True, separators=(",", ":"), ensure_ascii=False,
+).encode("utf-8")).hexdigest()
+```
+
+Only local JSON Pointer references are supported; unresolved/external/recursive references,
+`$id`, anchors, and dynamic references are rejected. Each schema is limited to 256 KiB,
+4096 schema nodes, and 64 levels. A different declared dialect or an unsupported format is rejected; date, date-time, and UUID formats are validated. These limits
+accept all ten current canonical Back Office models (version 1).
+
+Response fields:
+
+| Field | Meaning |
+|---|---|
+| `document_type`, `schema_version`, `schema_hash` | Exact supplied contract identity |
+| `status` | Always `draft`; never automatic approval |
+| `attributes` | Nested extracted object, validated against `output_schema` without coercion |
+| `canonical_schema_valid` | Whether the draft also passes the complete JSON Schema |
+| `canonical_schema_errors` | Failed JSON Schema keyword and instance path; no repeated field values |
+| `pages` | Source file, physical page number, source and rendered-page SHA-256 hashes |
+| `model`, `cache_hit` | Bedrock model and cache provenance |
+
+Missing/unreadable values can be omitted or null only where `output_schema` allows it.
+An upstream result violating that schema, or changing/omitting `document_type`, returns
+502. No invalid result is returned as a successful extraction. `canonical_schema_valid`
+only covers JSON Schema checks: Back Office must still apply canonical Pydantic Python
+validators and business checks before final submission. The response lists source pages;
+it does not claim field-level citations or Textract corroboration.
+
+These two endpoints do not create legacy `/runs` audit records or persist uploads. The
+calling Back Office workflow owns storage, associating the result to the person/document
+set, and review. Existing `/extract` and `/extract_json` retain the legacy audited workflow.
+
+### Strict JSON requests and limits
+
+All three JSON upload routes use strict Pydantic validation: unknown envelope/file fields,
+wrong scalar types (including `"false"` for a boolean or `"1"` for a version), invalid base64,
+empty uploads, and invalid schema contracts return **422** before any provider call.
+Validation errors omit the input so uploaded content is not echoed. This intentionally
+changes `/extract_json` malformed-envelope responses from 400 to 422 and stops silently
+ignoring unsupported options. Its valid `files`/`explain` request shape is unchanged.
+
+The same API-key and Lambda SigV4 requirements apply to both new routes. Existing ingestion
+limits apply (default 12 files, 20 pages total, 15 MiB per decoded file); typed extraction
+also caps pages at 20 if the configured ingestion limit is raised. Pages are never silently
+truncated. Schema/file-list limits are 422; ingestion page limits are 413; unsupported
+content is 415; corrupt documents are 422. Budget exhaustion is 503 and provider/output
+validation failures are 502. Lambda's total request-body limit can be lower than these
+application limits and includes both base64 files and schemas.
 
 ### 2.3 `POST /runs/{run_id}/decisions` → `DecisionResponse`
 ```json

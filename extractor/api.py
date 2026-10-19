@@ -1,19 +1,20 @@
 """FastAPI surface for Jose / Main Sequence / demo. Lambda via Mangum."""
 from __future__ import annotations
 
-import base64
 import hmac
 import logging
 import os
 from pathlib import Path
 
 import boto3
-from fastapi import FastAPI, File, UploadFile, HTTPException, Query, Request
-from fastapi.responses import HTMLResponse
+from fastapi import Depends, FastAPI, File, HTTPException, Query, Request, UploadFile
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import HTMLResponse, JSONResponse
 from starlette.concurrency import run_in_threadpool
 
-from . import __version__
+from . import __version__, document_service
 from . import api_models as M
+from . import document_models as D
 from .cost import BudgetExceeded
 from .ingest import InputError
 from .pipeline import run_uploads
@@ -137,38 +138,47 @@ async def extract(
     return await _run_files(payload, explain)
 
 
-_EXTRACT_JSON_BODY = {"requestBody": {"required": True, "content": {"application/json": {"schema": {
-    "type": "object", "required": ["files"], "properties": {
-        "files": {"type": "array", "minItems": 1, "items": {
-            "type": "object", "required": ["content_base64"], "properties": {
-                "filename": {"type": "string", "example": "package.pdf"},
-                "content_base64": {"type": "string", "format": "byte"}}}},
-        "explain": {"type": "boolean", "default": False}}}}}}}
+@app.exception_handler(RequestValidationError)
+async def request_validation_error(request: Request, exc: RequestValidationError):
+    # FastAPI's default includes the input, potentially echoing entire uploaded documents.
+    return JSONResponse(status_code=422, content={"detail": [
+        {"loc": list(error["loc"]), "type": error["type"], "msg": error["msg"]}
+        for error in exc.errors()
+    ]})
 
 
 @app.post("/extract_json", response_model=M.ExtractResponse, responses=ERR, tags=["extraction"],
-          openapi_extra=_EXTRACT_JSON_BODY)
-async def extract_json(request: Request):
-    """Same as /extract with JSON + base64 files (used by the browser demo through SigV4)."""
-    _check_key(request)
+          dependencies=[Depends(_check_key)])
+async def extract_json(body: D.ExtractJsonRequest):
+    """Legacy loan workflow with a strictly validated JSON/base64 request."""
+    return await _run_files(body.decoded_files(), body.explain)
+
+
+async def _run_document_operation(operation, body):
     try:
-        body = await request.json()
-    except Exception as e:
-        raise HTTPException(400, f"invalid JSON: {e}") from e
-    files = body.get("files") if isinstance(body, dict) else None
-    if not isinstance(files, list) or not files:
-        raise HTTPException(400, "body must be {\"files\": [{\"filename\", \"content_base64\"}, ...]}")
-    payload = []
-    for i, item in enumerate(files):
-        if not isinstance(item, dict) or not isinstance(item.get("content_base64"), str):
-            raise HTTPException(400, f"files[{i}] needs filename + content_base64 (string)")
-        name = str(item.get("filename") or "upload.bin")
-        try:
-            data = base64.b64decode(item["content_base64"], validate=True)
-        except Exception as e:
-            raise HTTPException(400, f"bad base64 for {name}") from e
-        payload.append((name, data))
-    return await _run_files(payload, bool(body.get("explain", False)))
+        return await run_in_threadpool(operation, body)
+    except InputError as exc:
+        raise HTTPException(exc.status, str(exc)) from exc
+    except BudgetExceeded as exc:
+        raise HTTPException(503, "document processing budget exceeded") from exc
+    except Exception as exc:
+        # Provider/schema validation exceptions may contain document content or AWS identifiers.
+        log.error("document processing failed (%s)", type(exc).__name__)
+        raise HTTPException(502, "document processing failed; invalid or unavailable upstream result") from exc
+
+
+@app.post("/classify_json", response_model=D.ClassifyJsonResponse, responses=ERR,
+          tags=["documents"], dependencies=[Depends(_check_key)])
+async def classify_json(body: D.ClassifyJsonRequest):
+    """Discover document types per page from the supplied catalog; no attribute extraction."""
+    return await _run_document_operation(document_service.discover, body)
+
+
+@app.post("/extract_typed_json", response_model=D.ExtractTypedJsonResponse, responses=ERR,
+          tags=["documents"], dependencies=[Depends(_check_key)])
+async def extract_typed_json(body: D.ExtractTypedJsonRequest):
+    """Extract one logical document using an explicit type and complete canonical/draft schemas."""
+    return await _run_document_operation(document_service.extract_typed, body)
 
 
 DEMO_HTML = r"""<!DOCTYPE html>
