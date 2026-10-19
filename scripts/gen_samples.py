@@ -40,8 +40,10 @@ def kv(c, y, rows):
     c.setFont("DejaVu", 11)
     for label, value in rows:
         c.drawString(30 * mm, y * mm, f"{label}:")
+        # long labels (DECLARED_MONTHLY_NET_INCOME) used to overprint the value at 85 mm
+        x = max(85 * mm, 30 * mm + c.stringWidth(f"{label}:", "DejaVu", 11) + 4 * mm)
         c.setFont("DejaVuBold", 11)
-        c.drawString(85 * mm, y * mm, str(value))
+        c.drawString(x, y * mm, str(value))
         c.setFont("DejaVu", 11)
         y -= 8
     return y
