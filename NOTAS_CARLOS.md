@@ -605,6 +605,112 @@ Coste de la revisión completa: 0,1869 (local) + 0,1319 (verificación Lambda) �
 
 ---
 
+## 17. v0.4: mercado checo, 7 tipos de documento y paquetes nuevos (19-oct-2026, tarde)
+
+**Qué:** dos tipos nuevos, `employer_confirmation` (potvrzení o zaměstnání a výši příjmu) y
+`tax_or_debt_certificate` (potvrzení o bezdlužnosti del Finanční úřad), con schema, pistas del
+clasificador y reglas cruzadas:
+- `XDOC_INCOME` también contrato ↔ confirmación y nómina ↔ confirmación (tolerancia 1 %).
+- `XDOC_EMPLOYER` nómina ↔ confirmación (sin forma jurídica; similitud ≥ 0,85).
+- `DOC_RECENT` certificado y confirmación ≤ 30 días respecto a la fecha del contrato
+  (configurable por tipo en rules.yaml).
+- `TAX_CLEAR` sobre un campo sí/no (`has_tax_arrears`).
+- `XDOC_HOLDER_RC` el titular del certificado = DNI (nombre + RČ).
+- Borrador al cliente en **checo e inglés** (`draft_client_messages`).
+
+**Por qué:** el brief pide 5–7 tipos DISTINTOS definidos por el Contrato y Carlos pidió el
+mercado checo. Las reglas nuevas son `OPTIONAL_OUTCOMES`: los audits viejos se siguen
+re-evaluando.
+
+**Paquetes:** `scripts/gen_packages.py` sustituye a los dos generadores viejos.
+- 12 personas checas ficticias con RČ válidos (mod 11) y direcciones en 12 ciudades.
+- Layouts A/B (y C = carta en prosa) por tipo, y fuentes DejaVu/Liberation.
+- 12 casos: feliz ×2 con 7 tipos, faltante, página faltante, ingreso ≠, empleador ≠ +
+  certificado viejo, RČ inválido + typo, escaneado con 5 tipos, desordenado con 6, DNI en
+  foto + deuda fiscal, documento extra + certificado de otra persona, feliz con 5 tipos.
+- La verdad sale de los inputs del generador, nunca de la salida del motor.
+
+## 18. Hallazgo: Textract no lee checo
+
+El primer run real con nombres checos (paquete 12) mostró que Textract **no tiene modelo
+checo**:
+- pierde ř/č/š/ž/í/ú: 'Ondřej' → 'Ondej', 'Školní … Ústí nad Labem' → 'koln … st nad Labem',
+  '2. října 2026' → '2.rjna 2026', 'Kč' → 'K'
+- no razona sobre prosa checa: en cartas toma la fecha de inicio del empleo como fecha de
+  emisión, y respondía "No" a la pregunta de deudas siempre
+
+Como para nombres se preferían los valores del OCR, el motor se quedaba con 'Ondej' y lanzaba
+falsas discrepancias.
+
+**Respuesta (determinista, sin tocar la verdad):**
+1. `agree_ocr_no_diacritics`: si la única diferencia son letras acentuadas (y espacios o
+   puntuación) que el OCR perdió, cuenta como acuerdo y se guarda la grafía del LLM.
+   'Novak' vs 'Nováková' sigue siendo desacuerdo.
+2. Variantes OCR de los meses checos; importes con la coma decimal perdida ('480 000 00 K')
+   o con un espacio detrás de la coma; tipo `employment_term` ('Indefinite' = 'na dobu
+   neurčitou').
+3. Deuda fiscal: el LLM ahora recibe la pregunta de cada campo (antes solo veía el nombre
+   del campo y leía el título "Certificate of no tax arrears"). El lado OCR es
+   `textract: lines_rule`: la frase con "nedoplat" decide (importe = deuda, negación = sin
+   deuda).
+4. `DOC_RECENT` nunca decide con una fecha en la que los motores no coinciden: revisión
+   manual con los dos valores.
+5. Splitter: una "página 2 de 2" no abre documento nuevo; las páginas sin número legible
+   ocupan los huecos.
+
+## 19. Eval real v0.4 (12 paquetes, 85 páginas)
+
+| Run | Campos | Checks | Sembrados | Falsas alarmas | Siguiente paso | Coste |
+|---|---|---|---|---|---|---|
+| 1, antes de los arreglos (caché vacía) | 97,0 % | 94,7 % | 12/13 | 10 | 5/12, **1 inseguro** | 2,17 USD |
+| 2, tras los arreglos de importes/fechas (caché) | 98,1 % | 96,4 % | 12/13 | 8 | 6/12, 1 inseguro | 0,15 USD |
+| 3, tras splitter + deuda fiscal (caché) | 98,3 % | 96,9 % | 13/13 | 7 | 7/12, 12/12 seguro | 0,99 USD |
+| **4, SIN caché (el oficial)** | **98,3 %** | **96,9 %** | **13/13** | **7** | **7/12, 12/12 seguro** | **2,30 USD** |
+
+Run 3 = run 4: es reproducible. Clasificación 100 % y agrupación 12/12 en los runs 3 y 4.
+
+**Los 5 fallos de siguiente paso son todos más prudentes de lo esperado:** 4 paquetes felices
+en `spot_check_warnings` (avisos de confianza baja de Textract sobre texto checo) y el 09 en
+`manual_review_extraction`.
+
+**Falsas alarmas restantes:**
+- fecha de emisión de la confirmación de empleo en carta checa (6 casos)
+- 'Č' leída como 'A' por el OCR (1 caso)
+
+Tabla por paquete: `docs/MAIN_GOAL_SPEC.md` §3.1 y `HANDOFF_CLAUDE.md` §7.
+
+**Coste:** ≈ 0,027 USD/página ≈ 0,19 USD por paquete. Gasto de esta tarea **5,74 USD**
+(ledger `.cost/task2_2026-10-19.json`); acumulado del proyecto ≈ 3,36 + 5,74 ≈ **9,10 USD**
+(tope del build 20).
+
+## 20. Protocolo de control y redeploy v0.4.0 (19-oct-2026, ~16:00 hora de Praga)
+
+**Protocolo:** `GET /runs/{id}/protocol?format=html|pdf` y `python -m extractor protocol
+<run_id> -o x.pdf`.
+- Se reconstruye solo desde el audit.
+- Cabecera: caso, run_id, horas, versiones motor/git/reglas/modelos, región, sha256 de
+  entradas, estado de la cadena.
+- Resumen y tabla de todos los checks con evidencia de ambos motores.
+- Campos citados, faltantes y borrador CZ/EN, historial humano, firma y el pie "AI output
+  supports the decision; not an automatic final approval".
+- El PDF se genera con PyMuPDF Story (sin servicio nuevo).
+
+**Redeploy:** `bash deploy/deploy.sh` con el árbol limpio, commit `7c604b0`, **misma**
+Lambda/URL/CloudFront. El env se conservó (8 variables) y el token no cambió ni se imprimió.
+
+| Verificación | Resultado |
+|---|---|
+| `GET /health` por CloudFront | 200, `version 0.4.0`, `git_commit 7c604b09823b`, `rules_version 4b062b737a41f26d` |
+| `signed_extract.py` paquete 12 | run `20261019T135755Z-5f5b9ed5`, 5 tipos, `spot_check_warnings`, 0,138 USD |
+| `GET /runs/{id}/protocol` (html / pdf) | 200 / 200 (PDF de 6 páginas), cadena VERIFIED, 9 eventos |
+| mismo endpoint sin token | 401 |
+
+**Auditoría duradera:** NO hecha. Necesitaría un bucket S3 o una tabla DynamoDB, que son tipos
+de recurso nuevos. **Carlos tiene que aprobarlo.** Mientras tanto, el audit vive en `/tmp` por
+contenedor: hay que abrir el protocolo justo después del extract.
+
+---
+
 ## Archivos clave
 
 - Motor: `extractor/` (reglas: `rules.yaml`, `rules_engine.py`; audit: `audit.py`;
