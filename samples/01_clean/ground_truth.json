@@ -1,0 +1,19 @@
+{
+  "package_id": "01_clean",
+  "person": {
+    "first_name": "Jana",
+    "last_name": "Nováková",
+    "birth_number": "885412/0000",
+    "income": 52000
+  },
+  "expected_docs": [
+    "contract",
+    "id_card",
+    "bank_statement",
+    "payslip",
+    "proof_of_address"
+  ],
+  "expected_missing": [],
+  "expected_issues": [],
+  "expected_next_step": "approve_ready"
+}

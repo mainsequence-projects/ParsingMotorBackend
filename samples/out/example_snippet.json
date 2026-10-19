@@ -1,0 +1,82 @@
+{
+  "package_id": "package.pdf",
+  "region": "eu-central-1",
+  "bedrock_model": "eu.anthropic.claude-sonnet-4-5-20250929-v1:0",
+  "recommended_next_step": "spot_check_warnings",
+  "missing_documents": [],
+  "fields_auto_validated_pct": 97.0,
+  "combined_confidence": 0.97,
+  "documents": [
+    {
+      "doc_type": "contract",
+      "page_start": 1,
+      "fields": {
+        "contract_number": {
+          "value": "KB-2026-00421",
+          "status": "passed",
+          "confidence": 0.94,
+          "page": 1
+        },
+        "first_name": {
+          "value": "Jana",
+          "status": "passed",
+          "confidence": 0.99,
+          "page": 1
+        },
+        "last_name": {
+          "value": "Nováková",
+          "status": "passed",
+          "confidence": 0.94,
+          "page": 1
+        }
+      }
+    },
+    {
+      "doc_type": "id_card",
+      "page_start": 2,
+      "fields": {
+        "first_name": {
+          "value": "Jana",
+          "status": "passed",
+          "confidence": 0.98,
+          "page": 2
+        },
+        "last_name": {
+          "value": "Nováková",
+          "status": "passed",
+          "confidence": 0.98,
+          "page": 2
+        },
+        "birth_date": {
+          "value": "12.04.1988",
+          "status": "passed",
+          "confidence": 0.96,
+          "page": 2
+        }
+      }
+    }
+  ],
+  "checks_sample": [
+    {
+      "check": "birth_number_valid",
+      "status": "passed",
+      "detail": "ok",
+      "page": 1,
+      "doc_type": "contract"
+    },
+    {
+      "check": "birth_date_matches_birth_number",
+      "status": "passed",
+      "detail": "ok",
+      "page": 1,
+      "doc_type": "contract"
+    },
+    {
+      "check": "birth_number_valid",
+      "status": "passed",
+      "detail": "ok",
+      "page": 2,
+      "doc_type": "id_card"
+    }
+  ]
+}

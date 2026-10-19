@@ -1,6 +1,21 @@
 .env
 .venv
+venv/
 __pycache__/
 *.pyc
 .DS_Store
 *.egg-info/
+.pytest_cache/
+
+# secrets — never commit
+.deploy_token
+*.pem
+.env.*
+
+# local deploy artifacts
+deploy/build/
+deploy/package.zip
+deploy/*.zip
+
+# runtime cost ledger / local eval dumps (regenerable)
+samples/out/cost_ledger.json

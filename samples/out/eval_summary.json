@@ -1,0 +1,205 @@
+{
+  "packages": 4,
+  "packages_fully_correct": 4,
+  "field_accuracy": 1.0,
+  "check_accuracy": 1.0,
+  "reports": [
+    {
+      "package": "01_clean",
+      "checks": {
+        "missing_docs": {
+          "expected": [],
+          "got": [],
+          "pass": true
+        },
+        "next_step": {
+          "expected": "approve_ready",
+          "got": "spot_check_warnings",
+          "pass": true
+        },
+        "classified:contract": {
+          "pass": true
+        },
+        "classified:id_card": {
+          "pass": true
+        },
+        "classified:bank_statement": {
+          "pass": true
+        },
+        "classified:payslip": {
+          "pass": true
+        },
+        "classified:proof_of_address": {
+          "pass": true
+        }
+      },
+      "fields": {
+        "contract.first_name": {
+          "expected": "jana",
+          "got": "jana",
+          "status": "passed",
+          "pass": true
+        },
+        "contract.last_name": {
+          "expected": "novakova",
+          "got": "novakova",
+          "status": "passed",
+          "pass": true
+        },
+        "contract.birth_number": {
+          "expected": "8854120000",
+          "got": "8854120000",
+          "status": "passed",
+          "pass": true
+        },
+        "id_card.first_name": {
+          "expected": "jana",
+          "got": "jana",
+          "status": "passed",
+          "pass": true
+        }
+      },
+      "ok": true,
+      "auto_validated_pct": 97.0,
+      "combined_confidence": 0.97,
+      "usage": {
+        "input_tokens": 18030,
+        "output_tokens": 978,
+        "calls": 10
+      }
+    },
+    {
+      "package": "02_missing_payslip",
+      "checks": {
+        "missing_docs": {
+          "expected": [
+            "payslip"
+          ],
+          "got": [
+            "payslip"
+          ],
+          "pass": true
+        },
+        "next_step": {
+          "expected": "request_missing_documents",
+          "got": "request_missing_documents",
+          "pass": true
+        },
+        "classified:contract": {
+          "pass": true
+        },
+        "classified:id_card": {
+          "pass": true
+        },
+        "classified:bank_statement": {
+          "pass": true
+        },
+        "classified:proof_of_address": {
+          "pass": true
+        }
+      },
+      "fields": {},
+      "ok": true,
+      "auto_validated_pct": 96.3,
+      "combined_confidence": 0.963,
+      "usage": {
+        "input_tokens": 14439,
+        "output_tokens": 781,
+        "calls": 8
+      }
+    },
+    {
+      "package": "03_amount_mismatch",
+      "checks": {
+        "missing_docs": {
+          "expected": [],
+          "got": [],
+          "pass": true
+        },
+        "issue:income_contract_vs_payslip": {
+          "pass": true
+        },
+        "issue:income_contract_vs_statement": {
+          "pass": true
+        },
+        "next_step": {
+          "expected": "manual_review_discrepancy",
+          "got": "manual_review_discrepancy",
+          "pass": true
+        },
+        "classified:contract": {
+          "pass": true
+        },
+        "classified:id_card": {
+          "pass": true
+        },
+        "classified:bank_statement": {
+          "pass": true
+        },
+        "classified:payslip": {
+          "pass": true
+        },
+        "classified:proof_of_address": {
+          "pass": true
+        }
+      },
+      "fields": {},
+      "ok": true,
+      "auto_validated_pct": 97.0,
+      "combined_confidence": 0.97,
+      "usage": {
+        "input_tokens": 18030,
+        "output_tokens": 972,
+        "calls": 10
+      }
+    },
+    {
+      "package": "04_name_typo_invalid_rc",
+      "checks": {
+        "missing_docs": {
+          "expected": [],
+          "got": [],
+          "pass": true
+        },
+        "issue:birth_number_valid": {
+          "pass": true
+        },
+        "issue:last_name_consistent": {
+          "pass": true
+        },
+        "issue:birth_number_consistent": {
+          "pass": true
+        },
+        "next_step": {
+          "expected": "manual_review_discrepancy",
+          "got": "manual_review_discrepancy",
+          "pass": true
+        },
+        "classified:contract": {
+          "pass": true
+        },
+        "classified:id_card": {
+          "pass": true
+        },
+        "classified:bank_statement": {
+          "pass": true
+        },
+        "classified:payslip": {
+          "pass": true
+        },
+        "classified:proof_of_address": {
+          "pass": true
+        }
+      },
+      "fields": {},
+      "ok": true,
+      "auto_validated_pct": 93.9,
+      "combined_confidence": 0.939,
+      "usage": {
+        "input_tokens": 18030,
+        "output_tokens": 943,
+        "calls": 10
+      }
+    }
+  ]
+}

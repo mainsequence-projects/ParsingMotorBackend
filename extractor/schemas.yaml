@@ -1,0 +1,60 @@
+# Per-document-type field schemas.
+# type: name | text | address | date | birth_number | amount | iban | id | doc_list
+# query: Textract QUERIES question (omit / textract: false => Bedrock-only field)
+doc_types:
+  contract:
+    description: Loan / service contract between the bank and the client
+    fields:
+      contract_number: {type: id, query: "What is the contract number?"}
+      first_name: {type: name, query: "What is the client's first name?"}
+      last_name: {type: name, query: "What is the client's last name (surname)?"}
+      birth_date: {type: date, query: "What is the client's date of birth?"}
+      birth_number: {type: birth_number, query: "What is the client's birth number (rodne cislo)?"}
+      address: {type: address, query: "What is the client's permanent address?"}
+      loan_amount: {type: amount, query: "What is the LOAN_AMOUNT?"}
+      declared_monthly_income: {type: amount, query: "What is the DECLARED_MONTHLY_NET_INCOME amount?"}
+      contract_date: {type: date, query: "What is the contract date (date of signature)?"}
+      required_documents:
+        type: doc_list
+        textract: false
+        description: >-
+          List of documents the client must submit according to the contract, mapped to
+          codes: id_card, bank_statement, payslip, proof_of_address
+  id_card:
+    description: Czech national identity card (obcansky prukaz)
+    fields:
+      first_name: {type: name, query: "What is the given name?"}
+      last_name: {type: name, query: "What is the surname?"}
+      birth_date: {type: date, query: "What is the date of birth?"}
+      birth_number: {type: birth_number, query: "What is the birth number (rodne cislo)?"}
+      address: {type: address, query: "What is the permanent residence address?"}
+      document_number: {type: id, query: "What is the document number?"}
+      expiry_date: {type: date, query: "What is the date of expiry?"}
+  bank_statement:
+    description: Bank account statement
+    fields:
+      account_holder: {type: name, query: "Who is the account holder?"}
+      iban: {type: iban, query: "What is the IBAN?"}
+      period_from: {type: date, query: "What is the start date of the statement period?"}
+      period_to: {type: date, query: "What is the end date of the statement period?"}
+      salary_credit: {type: amount, query: "What is the amount of the salary credit (incoming salary payment)?"}
+      closing_balance: {type: amount, query: "What is the closing balance?"}
+  payslip:
+    description: Monthly payslip from employer
+    fields:
+      first_name: {type: name, query: "What is the employee's first name?"}
+      last_name: {type: name, query: "What is the employee's last name?"}
+      birth_number: {type: birth_number, query: "What is the employee's birth number?"}
+      employer: {type: text, query: "What is the employer name?"}
+      net_income: {type: amount, query: "What is the net pay (net income)?"}
+      period: {type: text, query: "What is the pay period (month and year)?"}
+  proof_of_address:
+    description: Utility bill or other proof of address
+    fields:
+      full_name: {type: name, query: "What is the customer's full name?"}
+      address: {type: address, query: "What is the customer's address (supply address)?"}
+      issuer: {type: text, query: "Who issued the document (company name)?"}
+      issue_date: {type: date, query: "What is the issue date?"}
+  other:
+    description: Anything else
+    fields: {}

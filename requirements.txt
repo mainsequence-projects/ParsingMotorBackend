@@ -1,0 +1,12 @@
+# Prefer: pip install -e .
+# This file lists KB-extractor extras for environments that cannot read pyproject optional sets.
+boto3>=1.34
+fastapi>=0.110
+mangum>=0.17
+python-multipart>=0.0.9
+pymupdf>=1.24
+Pillow>=10.0
+PyYAML>=6.0
+reportlab>=4.0
+pypdf>=4.0
+uvicorn>=0.27

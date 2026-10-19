@@ -1,0 +1,17 @@
+{
+  "package_id": "04_name_typo_invalid_rc",
+  "expected_docs": [
+    "contract",
+    "id_card",
+    "bank_statement",
+    "payslip",
+    "proof_of_address"
+  ],
+  "expected_missing": [],
+  "expected_issues": [
+    "birth_number_valid",
+    "last_name_consistent",
+    "birth_number_consistent"
+  ],
+  "expected_next_step": "manual_review_discrepancy"
+}

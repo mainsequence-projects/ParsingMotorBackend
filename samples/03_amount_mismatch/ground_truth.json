@@ -1,0 +1,18 @@
+{
+  "package_id": "03_amount_mismatch",
+  "declared_income": 52000,
+  "actual_income": 38000,
+  "expected_docs": [
+    "contract",
+    "id_card",
+    "bank_statement",
+    "payslip",
+    "proof_of_address"
+  ],
+  "expected_missing": [],
+  "expected_issues": [
+    "income_contract_vs_payslip",
+    "income_contract_vs_statement"
+  ],
+  "expected_next_step": "manual_review_discrepancy"
+}
