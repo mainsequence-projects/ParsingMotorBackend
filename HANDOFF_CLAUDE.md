@@ -15,50 +15,54 @@
 > checo** (pierde ř/č/š/í…); se compensa con reglas deterministas.
 
 Last updated: 2026-10-19 16:10 Europe/Prague. Deployed: v0.4.0 commit 7c604b0. Local HEAD adds only docs commits after it (handoff, spec md/docx/pdf, NOTAS §17-20); no code change since the deploy. Keep this file updated after every commit.
+**19-oct ~18:00 — v0.5.0 on local branch `feat/engine-mockup-parity`** (from origin/main `99a7a8f`, which already contains PR #1 rules proposals and Jose's typed endpoints). NOT pushed, NOT deployed (Lambda still runs 0.4.0). Adds the engine side of the mockups: `GET /runs`, `GET /runs/{id}/events`, `GET /runs/{id}/pages/{n}.png` (inputs now kept next to the audit, sha256-verified), `GET /eval/summary`, `timings_ms`, run metadata in RunState, `check.description` from rules.yaml `summary`, `fields_passed/fields_total`. 377 tests green. Details: NOTAS §22, docs/API.md §2.4–2.4d. Redeploy needs Carlos's OK.
+**19-oct (later):** rule-learning loop committed on `feat/kb-extractor` (NOTAS §21), 277 tests green, NOT pushed and NOT deployed. `origin/main` has Jose's 2da7cc0 (typed document endpoints) touching api.py/api_models.py/openapi.json: expect conflicts on merge (regenerate openapi.json).
 
 ---
 
 ## 1. Goal
 
-### 1.1 The KB Track 6 brief (reconstructed)
-The original brief text was given to Carlos in chat and is **not stored in the repo**. Below is the
-full requirement list as it was handed to the engineering agent, item by item. If Carlos pastes
-the original, replace this subsection verbatim.
+### 1.1 The KB Track 6 brief (original, verbatim — pasted by Carlos 2026-10-19)
+**Context:** back-office teams check documents by hand, compare data across supporting materials
+and chase missing or ambiguous information. Build a generally applicable solution that speeds up
+the check, makes it more consistent and produces a traceable control protocol. The AI output
+supports the decision; it is not an automatic final approval.
 
-**Question:** *How can AI make the back-office control of loan/KYC document packages faster and
-more reliable, while every decision stays explainable and auditable?* A back-office clerk receives
-a **case package**: a **Contract** that defines which supporting documents are required, plus
-**5–7 different document types** (Czech market: ID card / občanský průkaz, bank statement / výpis
-z účtu, payslip / výplatní lístek, proof of address, employer confirmation / potvrzení o
-zaměstnání, tax-office no-debt certificate / potvrzení o bezdlužnosti, …). Pages can arrive as
-scans, photos, shuffled, with missing pages, or with inconsistent data.
+**Expected prototype:**
+- Accept a package of documents for one business case.
+- Check the set is complete: about 5-7 different documents, always defined in the "Contract"
+  document. Classify each document, then extract the pre-defined attributes for its type, with a
+  confidence level.
+- If something is missing or specific inconsistencies appear, automatically trigger a request to
+  the client to supplement or correct.
+- Sort results into passed checks, discrepancies, warnings and manual review, and generate a
+  cited, auditable protocol with a recommended next step for the back-office worker.
 
-**Expected prototype**
-- Ingest a package, classify every page, split/group it into documents.
-- Extract key fields per document type **with citation** (document, page, location) and
-  **confidence**.
-- Run a **configurable rules engine**: completeness vs the Contract, consistency across documents
-  (names, birth number/rodné číslo, address, income, employer), logical links (dates, validity).
-- Produce a **recommended next step** and, when something is missing/wrong, a **draft request to
-  the client**.
-- **Human in the loop**: confirm / edit / reject / send back (request documents).
-- **Audit trail**: input versions (hashes), rule and model versions, timestamps, human decision
-  history.
-- A **control protocol** the back-office can sign (cited HTML/PDF).
+**Technical tasks:**
+- Ingestion and preprocessing: load PDFs and images, OCR, keep the link to the original page.
+- Classification: determine the document type. Bonus: split multi-document PDFs and handle
+  shuffled pages.
+- Extraction: structured attributes with source citation and confidence score.
+- Rules engine: configurable checks for completeness, consistency and logical links.
+- Human in the loop: confirm, edit, reject or send back for supplementation.
+- Audit trail: input versions, applied rule or model, run timestamp, history of human
+  interventions.
 
-**Technical tasks:** ingestion + OCR with link to the original page; classification (+ bonus:
-split/shuffle); extraction with citation and confidence; configurable rules engine; HITL
-confirm/edit/reject/send-back; audit trail (input versions, rule/model, timestamp, human history).
+**Demo scenario:** a happy path (a complete set passes and a protocol is generated), an error path
+(a document is missing, or a key data item is missing or doesn't match), and the automatic
+resolution or human next steps.
 
-**Demo scenario:** happy path → error path (missing/inconsistent → client request drafted) →
-resolution (human edit/confirm → re-evaluated → approve_ready, audit verifies).
+**Evaluated on:** accuracy of classification, extraction and checks; traceability of evidence and
+explainability; robustness to document quality and variants; real-world usability for the back
+office.
 
-**Evaluation criteria:** accuracy; traceability/explainability; robustness; back-office usability.
+**Guardrails:** rules must be separate from extraction and easy to change; the rules should
+improve continuously from real decisions.
 
-**Guardrails:** rules separate from extraction and easy to change; rules can improve from real
-human decisions (suggestions, never silently auto-applied).
-
-**Data:** synthetic packages only (5–7 docs each, scans, missing pages, inconsistent data).
+**Data:** No documents are provided. KB does not share any documents for this challenge. Create
+your own synthetic document packages (a Contract that defines the 5-7 required documents, plus the
+supporting documents, incl. scans, missing pages and inconsistent data for the error path). No
+real client data.
 
 ### 1.2 Product decisions from Carlos
 - Market: **Czech** (Czech document types, rodné číslo rules, KB context, Czech names/addresses in
@@ -140,6 +144,7 @@ Diagram: `arquitectura_motor.png` (source `/workspace/hack/diagram/arch.py`).
 | `extractor/evaluate.py` | pure evaluation (no AWS) incl. human overrides |
 | `extractor/pipeline.py` | orchestrates a run, writes audit events, returns the API JSON |
 | `extractor/audit.py` | hash-chained JSONL per run, decisions, verify, learning report |
+| `extractor/rule_changes.py` | rule-learning loop: suggestions → one-value rules.yaml patch + offline impact → human approve/reject (hash-chained `rules_ledger.jsonl`) → new rules file, never auto-activated |
 | `extractor/api.py` | FastAPI endpoints + demo HTML; `api_models.py` = response models |
 | `extractor/protocol.py` | control protocol (HTML; PDF via PyMuPDF Story) from the audit log |
 | `extractor/cli.py` | `python -m extractor ...` (run, recheck, decide, verify, learn, protocol) |
@@ -151,7 +156,7 @@ Diagram: `arquitectura_motor.png` (source `/workspace/hack/diagram/arch.py`).
 | `deploy/signed_extract.py` | CLI: `/session` → SigV4 POST to the Function URL |
 | `deploy/teardown.sh` | removes the deployed resources |
 | `api/kb_extractor/main.py` | Main Sequence entry point (same FastAPI app) |
-| `tests/` | 270 tests, no AWS (`tests/fixtures` hold recorded runs) |
+| `tests/` | 277 tests, no AWS (`tests/fixtures` hold recorded runs) |
 | `docs/API.md`, `docs/openapi.json` | HTTP contract for Jose (ES+EN) |
 | `NOTAS_CARLOS.md` | Spanish decision log: every action and why |
 
@@ -173,6 +178,9 @@ Diagram: `arquitectura_motor.png` (source `/workspace/hack/diagram/arch.py`).
  "draft_client_message":"Dear …","draft_client_messages":{"cs":"Vážená/ý …","en":"Dear …"}}
 // GET /runs/{id}/protocol?format=html|pdf → cited protocol (CLI: python -m extractor protocol <run_id> -o p.pdf)
 // POST /runs/{id}/decisions  {"field":"contract.declared_monthly_income","action":"edit","new_value":"38000","reviewer":"jose"}
+// GET /rules/proposals → one-value rules.yaml patches + impact (less_cautious_runs!)
+// POST /rules/proposals/{id}/review {"action":"approve","reviewer":"lead_ana"} → new rules version (activate manually)
+// CLI: python -m extractor rules propose | rules review <id> --action approve --reviewer ana --write extractor/rules.yaml
 ```
 Statuses: field `passed|warning|manual_review|missing`; check `passed|warning|discrepancy|manual_review`.
 Next steps: `manual_review_discrepancy`, `request_missing_documents`, `manual_review_extraction`,
@@ -259,11 +267,16 @@ an 8-page 7-type package). Lambda: 5-page package ≈ 15 s. Spend this task **5.
 | Czech + English client draft | Done (v0.4) |
 | HITL confirm/edit/reject/request_documents (API) | Done (UI = Jose) |
 | Audit trail (hashes, versions, timestamps, human history, verify) | Partial: Lambda storage ephemeral |
-| Learning loop from decisions | Partial (report + suggestions, never auto-applied) |
+| Learning loop from decisions | Done locally (proposal → impact → review → new version; activation is manual). Not deployed |
 | Back-office UI | Jose (frontend repo) |
 | Durable audit on Lambda | Missing: needs S3/DynamoDB = new resource type → **Carlos must approve** |
 
 ## 9. Exact next steps (in order)
+0. (v0.5.0, local) With Carlos's OK: push `feat/engine-mockup-parity`, PR to main, redeploy the SAME
+   Lambda with `deploy.sh` on a clean tree (bundles `eval_summary.json`). Frontend widgets map:
+   queue → `GET /runs` (+ `/eval/summary` KPI cards); review screen → `GET /runs/{id}` (fields,
+   bbox, checks+description, drafts, timings, inputs/pages) + `/pages/{n}.png` + `/events` +
+   `/verify`; actions → `POST /decisions`; protocol → `/protocol?format=pdf`.
 1. Jose / Main Sequence: wire `/extract_json`, `/runs/{id}`, `/runs/{id}/decisions`,
    `/runs/{id}/protocol` (open the protocol right after the extract: audit is per container).
 2. Carlos decides on durable audit (S3 bucket or DynamoDB table). Do NOT create without approval.
@@ -277,7 +290,9 @@ an 8-page 7-type package). Lambda: 5-page package ≈ 15 s. Spend this task **5.
 - **AWS SSO creds expire** (hours). Symptom `ExpiredToken`: stop, ask Carlos to re-login.
 - **Function URL is AWS_IAM** because the org (SCP) blocks anonymous Function URL access (403 even with `Principal:*`).
 - **Reserved concurrency cannot be set**: account has 10 concurrent executions total; AWS needs ≥10 unreserved.
-- **Audit on Lambda lives in `/tmp`**: per container, lost on cold start → `/runs/{id}` can 404. Budget guard also per container.
+- **Audit on Lambda lives in `/tmp`**: per container, lost on cold start → `/runs/{id}` can 404. Budget guard also per container. Since 0.5.0 the same applies to `GET /runs`, `/events` and `/pages/{n}.png` (kept input bytes = personal data, same retention as the audit; `EXTRACTOR_KEEP_INPUTS=0` disables).
+- `check.description` comes from the run's own rules (audit), so pre-0.5 runs show `description.en`, not the new `summary`.
+- `fields_auto_validated_pct` = passed + warning (compat). The "39/48 passed" KPI is `fields_passed/fields_total`.
 - **`eu.*` Bedrock inference profiles** may process in other EU regions (data stays in the EU, not only Frankfurt).
 - **The Main Sequence wheel is missing the server part** (Jose's scaffold); run the API with uvicorn/Lambda meanwhile.
 - CloudFront origin read timeout is 60 s (that's why POST goes directly to the Function URL; Lambda allows 180 s).

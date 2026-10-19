@@ -19,7 +19,7 @@ Lambda invocation also retains its existing SigV4 authentication. Tokens in quer
 parameters are not accepted. `GET /session` retains the configured invocation role and
 Function URL contract so existing Back Office server clients can continue to call it.
 
-**Breaking removal:** `/extract`, `/extract_json`, `/runs/*`, `/rules`, and `/learning`
+**Breaking removal:** `/extract`, `/extract_json`, `/runs`, `/runs/*`, `/rules`, `/rules/proposals/*`, `/learning`, and `/eval/summary`
 now return 404. Their CLI equivalents (`recheck`, `decide`, `verify`, `learn`, and
 `protocol`) and the loan demo are removed. There is no compatibility route that runs
 business rules inside this service. Historical samples and project notes are reference

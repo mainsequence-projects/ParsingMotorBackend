@@ -12,7 +12,10 @@ from extractor import api
     ("post", "/extract"), ("post", "/extract_json"),
     ("get", "/runs/example"), ("post", "/runs/example/decisions"),
     ("get", "/runs/example/verify"), ("get", "/runs/example/protocol"),
-    ("get", "/rules"), ("get", "/learning"),
+    ("get", "/rules"), ("get", "/learning"), ("get", "/runs"),
+    ("get", "/runs/example/events"), ("get", "/runs/example/pages/1.png"),
+    ("get", "/eval/summary"), ("get", "/rules/proposals"),
+    ("post", "/rules/proposals/example/review"),
 ])
 def test_loan_workflow_endpoints_are_removed(method, path):
     assert getattr(TestClient(api.app), method)(path).status_code == 404
@@ -20,7 +23,7 @@ def test_loan_workflow_endpoints_are_removed(method, path):
 
 @pytest.mark.parametrize("module", [
     "pipeline", "evaluate", "cross_checks", "rules", "rules_engine", "audit", "protocol",
-    "reconcile", "doclist", "classify", "extract",
+    "reconcile", "doclist", "classify", "extract", "rule_changes", "runstore",
 ])
 def test_legacy_business_engine_is_not_importable(module):
     assert importlib.util.find_spec(f"extractor.{module}") is None

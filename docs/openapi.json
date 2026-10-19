@@ -3,7 +3,7 @@
   "info": {
     "title": "Document Extraction API",
     "description": "Document classification and typed extraction with source evidence. Back Office owns requirements, cross-document checks, review decisions and protocols. Auth: header x-api-key when EXTRACTOR_API_KEY is set. See docs/API.md.",
-    "version": "0.4.0"
+    "version": "0.5.0"
   },
   "paths": {
     "/health": {
