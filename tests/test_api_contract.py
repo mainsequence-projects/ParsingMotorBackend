@@ -52,6 +52,7 @@ def test_demo_story_discrepancy_draft_human_edit_verify(client):
     assert after["draft_client_message"] is None and len(after["decisions"]) == 1
     v = client.get(f"/runs/{RUN}/verify").json()
     assert v["ok"] and v["errors"] == [] and v["events"] >= 3
+    assert v["file"] == f"{RUN}.jsonl"                    # no server path
     lr = client.get("/learning?min_support=1")
     assert lr.status_code == 200 and lr.json()["auto_applied"] is False
 

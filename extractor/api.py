@@ -303,7 +303,9 @@ def verify_run(run_id: str, request: Request):
     try:
         if not _audit.run_path(run_id).exists():
             raise _audit.NotFound(f"no audit log for run {run_id}")
-        return _audit.verify(run_id)
+        v = dict(_audit.verify(run_id))
+        v["file"] = Path(str(v.get("file", ""))).name      # no server paths to clients
+        return v
     except _audit.AuditError as e:
         raise _audit_http(e) from e
 
