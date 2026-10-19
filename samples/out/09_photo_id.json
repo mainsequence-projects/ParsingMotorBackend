@@ -1,0 +1,1013 @@
+{
+  "run_id": "20261019T122215Z-69c2eafd",
+  "package_id": "09_photo_id",
+  "engine_version": "0.2.0",
+  "git_commit": "62e385a6776b1d44cf3649f9eacb12a67659937c",
+  "region": "eu-central-1",
+  "models": {
+    "classification": "eu.anthropic.claude-haiku-4-5-20251001-v1:0",
+    "extraction": "eu.anthropic.claude-sonnet-4-5-20250929-v1:0",
+    "textract": {
+      "service": "textract",
+      "operation": "AnalyzeDocument",
+      "mode": "sync",
+      "feature_types": [
+        "QUERIES"
+      ],
+      "api_version": "2018-06-27",
+      "region": "eu-central-1"
+    }
+  },
+  "bedrock_model": "eu.anthropic.claude-sonnet-4-5-20250929-v1:0",
+  "generated_at": "2026-10-19T12:22:23.589Z",
+  "rules_version": "e5467f7b0adf0668",
+  "rules_label": "kb-rules-2026-10-19",
+  "documents": [
+    {
+      "doc_id": "d1",
+      "doc_type": "contract",
+      "source_file": "contract.pdf",
+      "doc_key": "KB202600421",
+      "page_start": 1,
+      "page_end": 1,
+      "pages": [
+        {
+          "source_file": "contract.pdf",
+          "page": 1,
+          "page_number": null,
+          "page_count": null,
+          "doc_key": "KB-2026-00421",
+          "rotation": 0,
+          "confidence": 0.99,
+          "page_sha256": "004c243619ad42c7719d8fe39aca3af30487a09ffb44c451f6a8fa6b30f0cc20",
+          "sha256": "004c243619ad42c7719d8fe39aca3af30487a09ffb44c451f6a8fa6b30f0cc20",
+          "source_sha256": "f6409a1bc7047bd2069c4284ab4d5ad9bc7590c9904a7f9aa0721fd9e3aec237"
+        }
+      ],
+      "classification_confidence": 0.99,
+      "classification_reason": "Document is titled 'ÚVĚROVÁ SMLOUVA / LOAN CONTRACT' with contract number, loan amount, and client details.",
+      "fields": {
+        "contract_number": {
+          "type": "id",
+          "value": "KB-2026-00421",
+          "normalized": "KB202600421",
+          "textract": "KB-2026-00421",
+          "textract_conf": 0.94,
+          "textract_page": 1,
+          "bedrock": "KB-2026-00421",
+          "bedrock_page": 1,
+          "confidence": 0.94,
+          "page": 1,
+          "outcome": "agree_high_conf",
+          "status": "passed",
+          "rule_ids": [
+            "FIELD_RECONCILE"
+          ],
+          "rules_version": "e5467f7b0adf0668",
+          "bbox": {
+            "Width": 0.15806777775287628,
+            "Height": 0.01083912793546915,
+            "Left": 0.4048251211643219,
+            "Top": 0.13120511174201965
+          }
+        },
+        "first_name": {
+          "type": "name",
+          "value": "Jana",
+          "normalized": "jana",
+          "textract": "Jana",
+          "textract_conf": 0.99,
+          "textract_page": 1,
+          "bedrock": "Jana",
+          "bedrock_page": 1,
+          "confidence": 0.99,
+          "page": 1,
+          "outcome": "agree_high_conf",
+          "status": "passed",
+          "rule_ids": [
+            "FIELD_RECONCILE",
+            "XDOC_FIRST_NAME"
+          ],
+          "rules_version": "e5467f7b0adf0668",
+          "bbox": {
+            "Width": 0.04596874862909317,
+            "Height": 0.013120703399181366,
+            "Left": 0.40240606665611267,
+            "Top": 0.1580170840024948
+          }
+        },
+        "last_name": {
+          "type": "name",
+          "value": "Nováková",
+          "normalized": "novakova",
+          "textract": "Nováková",
+          "textract_conf": 0.95,
+          "textract_page": 1,
+          "bedrock": "Nováková",
+          "bedrock_page": 1,
+          "confidence": 0.95,
+          "page": 1,
+          "outcome": "agree_high_conf",
+          "status": "passed",
+          "rule_ids": [
+            "FIELD_RECONCILE",
+            "XDOC_LAST_NAME"
+          ],
+          "rules_version": "e5467f7b0adf0668",
+          "bbox": {
+            "Width": 0.10080841928720474,
+            "Height": 0.011409392580389977,
+            "Left": 0.40563228726387024,
+            "Top": 0.18482866883277893
+          }
+        },
+        "birth_date": {
+          "type": "date",
+          "value": "12.04.1988",
+          "normalized": "1988-04-12",
+          "textract": "12.04.1988",
+          "textract_conf": 0.97,
+          "textract_page": 1,
+          "bedrock": "1988-04-12",
+          "bedrock_page": 1,
+          "confidence": 0.97,
+          "page": 1,
+          "outcome": "agree_high_conf",
+          "status": "passed",
+          "rule_ids": [
+            "FIELD_RECONCILE",
+            "RC_BIRTHDATE_MATCH"
+          ],
+          "rules_version": "e5467f7b0adf0668",
+          "bbox": {
+            "Width": 0.11532474309206009,
+            "Height": 0.010838919319212437,
+            "Left": 0.4056326746940613,
+            "Top": 0.2122107744216919
+          }
+        },
+        "birth_number": {
+          "type": "birth_number",
+          "value": "885412/0000",
+          "normalized": "8854120000",
+          "textract": "885412/0000",
+          "textract_conf": 0.98,
+          "textract_page": 1,
+          "bedrock": "885412/0000",
+          "bedrock_page": 1,
+          "confidence": 0.98,
+          "page": 1,
+          "outcome": "agree_high_conf",
+          "status": "passed",
+          "rule_ids": [
+            "FIELD_RECONCILE",
+            "RC_VALID",
+            "RC_BIRTHDATE_MATCH",
+            "XDOC_BIRTH_NUMBER"
+          ],
+          "rules_version": "e5467f7b0adf0668",
+          "bbox": {
+            "Width": 0.1346798688173294,
+            "Height": 0.012550286017358303,
+            "Left": 0.4048265516757965,
+            "Top": 0.23845192790031433
+          }
+        },
+        "address": {
+          "type": "address",
+          "value": "Vinohradská 12, 120 00 Praha 2",
+          "normalized": "vinohradska 12 120 00 praha 2",
+          "textract": "Vinohradská 12, 120 00 Praha 2",
+          "textract_conf": 0.91,
+          "textract_page": 1,
+          "bedrock": "Vinohradská 12, 120 00 Praha 2",
+          "bedrock_page": 1,
+          "confidence": 0.91,
+          "page": 1,
+          "outcome": "agree_high_conf",
+          "status": "passed",
+          "rule_ids": [
+            "FIELD_RECONCILE",
+            "XDOC_ADDRESS"
+          ],
+          "rules_version": "e5467f7b0adf0668",
+          "bbox": {
+            "Width": 0.3322641849517822,
+            "Height": 0.01312092412263155,
+            "Left": 0.4040204584598541,
+            "Top": 0.26526328921318054
+          }
+        },
+        "loan_amount": {
+          "type": "amount",
+          "value": "250000.00 CZK",
+          "normalized": 250000.0,
+          "textract": "250000.00 CZK",
+          "textract_conf": 0.8,
+          "textract_page": 1,
+          "bedrock": 250000.0,
+          "bedrock_page": 1,
+          "confidence": 0.8,
+          "page": 1,
+          "outcome": "agree_low_conf",
+          "status": "warning",
+          "rule_ids": [
+            "FIELD_RECONCILE",
+            "CONTRACT_INCOME_NOT_LOAN",
+            "LOAN_AMOUNT_PRESENT"
+          ],
+          "rules_version": "e5467f7b0adf0668",
+          "bbox": {
+            "Width": 0.15806718170642853,
+            "Height": 0.010838844813406467,
+            "Left": 0.4048272669315338,
+            "Top": 0.29264554381370544
+          }
+        },
+        "declared_monthly_income": {
+          "type": "amount",
+          "value": 52000.0,
+          "normalized": 52000.0,
+          "textract": "15200E.00",
+          "textract_conf": 0.37,
+          "textract_page": 1,
+          "bedrock": 52000.0,
+          "bedrock_page": 1,
+          "confidence": 0.37,
+          "page": 1,
+          "outcome": "disagree",
+          "status": "manual_review",
+          "rule_ids": [
+            "FIELD_RECONCILE",
+            "CONTRACT_INCOME_NOT_LOAN"
+          ],
+          "rules_version": "e5467f7b0adf0668",
+          "bbox": null
+        },
+        "contract_date": {
+          "type": "date",
+          "value": "01.10.2026",
+          "normalized": "2026-10-01",
+          "textract": "01.10.2026",
+          "textract_conf": 0.98,
+          "textract_page": 1,
+          "bedrock": "2026-10-01",
+          "bedrock_page": 1,
+          "confidence": 0.98,
+          "page": 1,
+          "outcome": "agree_high_conf",
+          "status": "passed",
+          "rule_ids": [
+            "FIELD_RECONCILE"
+          ],
+          "rules_version": "e5467f7b0adf0668",
+          "bbox": {
+            "Width": 0.11613084375858307,
+            "Height": 0.010838729329407215,
+            "Left": 0.4048280119895935,
+            "Top": 0.3468390703201294
+          }
+        },
+        "required_documents": {
+          "type": "doc_list",
+          "value": [
+            "id_card"
+          ],
+          "normalized": [
+            "id_card"
+          ],
+          "textract": null,
+          "textract_conf": 0.0,
+          "textract_page": null,
+          "bedrock": [
+            "id_card"
+          ],
+          "bedrock_page": 1,
+          "confidence": 0.0,
+          "page": 1,
+          "outcome": "llm_only",
+          "status": "warning",
+          "rule_ids": [
+            "FIELD_RECONCILE"
+          ],
+          "rules_version": "e5467f7b0adf0668",
+          "bbox": null
+        }
+      },
+      "checks": [
+        {
+          "check_id": "RC_VALID:birth_number_valid:contract",
+          "check": "birth_number_valid",
+          "rule_id": "RC_VALID",
+          "rules_version": "e5467f7b0adf0668",
+          "outcome": "valid",
+          "status": "passed",
+          "detail": "ok",
+          "page": 1,
+          "doc_type": "contract",
+          "evidence": [
+            {
+              "doc_id": "d1",
+              "doc_type": "contract",
+              "field": "birth_number",
+              "value": "885412/0000",
+              "page": 1
+            }
+          ]
+        },
+        {
+          "check_id": "RC_BIRTHDATE_MATCH:birth_date_matches_birth_number:contract",
+          "check": "birth_date_matches_birth_number",
+          "rule_id": "RC_BIRTHDATE_MATCH",
+          "rules_version": "e5467f7b0adf0668",
+          "outcome": "match",
+          "status": "passed",
+          "detail": "field=1988-04-12 encoded=1988-04-12",
+          "page": 1,
+          "doc_type": "contract",
+          "evidence": [
+            {
+              "doc_id": "d1",
+              "doc_type": "contract",
+              "field": "birth_date",
+              "value": "12.04.1988",
+              "page": 1
+            },
+            {
+              "doc_id": "d1",
+              "doc_type": "contract",
+              "field": "birth_number",
+              "value": "885412/0000",
+              "page": 1
+            }
+          ]
+        },
+        {
+          "check_id": "CONTRACT_INCOME_NOT_LOAN:declared_income_not_loan_amount:contract",
+          "check": "declared_income_not_loan_amount",
+          "rule_id": "CONTRACT_INCOME_NOT_LOAN",
+          "rules_version": "e5467f7b0adf0668",
+          "outcome": "ok",
+          "status": "passed",
+          "detail": "loan=250000.0 declared=52000.0",
+          "page": 1,
+          "doc_type": "contract",
+          "evidence": [
+            {
+              "doc_id": "d1",
+              "doc_type": "contract",
+              "field": "loan_amount",
+              "value": "250000.00 CZK",
+              "page": 1
+            },
+            {
+              "doc_id": "d1",
+              "doc_type": "contract",
+              "field": "declared_monthly_income",
+              "value": 52000.0,
+              "page": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "doc_id": "d2",
+      "doc_type": "id_card",
+      "source_file": "id_photo.jpg",
+      "doc_key": "123456789",
+      "page_start": 1,
+      "page_end": 1,
+      "pages": [
+        {
+          "source_file": "id_photo.jpg",
+          "page": 1,
+          "page_number": null,
+          "page_count": null,
+          "doc_key": "123456789",
+          "rotation": 0,
+          "confidence": 0.95,
+          "page_sha256": "a588b013b0102707216c3af7c0fcc9cd10d2830ac4aa03a65d980f11c4e3c201",
+          "sha256": "a588b013b0102707216c3af7c0fcc9cd10d2830ac4aa03a65d980f11c4e3c201",
+          "source_sha256": "cbc1780b54a292a6e930c87a86020358f79d5dd45b2a2083f2832eb10a99ef6a"
+        }
+      ],
+      "classification_confidence": 0.95,
+      "classification_reason": "Document is a Czech ID card (Občanský průkaz) with personal identification details including name, date of birth, birth number, document number, and photo field.",
+      "fields": {
+        "first_name": {
+          "type": "name",
+          "value": "Jana",
+          "normalized": "jana",
+          "textract": "Jana",
+          "textract_conf": 0.99,
+          "textract_page": 1,
+          "bedrock": "Jana",
+          "bedrock_page": 1,
+          "confidence": 0.99,
+          "page": 1,
+          "outcome": "agree_high_conf",
+          "status": "passed",
+          "rule_ids": [
+            "FIELD_RECONCILE",
+            "XDOC_FIRST_NAME"
+          ],
+          "rules_version": "e5467f7b0adf0668",
+          "bbox": {
+            "Width": 0.044645633548498154,
+            "Height": 0.0311582051217556,
+            "Left": 0.41089168190956116,
+            "Top": 0.41766229271888733
+          }
+        },
+        "last_name": {
+          "type": "name",
+          "value": "Nováková",
+          "normalized": "novakova",
+          "textract": "Nováková",
+          "textract_conf": 0.99,
+          "textract_page": 1,
+          "bedrock": "Nováková",
+          "bedrock_page": 1,
+          "confidence": 0.99,
+          "page": 1,
+          "outcome": "agree_high_conf",
+          "status": "passed",
+          "rule_ids": [
+            "FIELD_RECONCILE",
+            "XDOC_LAST_NAME"
+          ],
+          "rules_version": "e5467f7b0adf0668",
+          "bbox": {
+            "Width": 0.09498614072799683,
+            "Height": 0.03648143261671066,
+            "Left": 0.4096119701862335,
+            "Top": 0.4629862904548645
+          }
+        },
+        "birth_date": {
+          "type": "date",
+          "value": "12.04.1988",
+          "normalized": "1988-04-12",
+          "textract": "12.04.1988",
+          "textract_conf": 0.97,
+          "textract_page": 1,
+          "bedrock": "1988-04-12",
+          "bedrock_page": 1,
+          "confidence": 0.97,
+          "page": 1,
+          "outcome": "agree_high_conf",
+          "status": "passed",
+          "rule_ids": [
+            "FIELD_RECONCILE",
+            "RC_BIRTHDATE_MATCH"
+          ],
+          "rules_version": "e5467f7b0adf0668",
+          "bbox": {
+            "Width": 0.10701259225606918,
+            "Height": 0.03716734051704407,
+            "Left": 0.4065670073032379,
+            "Top": 0.5106141567230225
+          }
+        },
+        "birth_number": {
+          "type": "birth_number",
+          "value": "885412/0000",
+          "normalized": "8854120000",
+          "textract": "885412/0000",
+          "textract_conf": 0.93,
+          "textract_page": 1,
+          "bedrock": "885412/0000",
+          "bedrock_page": 1,
+          "confidence": 0.93,
+          "page": 1,
+          "outcome": "agree_high_conf",
+          "status": "passed",
+          "rule_ids": [
+            "FIELD_RECONCILE",
+            "RC_VALID",
+            "RC_BIRTHDATE_MATCH",
+            "XDOC_BIRTH_NUMBER"
+          ],
+          "rules_version": "e5467f7b0adf0668",
+          "bbox": {
+            "Width": 0.12469548732042313,
+            "Height": 0.04150461032986641,
+            "Left": 0.40207964181900024,
+            "Top": 0.5557999014854431
+          }
+        },
+        "address": {
+          "type": "address",
+          "value": "Vinohradská 12, 120 00 Praha2",
+          "normalized": "vinohradska 12 120 00 praha2",
+          "textract": "Vinohradská 12, 120 00 Praha2",
+          "textract_conf": 0.75,
+          "textract_page": 1,
+          "bedrock": "Vinohradská 12, 120 00 Praha 2",
+          "bedrock_page": 1,
+          "confidence": 0.75,
+          "page": 1,
+          "outcome": "agree_low_conf",
+          "status": "warning",
+          "rule_ids": [
+            "FIELD_RECONCILE",
+            "XDOC_ADDRESS"
+          ],
+          "rules_version": "e5467f7b0adf0668",
+          "bbox": {
+            "Width": 0.3036482632160187,
+            "Height": 0.07881243526935577,
+            "Left": 0.39754804968833923,
+            "Top": 0.5941439867019653
+          }
+        },
+        "document_number": {
+          "type": "id",
+          "value": "123456789",
+          "normalized": "123456789",
+          "textract": "123456789",
+          "textract_conf": 0.99,
+          "textract_page": 1,
+          "bedrock": "123456789",
+          "bedrock_page": 1,
+          "confidence": 0.99,
+          "page": 1,
+          "outcome": "agree_high_conf",
+          "status": "passed",
+          "rule_ids": [
+            "FIELD_RECONCILE"
+          ],
+          "rules_version": "e5467f7b0adf0668",
+          "bbox": {
+            "Width": 0.10528860241174698,
+            "Height": 0.03578588739037514,
+            "Left": 0.3954887092113495,
+            "Top": 0.6483942866325378
+          }
+        },
+        "expiry_date": {
+          "type": "date",
+          "value": "12.04.2032",
+          "normalized": "2032-04-12",
+          "textract": "12.04.2032",
+          "textract_conf": 0.98,
+          "textract_page": 1,
+          "bedrock": "2032-04-12",
+          "bedrock_page": 1,
+          "confidence": 0.98,
+          "page": 1,
+          "outcome": "agree_high_conf",
+          "status": "passed",
+          "rule_ids": [
+            "FIELD_RECONCILE",
+            "ID_NOT_EXPIRED"
+          ],
+          "rules_version": "e5467f7b0adf0668",
+          "bbox": {
+            "Width": 0.10631078481674194,
+            "Height": 0.035584334284067154,
+            "Left": 0.391845703125,
+            "Top": 0.6937013864517212
+          }
+        }
+      },
+      "checks": [
+        {
+          "check_id": "RC_VALID:birth_number_valid:id_card",
+          "check": "birth_number_valid",
+          "rule_id": "RC_VALID",
+          "rules_version": "e5467f7b0adf0668",
+          "outcome": "valid",
+          "status": "passed",
+          "detail": "ok",
+          "page": 1,
+          "doc_type": "id_card",
+          "evidence": [
+            {
+              "doc_id": "d2",
+              "doc_type": "id_card",
+              "field": "birth_number",
+              "value": "885412/0000",
+              "page": 1
+            }
+          ]
+        },
+        {
+          "check_id": "RC_BIRTHDATE_MATCH:birth_date_matches_birth_number:id_card",
+          "check": "birth_date_matches_birth_number",
+          "rule_id": "RC_BIRTHDATE_MATCH",
+          "rules_version": "e5467f7b0adf0668",
+          "outcome": "match",
+          "status": "passed",
+          "detail": "field=1988-04-12 encoded=1988-04-12",
+          "page": 1,
+          "doc_type": "id_card",
+          "evidence": [
+            {
+              "doc_id": "d2",
+              "doc_type": "id_card",
+              "field": "birth_date",
+              "value": "12.04.1988",
+              "page": 1
+            },
+            {
+              "doc_id": "d2",
+              "doc_type": "id_card",
+              "field": "birth_number",
+              "value": "885412/0000",
+              "page": 1
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "checks": [
+    {
+      "check_id": "RC_VALID:birth_number_valid:contract",
+      "check": "birth_number_valid",
+      "rule_id": "RC_VALID",
+      "rules_version": "e5467f7b0adf0668",
+      "outcome": "valid",
+      "status": "passed",
+      "detail": "ok",
+      "page": 1,
+      "doc_type": "contract",
+      "evidence": [
+        {
+          "doc_id": "d1",
+          "doc_type": "contract",
+          "field": "birth_number",
+          "value": "885412/0000",
+          "page": 1
+        }
+      ]
+    },
+    {
+      "check_id": "RC_BIRTHDATE_MATCH:birth_date_matches_birth_number:contract",
+      "check": "birth_date_matches_birth_number",
+      "rule_id": "RC_BIRTHDATE_MATCH",
+      "rules_version": "e5467f7b0adf0668",
+      "outcome": "match",
+      "status": "passed",
+      "detail": "field=1988-04-12 encoded=1988-04-12",
+      "page": 1,
+      "doc_type": "contract",
+      "evidence": [
+        {
+          "doc_id": "d1",
+          "doc_type": "contract",
+          "field": "birth_date",
+          "value": "12.04.1988",
+          "page": 1
+        },
+        {
+          "doc_id": "d1",
+          "doc_type": "contract",
+          "field": "birth_number",
+          "value": "885412/0000",
+          "page": 1
+        }
+      ]
+    },
+    {
+      "check_id": "CONTRACT_INCOME_NOT_LOAN:declared_income_not_loan_amount:contract",
+      "check": "declared_income_not_loan_amount",
+      "rule_id": "CONTRACT_INCOME_NOT_LOAN",
+      "rules_version": "e5467f7b0adf0668",
+      "outcome": "ok",
+      "status": "passed",
+      "detail": "loan=250000.0 declared=52000.0",
+      "page": 1,
+      "doc_type": "contract",
+      "evidence": [
+        {
+          "doc_id": "d1",
+          "doc_type": "contract",
+          "field": "loan_amount",
+          "value": "250000.00 CZK",
+          "page": 1
+        },
+        {
+          "doc_id": "d1",
+          "doc_type": "contract",
+          "field": "declared_monthly_income",
+          "value": 52000.0,
+          "page": 1
+        }
+      ]
+    },
+    {
+      "check_id": "RC_VALID:birth_number_valid:id_card",
+      "check": "birth_number_valid",
+      "rule_id": "RC_VALID",
+      "rules_version": "e5467f7b0adf0668",
+      "outcome": "valid",
+      "status": "passed",
+      "detail": "ok",
+      "page": 1,
+      "doc_type": "id_card",
+      "evidence": [
+        {
+          "doc_id": "d2",
+          "doc_type": "id_card",
+          "field": "birth_number",
+          "value": "885412/0000",
+          "page": 1
+        }
+      ]
+    },
+    {
+      "check_id": "RC_BIRTHDATE_MATCH:birth_date_matches_birth_number:id_card",
+      "check": "birth_date_matches_birth_number",
+      "rule_id": "RC_BIRTHDATE_MATCH",
+      "rules_version": "e5467f7b0adf0668",
+      "outcome": "match",
+      "status": "passed",
+      "detail": "field=1988-04-12 encoded=1988-04-12",
+      "page": 1,
+      "doc_type": "id_card",
+      "evidence": [
+        {
+          "doc_id": "d2",
+          "doc_type": "id_card",
+          "field": "birth_date",
+          "value": "12.04.1988",
+          "page": 1
+        },
+        {
+          "doc_id": "d2",
+          "doc_type": "id_card",
+          "field": "birth_number",
+          "value": "885412/0000",
+          "page": 1
+        }
+      ]
+    },
+    {
+      "check_id": "XDOC_BIRTH_NUMBER:birth_number_consistent:package",
+      "check": "birth_number_consistent",
+      "rule_id": "XDOC_BIRTH_NUMBER",
+      "rules_version": "e5467f7b0adf0668",
+      "outcome": "consistent",
+      "status": "passed",
+      "detail": "values=['8854120000']",
+      "page": 1,
+      "doc_type": null,
+      "evidence": [
+        {
+          "doc_id": "d1",
+          "doc_type": "contract",
+          "field": "birth_number",
+          "value": "885412/0000",
+          "page": 1
+        },
+        {
+          "doc_id": "d2",
+          "doc_type": "id_card",
+          "field": "birth_number",
+          "value": "885412/0000",
+          "page": 1
+        }
+      ]
+    },
+    {
+      "check_id": "XDOC_FIRST_NAME:first_name_consistent:package",
+      "check": "first_name_consistent",
+      "rule_id": "XDOC_FIRST_NAME",
+      "rules_version": "e5467f7b0adf0668",
+      "outcome": "consistent",
+      "status": "passed",
+      "detail": "values=['jana']",
+      "page": 1,
+      "doc_type": null,
+      "evidence": [
+        {
+          "doc_id": "d1",
+          "doc_type": "contract",
+          "field": "first_name",
+          "value": "Jana",
+          "page": 1
+        },
+        {
+          "doc_id": "d2",
+          "doc_type": "id_card",
+          "field": "first_name",
+          "value": "Jana",
+          "page": 1
+        }
+      ]
+    },
+    {
+      "check_id": "XDOC_LAST_NAME:last_name_consistent:package",
+      "check": "last_name_consistent",
+      "rule_id": "XDOC_LAST_NAME",
+      "rules_version": "e5467f7b0adf0668",
+      "outcome": "consistent",
+      "status": "passed",
+      "detail": "values=['novakova']",
+      "page": 1,
+      "doc_type": null,
+      "evidence": [
+        {
+          "doc_id": "d1",
+          "doc_type": "contract",
+          "field": "last_name",
+          "value": "Nováková",
+          "page": 1
+        },
+        {
+          "doc_id": "d2",
+          "doc_type": "id_card",
+          "field": "last_name",
+          "value": "Nováková",
+          "page": 1
+        }
+      ]
+    },
+    {
+      "check_id": "XDOC_ADDRESS:address_consistent:package",
+      "check": "address_consistent",
+      "rule_id": "XDOC_ADDRESS",
+      "rules_version": "e5467f7b0adf0668",
+      "outcome": "consistent",
+      "status": "passed",
+      "detail": "min_similarity=0.98 (threshold 0.85)",
+      "page": 1,
+      "doc_type": null,
+      "evidence": [
+        {
+          "doc_id": "d1",
+          "doc_type": "contract",
+          "field": "address",
+          "value": "Vinohradská 12, 120 00 Praha 2",
+          "page": 1
+        },
+        {
+          "doc_id": "d2",
+          "doc_type": "id_card",
+          "field": "address",
+          "value": "Vinohradská 12, 120 00 Praha2",
+          "page": 1
+        }
+      ]
+    },
+    {
+      "check_id": "LOAN_AMOUNT_PRESENT:loan_amount_present:package",
+      "check": "loan_amount_present",
+      "rule_id": "LOAN_AMOUNT_PRESENT",
+      "rules_version": "e5467f7b0adf0668",
+      "outcome": "present",
+      "status": "passed",
+      "detail": "250000.0",
+      "page": 1,
+      "doc_type": null,
+      "evidence": [
+        {
+          "doc_id": "d1",
+          "doc_type": "contract",
+          "field": "loan_amount",
+          "value": "250000.00 CZK",
+          "page": 1
+        }
+      ]
+    },
+    {
+      "check_id": "ID_NOT_EXPIRED:id_card_not_expired:id_card",
+      "check": "id_card_not_expired",
+      "rule_id": "ID_NOT_EXPIRED",
+      "rules_version": "e5467f7b0adf0668",
+      "outcome": "valid",
+      "status": "passed",
+      "detail": "expiry=2032-04-12 ref=2026-10-01",
+      "page": 1,
+      "doc_type": "id_card",
+      "evidence": [
+        {
+          "doc_id": "d2",
+          "doc_type": "id_card",
+          "field": "expiry_date",
+          "value": "12.04.2032",
+          "page": 1
+        }
+      ]
+    },
+    {
+      "check_id": "COMPLETENESS:required_documents_present:package",
+      "check": "required_documents_present",
+      "rule_id": "COMPLETENESS",
+      "rules_version": "e5467f7b0adf0668",
+      "outcome": "complete",
+      "status": "passed",
+      "detail": "required(contract)=['id_card'] missing=[]",
+      "page": null,
+      "doc_type": null,
+      "evidence": []
+    },
+    {
+      "check_id": "PAGE_CONTINUITY:pages_complete:package",
+      "check": "pages_complete",
+      "rule_id": "PAGE_CONTINUITY",
+      "rules_version": "e5467f7b0adf0668",
+      "outcome": "no_markers",
+      "status": "passed",
+      "detail": "no 'page x of y' markers",
+      "page": null,
+      "doc_type": null,
+      "evidence": []
+    },
+    {
+      "check_id": "UNEXPECTED_DOCUMENTS:no_unrequested_documents:package",
+      "check": "no_unrequested_documents",
+      "rule_id": "UNEXPECTED_DOCUMENTS",
+      "rules_version": "e5467f7b0adf0668",
+      "outcome": "none",
+      "status": "passed",
+      "detail": "unrequested=[]",
+      "page": null,
+      "doc_type": null,
+      "evidence": []
+    }
+  ],
+  "required_documents": [
+    "id_card"
+  ],
+  "required_documents_source": "contract",
+  "missing_documents": [],
+  "missing_pages": [],
+  "unexpected_documents": [],
+  "combined_confidence": 0.941,
+  "fields_auto_validated_pct": 94.1,
+  "recommended_next_step": "spot_check_warnings",
+  "draft_client_message": null,
+  "inputs": [
+    {
+      "name": "contract.pdf",
+      "bytes": 44679,
+      "sha256": "f6409a1bc7047bd2069c4284ab4d5ad9bc7590c9904a7f9aa0721fd9e3aec237"
+    },
+    {
+      "name": "id_photo.jpg",
+      "bytes": 89036,
+      "sha256": "cbc1780b54a292a6e930c87a86020358f79d5dd45b2a2083f2832eb10a99ef6a"
+    }
+  ],
+  "pages_classified": [
+    {
+      "source_file": "contract.pdf",
+      "page": 1,
+      "doc_type": "contract",
+      "confidence": 0.99,
+      "reason": "Document is titled 'ÚVĚROVÁ SMLOUVA / LOAN CONTRACT' with contract number, loan amount, and client details.",
+      "page_number": null,
+      "page_count": null,
+      "doc_key": "KB-2026-00421",
+      "rotation": 0,
+      "cache_hit": false
+    },
+    {
+      "source_file": "id_photo.jpg",
+      "page": 1,
+      "doc_type": "id_card",
+      "confidence": 0.95,
+      "reason": "Document is a Czech ID card (Občanský průkaz) with personal identification details including name, date of birth, birth number, document number, and photo field.",
+      "page_number": null,
+      "page_count": null,
+      "doc_key": "123456789",
+      "rotation": 0,
+      "cache_hit": false
+    }
+  ],
+  "cost": {
+    "run": {
+      "textract_pages": 2,
+      "bedrock_calls": 4,
+      "bedrock_input_tokens": 8028,
+      "bedrock_output_tokens": 770,
+      "cache_hits_textract": 0,
+      "cache_hits_bedrock": 0,
+      "usd": 0.0547
+    },
+    "cache_hits": {
+      "textract": 0,
+      "textract_calls": 2,
+      "bedrock_extraction": 0,
+      "classification": 0
+    },
+    "ledger": {
+      "budget_usd": 1.0,
+      "total_usd": 0.5665,
+      "remaining_usd": 0.4335,
+      "textract_pages": 21,
+      "bedrock_calls": 43,
+      "bedrock_input_tokens": 86628,
+      "bedrock_output_tokens": 7446,
+      "cache_hits_textract": 22,
+      "cache_hits_bedrock": 43,
+      "aborted": false,
+      "ledger": "/workspace/hack/ParsingMotorBackend/.cost/task_2026-10-19.json"
+    }
+  },
+  "audit_file": "/workspace/hack/ParsingMotorBackend/audit/20261019T122215Z-69c2eafd.jsonl"
+}

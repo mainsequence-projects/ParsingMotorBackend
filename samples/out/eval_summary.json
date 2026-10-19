@@ -1,205 +1,297 @@
 {
-  "packages": 4,
-  "packages_fully_correct": 4,
-  "field_accuracy": 1.0,
-  "check_accuracy": 1.0,
-  "reports": [
+  "packages": 9,
+  "page_classification_accuracy": 1.0,
+  "grouping_ok": "9/9",
+  "field_accuracy": 0.996,
+  "fields": "254/255",
+  "expected_flags_hit": "8/8",
+  "false_alarms": 2,
+  "packages_without_false_alarm": "8/9",
+  "next_step_accuracy": "5/9",
+  "next_step_safe": "9/9",
+  "missing_docs_ok": "9/9",
+  "missing_pages_ok": "9/9",
+  "unexpected_ok": "9/9",
+  "eval_usd": 0.4346,
+  "ledger": {
+    "budget_usd": 1.0,
+    "total_usd": 0.5665,
+    "remaining_usd": 0.4335,
+    "textract_pages": 21,
+    "bedrock_calls": 43,
+    "bedrock_input_tokens": 86628,
+    "bedrock_output_tokens": 7446,
+    "cache_hits_textract": 22,
+    "cache_hits_bedrock": 43,
+    "aborted": false,
+    "ledger": "/workspace/hack/ParsingMotorBackend/.cost/task_2026-10-19.json"
+  },
+  "rows": [
     {
       "package": "01_clean",
-      "checks": {
-        "missing_docs": {
-          "expected": [],
-          "got": [],
-          "pass": true
-        },
-        "next_step": {
-          "expected": "approve_ready",
-          "got": "spot_check_warnings",
-          "pass": true
-        },
-        "classified:contract": {
-          "pass": true
-        },
-        "classified:id_card": {
-          "pass": true
-        },
-        "classified:bank_statement": {
-          "pass": true
-        },
-        "classified:payslip": {
-          "pass": true
-        },
-        "classified:proof_of_address": {
-          "pass": true
-        }
+      "pages_correct": 5,
+      "pages_total": 5,
+      "grouping_ok": true,
+      "fields_correct": 33,
+      "fields_total": 33,
+      "field_errors": [],
+      "flags_expected": 0,
+      "flags_hit": 0,
+      "flags_missed": [],
+      "false_alarms": [],
+      "checks_total": 20,
+      "next_step": "spot_check_warnings",
+      "next_step_expected": "approve_ready",
+      "next_step_ok": false,
+      "next_step_safe": true,
+      "missing_ok": true,
+      "missing_pages_ok": true,
+      "unexpected_ok": true,
+      "usd": 0.0,
+      "cache_hits": {
+        "textract": 5,
+        "textract_calls": 5,
+        "bedrock_extraction": 5,
+        "classification": 5
       },
-      "fields": {
-        "contract.first_name": {
-          "expected": "jana",
-          "got": "jana",
-          "status": "passed",
-          "pass": true
-        },
-        "contract.last_name": {
-          "expected": "novakova",
-          "got": "novakova",
-          "status": "passed",
-          "pass": true
-        },
-        "contract.birth_number": {
-          "expected": "8854120000",
-          "got": "8854120000",
-          "status": "passed",
-          "pass": true
-        },
-        "id_card.first_name": {
-          "expected": "jana",
-          "got": "jana",
-          "status": "passed",
-          "pass": true
-        }
-      },
-      "ok": true,
-      "auto_validated_pct": 97.0,
-      "combined_confidence": 0.97,
-      "usage": {
-        "input_tokens": 18030,
-        "output_tokens": 978,
-        "calls": 10
-      }
+      "run_id": "20261019T122058Z-a4135021"
     },
     {
       "package": "02_missing_payslip",
-      "checks": {
-        "missing_docs": {
-          "expected": [
-            "payslip"
-          ],
-          "got": [
-            "payslip"
-          ],
-          "pass": true
-        },
-        "next_step": {
-          "expected": "request_missing_documents",
-          "got": "request_missing_documents",
-          "pass": true
-        },
-        "classified:contract": {
-          "pass": true
-        },
-        "classified:id_card": {
-          "pass": true
-        },
-        "classified:bank_statement": {
-          "pass": true
-        },
-        "classified:proof_of_address": {
-          "pass": true
-        }
+      "pages_correct": 4,
+      "pages_total": 4,
+      "grouping_ok": true,
+      "fields_correct": 27,
+      "fields_total": 27,
+      "field_errors": [],
+      "flags_expected": 1,
+      "flags_hit": 1,
+      "flags_missed": [],
+      "false_alarms": [],
+      "checks_total": 17,
+      "next_step": "request_missing_documents",
+      "next_step_expected": "request_missing_documents",
+      "next_step_ok": true,
+      "next_step_safe": true,
+      "missing_ok": true,
+      "missing_pages_ok": true,
+      "unexpected_ok": true,
+      "usd": 0.0,
+      "cache_hits": {
+        "textract": 4,
+        "textract_calls": 4,
+        "bedrock_extraction": 4,
+        "classification": 4
       },
-      "fields": {},
-      "ok": true,
-      "auto_validated_pct": 96.3,
-      "combined_confidence": 0.963,
-      "usage": {
-        "input_tokens": 14439,
-        "output_tokens": 781,
-        "calls": 8
-      }
+      "run_id": "20261019T122059Z-afaf7393"
     },
     {
       "package": "03_amount_mismatch",
-      "checks": {
-        "missing_docs": {
-          "expected": [],
-          "got": [],
-          "pass": true
-        },
-        "issue:income_contract_vs_payslip": {
-          "pass": true
-        },
-        "issue:income_contract_vs_statement": {
-          "pass": true
-        },
-        "next_step": {
-          "expected": "manual_review_discrepancy",
-          "got": "manual_review_discrepancy",
-          "pass": true
-        },
-        "classified:contract": {
-          "pass": true
-        },
-        "classified:id_card": {
-          "pass": true
-        },
-        "classified:bank_statement": {
-          "pass": true
-        },
-        "classified:payslip": {
-          "pass": true
-        },
-        "classified:proof_of_address": {
-          "pass": true
-        }
+      "pages_correct": 5,
+      "pages_total": 5,
+      "grouping_ok": true,
+      "fields_correct": 33,
+      "fields_total": 33,
+      "field_errors": [],
+      "flags_expected": 2,
+      "flags_hit": 2,
+      "flags_missed": [],
+      "false_alarms": [],
+      "checks_total": 20,
+      "next_step": "manual_review_discrepancy",
+      "next_step_expected": "manual_review_discrepancy",
+      "next_step_ok": true,
+      "next_step_safe": true,
+      "missing_ok": true,
+      "missing_pages_ok": true,
+      "unexpected_ok": true,
+      "usd": 0.0518,
+      "cache_hits": {
+        "textract": 3,
+        "textract_calls": 5,
+        "bedrock_extraction": 3,
+        "classification": 3
       },
-      "fields": {},
-      "ok": true,
-      "auto_validated_pct": 97.0,
-      "combined_confidence": 0.97,
-      "usage": {
-        "input_tokens": 18030,
-        "output_tokens": 972,
-        "calls": 10
-      }
+      "run_id": "20261019T122100Z-9ad003f8"
     },
     {
       "package": "04_name_typo_invalid_rc",
-      "checks": {
-        "missing_docs": {
-          "expected": [],
-          "got": [],
-          "pass": true
-        },
-        "issue:birth_number_valid": {
-          "pass": true
-        },
-        "issue:last_name_consistent": {
-          "pass": true
-        },
-        "issue:birth_number_consistent": {
-          "pass": true
-        },
-        "next_step": {
-          "expected": "manual_review_discrepancy",
-          "got": "manual_review_discrepancy",
-          "pass": true
-        },
-        "classified:contract": {
-          "pass": true
-        },
-        "classified:id_card": {
-          "pass": true
-        },
-        "classified:bank_statement": {
-          "pass": true
-        },
-        "classified:payslip": {
-          "pass": true
-        },
-        "classified:proof_of_address": {
-          "pass": true
-        }
+      "pages_correct": 5,
+      "pages_total": 5,
+      "grouping_ok": true,
+      "fields_correct": 33,
+      "fields_total": 33,
+      "field_errors": [],
+      "flags_expected": 3,
+      "flags_hit": 3,
+      "flags_missed": [],
+      "false_alarms": [],
+      "checks_total": 19,
+      "next_step": "manual_review_discrepancy",
+      "next_step_expected": "manual_review_discrepancy",
+      "next_step_ok": true,
+      "next_step_safe": true,
+      "missing_ok": true,
+      "missing_pages_ok": true,
+      "unexpected_ok": true,
+      "usd": 0.0522,
+      "cache_hits": {
+        "textract": 3,
+        "textract_calls": 5,
+        "bedrock_extraction": 3,
+        "classification": 3
       },
-      "fields": {},
-      "ok": true,
-      "auto_validated_pct": 93.9,
-      "combined_confidence": 0.939,
-      "usage": {
-        "input_tokens": 18030,
-        "output_tokens": 943,
-        "calls": 10
-      }
+      "run_id": "20261019T122107Z-8032ed9b"
+    },
+    {
+      "package": "05_scanned_noisy",
+      "pages_correct": 5,
+      "pages_total": 5,
+      "grouping_ok": true,
+      "fields_correct": 32,
+      "fields_total": 33,
+      "field_errors": [
+        "contract.declared_monthly_income: exp=52000 got=182000.0"
+      ],
+      "flags_expected": 0,
+      "flags_hit": 0,
+      "flags_missed": [],
+      "false_alarms": [
+        "income_contract_vs_payslip",
+        "income_contract_vs_statement"
+      ],
+      "checks_total": 20,
+      "next_step": "manual_review_discrepancy",
+      "next_step_expected": "approve_ready",
+      "next_step_ok": false,
+      "next_step_safe": true,
+      "missing_ok": true,
+      "missing_pages_ok": true,
+      "unexpected_ok": true,
+      "usd": 0.132,
+      "cache_hits": {
+        "textract": 0,
+        "textract_calls": 5,
+        "bedrock_extraction": 0,
+        "classification": 0
+      },
+      "run_id": "20261019T122132Z-358a63ec"
+    },
+    {
+      "package": "06_shuffled",
+      "pages_correct": 5,
+      "pages_total": 5,
+      "grouping_ok": true,
+      "fields_correct": 29,
+      "fields_total": 29,
+      "field_errors": [],
+      "flags_expected": 0,
+      "flags_hit": 0,
+      "flags_missed": [],
+      "false_alarms": [],
+      "checks_total": 19,
+      "next_step": "spot_check_warnings",
+      "next_step_expected": "approve_ready",
+      "next_step_ok": false,
+      "next_step_safe": true,
+      "missing_ok": true,
+      "missing_pages_ok": true,
+      "unexpected_ok": true,
+      "usd": 0.0762,
+      "cache_hits": {
+        "textract": 2,
+        "textract_calls": 5,
+        "bedrock_extraction": 2,
+        "classification": 2
+      },
+      "run_id": "20261019T122149Z-0ffc3ea2"
+    },
+    {
+      "package": "07_missing_page",
+      "pages_correct": 3,
+      "pages_total": 3,
+      "grouping_ok": true,
+      "fields_correct": 23,
+      "fields_total": 23,
+      "field_errors": [],
+      "flags_expected": 1,
+      "flags_hit": 1,
+      "flags_missed": [],
+      "false_alarms": [],
+      "checks_total": 16,
+      "next_step": "request_missing_documents",
+      "next_step_expected": "request_missing_documents",
+      "next_step_ok": true,
+      "next_step_safe": true,
+      "missing_ok": true,
+      "missing_pages_ok": true,
+      "unexpected_ok": true,
+      "usd": 0.0373,
+      "cache_hits": {
+        "textract": 2,
+        "textract_calls": 3,
+        "bedrock_extraction": 1,
+        "classification": 2
+      },
+      "run_id": "20261019T122158Z-c362e5b8"
+    },
+    {
+      "package": "08_extra_document",
+      "pages_correct": 5,
+      "pages_total": 5,
+      "grouping_ok": true,
+      "fields_correct": 27,
+      "fields_total": 27,
+      "field_errors": [],
+      "flags_expected": 1,
+      "flags_hit": 1,
+      "flags_missed": [],
+      "false_alarms": [],
+      "checks_total": 17,
+      "next_step": "spot_check_warnings",
+      "next_step_expected": "spot_check_warnings",
+      "next_step_ok": true,
+      "next_step_safe": true,
+      "missing_ok": true,
+      "missing_pages_ok": true,
+      "unexpected_ok": true,
+      "usd": 0.0304,
+      "cache_hits": {
+        "textract": 3,
+        "textract_calls": 4,
+        "bedrock_extraction": 3,
+        "classification": 3
+      },
+      "run_id": "20261019T122206Z-8b8731cb"
+    },
+    {
+      "package": "09_photo_id",
+      "pages_correct": 2,
+      "pages_total": 2,
+      "grouping_ok": true,
+      "fields_correct": 17,
+      "fields_total": 17,
+      "field_errors": [],
+      "flags_expected": 0,
+      "flags_hit": 0,
+      "flags_missed": [],
+      "false_alarms": [],
+      "checks_total": 14,
+      "next_step": "spot_check_warnings",
+      "next_step_expected": "approve_ready",
+      "next_step_ok": false,
+      "next_step_safe": true,
+      "missing_ok": true,
+      "missing_pages_ok": true,
+      "unexpected_ok": true,
+      "usd": 0.0547,
+      "cache_hits": {
+        "textract": 0,
+        "textract_calls": 2,
+        "bedrock_extraction": 0,
+        "classification": 0
+      },
+      "run_id": "20261019T122215Z-69c2eafd"
     }
   ]
 }
