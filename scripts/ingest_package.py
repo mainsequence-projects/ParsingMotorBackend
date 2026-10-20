@@ -134,13 +134,31 @@ def op_key(*parts) -> str:
     return str(uuid.uuid5(NAMESPACE, ":".join(map(str, parts))))
 
 
-def upload(folder: Path, bo: BackOffice, *, person_uid=None, case_uid=None, person_name=None,
-           case_type="new_loan", document_set=("loan_requirements", 1), wait_s=600, poll_s=3) -> dict:
+def profile_for(pkg: Path | None, name=None, birth_date=None, street=None) -> dict:
+    """Back Office checks every document against the person's profile (name, date of birth,
+    address), so the profile must hold the client's real values. Synthetic packages carry
+    them in ground_truth.json; otherwise they come from the flags."""
+    gt = json.loads((pkg / "ground_truth.json").read_text()) if pkg and (pkg / "ground_truth.json").exists() else {}
+    person, contract = gt.get("person") or {}, (gt.get("expected_fields") or {}).get("contract") or {}
+    first, last = person.get("first_name"), person.get("last_name")
+    profile = {"full_name": name or (f"{first} {last}" if first and last else None),
+               "given_names": first, "last_name": last,
+               "date_of_birth": birth_date or contract.get("birth_date")}
+    street = street or (contract.get("address") or "").partition(",")[0] or None
+    if street:  # street only: a city read as "Praha" vs "Praha 5" would fail the whole check
+        profile["residential_address"] = {"address_line_1": street}
+    if not profile["full_name"]:
+        raise SystemExit("no client name: pass --person-name (and --birth-date, --street)")
+    return {k: v for k, v in profile.items() if v}
+
+
+def upload(folder: Path, bo: BackOffice, *, person_uid=None, case_uid=None, profile=None,
+           case_type="new_loan", document_set=("loan_requirements", 6), wait_s=600, poll_s=3) -> dict:
     manifest = json.loads((folder / "manifest.json").read_text())
     pkg = manifest["package"]
     if not person_uid:
         person_uid = bo.call("POST", "/persons", {"operation_key": op_key(pkg, "person"), "profile": {
-            "external_reference": f"synthetic:{pkg}", "full_name": person_name or pkg}})["uid"]
+            "external_reference": f"synthetic:{pkg}", **(profile or {"full_name": pkg})}})["uid"]
     if not case_uid:
         case_uid = bo.call("POST", "/cases", {"operation_key": op_key(pkg, "case"), "subject_uid": person_uid,
                                               "case_type_key": case_type, "document_set_key": document_set[0],
@@ -189,13 +207,16 @@ def main(argv=None):
         s.add_argument("--catalog", type=Path, help="JSON {document_type: description} for the classifier")
     up = [sub.add_parser("upload"), sub.choices["run"]]
     up[0].add_argument("folder", type=Path)
+    up[0].add_argument("--package", type=Path, help="package folder with ground_truth.json, for the profile")
     for s in up:
         s.add_argument("--api", required=True, help="Back Office API base, e.g. http://127.0.0.1:15174/api")
         s.add_argument("--allow-remote", action="store_true")
         s.add_argument("--person-uid")
         s.add_argument("--case-uid")
         s.add_argument("--person-name")
-        s.add_argument("--document-set", default="loan_requirements:1")
+        s.add_argument("--birth-date", help="YYYY-MM-DD")
+        s.add_argument("--street", help="street and house number, as on the documents")
+        s.add_argument("--document-set", default="loan_requirements:6")
     a = ap.parse_args(argv)
     if a.cmd in ("split", "run"):
         catalog = [dict(c) for c in CATALOG]
@@ -209,8 +230,9 @@ def main(argv=None):
     if a.cmd in ("upload", "run"):
         check_api(a.api, a.allow_remote)
         key, _, ver = a.document_set.partition(":")
+        profile = None if a.person_uid else profile_for(a.package, a.person_name, a.birth_date, a.street)
         r = upload(a.folder if a.cmd == "upload" else a.out, BackOffice(a.api), person_uid=a.person_uid,
-                   case_uid=a.case_uid, person_name=a.person_name, document_set=(key, int(ver or 1)))
+                   case_uid=a.case_uid, profile=profile, document_set=(key, int(ver or 1)))
         print(json.dumps(r, indent=2))
 
 
