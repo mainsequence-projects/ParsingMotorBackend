@@ -7,13 +7,16 @@ Acceptance, thresholds and cross-document rules stay in Back Office.
 """
 from __future__ import annotations
 
+import logging
 import re
 from collections import defaultdict
 
 from . import aws
+from .cost import BudgetExceeded
 from .normalize import norm_amount, norm_date, norm_text, strip_diacritics
 from .schema_contract import validator
 
+log = logging.getLogger(__name__)
 READER_ID = "ocr_textract"
 MODEL = "textract:AnalyzeDocument/QUERIES"
 NORMALIZATION_VERSION = "schema_ocr_vision_v2"
@@ -180,7 +183,16 @@ def read(pages, root: dict, values: dict, citations: dict) -> dict:
     best = {}
     for n, qs in by_page.items():
         aliases = {f"q{i}": pointer for i, pointer in enumerate(qs)}
-        answers, _ = aws.textract_queries(page_of[n].png, {a: qs[p] for a, p in aliases.items()})
+        try:
+            answers, _ = aws.textract_queries(page_of[n].png, {a: qs[p] for a, p in aliases.items()})
+        except BudgetExceeded:
+            raise
+        except Exception as e:  # noqa: BLE001
+            # Textract allows 1 request/s per account; when parallel documents exhaust the
+            # retries, this page simply gets no OCR candidate (single_reader -> review) instead
+            # of failing the whole document.
+            log.warning("textract failed on page %s, OCR candidates left empty: %s", n, type(e).__name__)
+            continue
         for alias, ans in answers.items():
             pointer = aliases[alias]
             if ans.get("value") and (pointer not in best or ans["confidence"] > best[pointer]["confidence"]):

@@ -152,8 +152,17 @@ def profile_for(pkg: Path | None, name=None, birth_date=None, street=None) -> di
     return {k: v for k, v in profile.items() if v}
 
 
+def wait_for(bo: BackOffice, runs: dict, deadline: float, poll_s: float) -> None:
+    while any(r.get("status") not in TERMINAL for r in runs.values()) and time.monotonic() < deadline:
+        time.sleep(poll_s)
+        for f, r in runs.items():
+            if r.get("status") not in TERMINAL:
+                runs[f] = bo.call("GET", f"/processing-runs/{r['uid']}")
+
+
 def upload(folder: Path, bo: BackOffice, *, person_uid=None, case_uid=None, profile=None,
-           case_type="new_loan", document_set=("loan_requirements", 6), wait_s=600, poll_s=3) -> dict:
+           case_type="new_loan", document_set=("loan_requirements", 6), wait_s=600, poll_s=3,
+           sequential=False) -> dict:
     manifest = json.loads((folder / "manifest.json").read_text())
     pkg = manifest["package"]
     if not person_uid:
@@ -163,15 +172,14 @@ def upload(folder: Path, bo: BackOffice, *, person_uid=None, case_uid=None, prof
         case_uid = bo.call("POST", "/cases", {"operation_key": op_key(pkg, "case"), "subject_uid": person_uid,
                                               "case_type_key": case_type, "document_set_key": document_set[0],
                                               "document_set_version": document_set[1]})["uid"]
-    runs = {}
+    runs, deadline = {}, time.monotonic() + wait_s
     for d in manifest["documents"]:
         runs[d["file"]] = bo.upload(person_uid, op_key(pkg, "upload", d["sha256"]), folder / d["file"])
-    deadline = time.monotonic() + wait_s
-    while any(r.get("status") not in TERMINAL for r in runs.values()) and time.monotonic() < deadline:
-        time.sleep(poll_s)
-        for f, r in runs.items():
-            if r.get("status") not in TERMINAL:
-                runs[f] = bo.call("GET", f"/processing-runs/{r['uid']}")
+        if sequential:  # one document in flight: Textract allows 1 request/s per account
+            one = {d["file"]: runs[d["file"]]}
+            wait_for(bo, one, deadline, poll_s)
+            runs.update(one)
+    wait_for(bo, runs, deadline, poll_s)
     documents = [r["document"]["uid"] for r in runs.values() if (r.get("document") or {}).get("uid")]
     linked = None
     if documents:
@@ -217,6 +225,8 @@ def main(argv=None):
         s.add_argument("--birth-date", help="YYYY-MM-DD")
         s.add_argument("--street", help="street and house number, as on the documents")
         s.add_argument("--document-set", default="loan_requirements:6")
+        s.add_argument("--sequential", action="store_true",
+                       help="process one document at a time (live demo: Textract allows 1 request/s)")
     a = ap.parse_args(argv)
     if a.cmd in ("split", "run"):
         catalog = [dict(c) for c in CATALOG]
@@ -232,7 +242,8 @@ def main(argv=None):
         key, _, ver = a.document_set.partition(":")
         profile = None if a.person_uid else profile_for(a.package, a.person_name, a.birth_date, a.street)
         r = upload(a.folder if a.cmd == "upload" else a.out, BackOffice(a.api), person_uid=a.person_uid,
-                   case_uid=a.case_uid, profile=profile, document_set=(key, int(ver or 1)))
+                   case_uid=a.case_uid, profile=profile, document_set=(key, int(ver or 1)),
+                   sequential=a.sequential)
         print(json.dumps(r, indent=2))
 
 

@@ -121,3 +121,35 @@ def test_every_field_has_both_readers_as_back_office_requires(client, upload, mo
     result = post(client, upload)
     for f in result.field_evidence:
         assert len(f.candidates) >= 2 and len({c.model for c in f.candidates}) >= 2, f.pointer
+
+
+def test_textract_throttling_keeps_the_vision_reading(client, upload, monkeypatch):
+    from botocore.exceptions import ClientError
+
+    def converse(prompt, **kwargs):
+        return vision({"bank_name": "KB"}), "vision-model", {"cache_hit": False, "usage": {}}
+
+    def throttled(png, queries):
+        raise ClientError({"Error": {"Code": "ProvisionedThroughputExceededException"}}, "AnalyzeDocument")
+
+    monkeypatch.setattr(document_service, "converse_json", converse)
+    monkeypatch.setattr(aws, "textract_queries", throttled)
+    result = post(client, upload)
+    f = field(result, "/bank_name")
+    assert result.attributes["bank_name"] == "KB" and f.agreement == "single_reader"
+    assert [c.value for c in f.candidates if c.reader_id == "ocr_textract"] == [None]
+
+
+def test_budget_guard_still_stops_the_run(client, upload, monkeypatch):
+    from extractor.cost import BudgetExceeded
+
+    def converse(prompt, **kwargs):
+        return vision({"bank_name": "KB"}), "vision-model", {"cache_hit": False, "usage": {}}
+
+    def broke(png, queries):
+        raise BudgetExceeded("over budget")
+
+    monkeypatch.setattr(document_service, "converse_json", converse)
+    monkeypatch.setattr(aws, "textract_queries", broke)
+    body = {**typed_body(upload), "contract_version": 2, "reader_mode": "independent_readers"}
+    assert client.post("/extract_typed_json", json=body).status_code == 503
