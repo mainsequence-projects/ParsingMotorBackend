@@ -99,3 +99,13 @@ def test_profile_holds_the_values_back_office_checks_documents_against():
     assert profile["full_name"] == "Eva Horáková" and profile["date_of_birth"] == "1990-09-05"
     assert profile["residential_address"] == {"address_line_1": "Lidická 3"}
     assert ing.profile_for(None, "Jan Novák") == {"full_name": "Jan Novák"}
+
+
+def test_sequential_upload_finishes_each_document_before_the_next(tmp_path):
+    gt = json.loads((PKG / "ground_truth.json").read_text())
+    ing.split(PKG, tmp_path, oracle_classifier(gt))
+    fake = FakeBackOffice()
+    ing.upload(tmp_path, ing.BackOffice("http://127.0.0.1:15174/api", http=fake), poll_s=0, sequential=True)
+    order = [c[1].split("/")[1] for c in fake.calls if c[1] in ("/document-processing",) or c[1].startswith("/processing-runs/")]
+    # every upload is followed by its poll before the next upload starts
+    assert order[:4] == ["document-processing", "processing-runs", "document-processing", "processing-runs"]
