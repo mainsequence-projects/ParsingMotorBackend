@@ -92,3 +92,10 @@ def test_upload_refuses_remote_http_api():
     with pytest.raises(SystemExit):
         ing.check_api("http://backoffice.example.com/api", allow_remote=True)
     ing.check_api("http://127.0.0.1:15174/api", allow_remote=False)
+
+
+def test_profile_holds_the_values_back_office_checks_documents_against():
+    profile = ing.profile_for(Path(__file__).resolve().parents[1] / "samples" / "05_income_mismatch_employer")
+    assert profile["full_name"] == "Eva Horáková" and profile["date_of_birth"] == "1990-09-05"
+    assert profile["residential_address"] == {"address_line_1": "Lidická 3"}
+    assert ing.profile_for(None, "Jan Novák") == {"full_name": "Jan Novák"}
